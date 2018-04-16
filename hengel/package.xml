@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>hengel</name>
+  <version>0.0.1</version>
+  <description>
+    hengel robot autonomous painting - ros package
+  </description>
+  <license>Apache 2.0</license>
+  <license>BSD</license>
+  <author email="bkjung94@gmail.com">bkjung</author>
+  <maintainer email="bkjung94@gmail.com">bkjung</maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>hengel_paint_actuator</exec_depend>
+  <export><metapackage/></export>
+</package>
