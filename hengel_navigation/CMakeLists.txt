@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hengel_navigation)
 
+set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
@@ -9,8 +11,10 @@ project(hengel_navigation)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  rospy
   std_msgs
+  sensor_msgs
+  diagnostic_msgs
+  hengel_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -105,8 +109,8 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES hengel_navigation
-#  CATKIN_DEPENDS roscpp rospy std_msgs
-#  DEPENDS system_lib
+  CATKIN_DEPENDS roscpp std_msgs sensor_msgs diagnostic_msgs hengel_msgs
+#  DEPENDS system_libi
 )
 
 ###########
@@ -120,6 +124,9 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+add_executable(hengel_diagnostics src/hengel_diagnostics.cpp)
+add_dependencies(hengel_diagnostics ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(hengel_diagnostics ${catkin_LIBRARIES})
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/hengel_navigation.cpp
@@ -145,6 +152,7 @@ include_directories(
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
@@ -159,6 +167,23 @@ include_directories(
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
+install(TARGETS hengel_diagnostics
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(PROGRAMS 
+  scripts/create_udev_rules
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(FILES 99-turtlebot3-cdc.rules
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
 # install(PROGRAMS
 #   scripts/my_python_script
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
