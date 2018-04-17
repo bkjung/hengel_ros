@@ -1,0 +1,5 @@
+<launch>
+  <!-- turtlebot3_teleop_key already has its own built in velocity smoother -->
+  <node pkg="hengel_path_tracer" type="alphabet_tracer.py" name="hengel_alphabet_tracer"  output="screen" args="$(find hengel_path_tracer)">
+  </node>
+</launch>
