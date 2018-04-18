@@ -1,6 +1,0 @@
-<launch>
-  <include file="$(find hengel_navigation)/launch/turtlebot3_core.launch"/>
-  <include file="$(find hengel_navigation)/launch/turtlebot3_lidar.launch"/>
-
-  <node pkg="hengel_navigation" type="hengel_diagnostics" name="hengel_diagnostics" output="screen" />
-</launch>
