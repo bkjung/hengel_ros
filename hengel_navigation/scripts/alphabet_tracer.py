@@ -37,7 +37,7 @@ If you want to close, insert 's'
 -----------------------
 """
 
-waypoint_increment = 1
+waypoint_increment = 3
 waypoints_length = 0
 waypoints=[]
 cnt_letter = 0
@@ -61,7 +61,7 @@ def get_path(word):
                 for idx, line in enumerate(file_path):
                     _str = line.split()
                     if not len(_str)==0:
-                        arr_path.append([(float)(_str[0])+(float)(cnt_letter), 1.0-(float)(_str[1])])
+                        arr_path.append([(float)(_str[0])+(float)(cnt_letter)-(2*(float)(cnt_letter)-1)*250/1632, 1.0-(float)(_str[1])])
                     else:
                         pass
 
@@ -132,10 +132,6 @@ class GotoPoint():
         print("x, y, rotation", position.x, position.y, np.rad2deg(rotation))
 
 
-        
-        lin_vel=0.08
-        # (goal_x, goal_y, goal_z) = self.getkey()
-
         # go through path array
         
         waypoints_length = len(arr_path)        
@@ -146,8 +142,11 @@ class GotoPoint():
 
         thres1=np.deg2rad(30)
         thres2=np.deg2rad(15)
-        ang_vel_1=0.3
-        ang_vel_2=0.1
+        thres3=np.deg2rad(8)
+        ang_vel_1=0.35
+        ang_vel_2=0.2
+        ang_vel_3=0.1
+        lin_vel=0.05
 
         waypoint_index = 1  #starting from index No. 1 (c.f. No.0 is at the origin(0,0))
 
@@ -162,7 +161,7 @@ class GotoPoint():
             goal_distance = sqrt(pow(current_waypoint[0] - position.x, 2) + pow(current_waypoint[1] - position.y, 2))
             distance = goal_distance
             
-            while distance > 0.1:
+            while distance > 0.03:
                 try:
                     print ("distance= ", '%.3f' % distance)
                     
@@ -195,10 +194,20 @@ class GotoPoint():
                         else:
                             move_cmd.linear.x=0
                             move_cmd.angular.z=-ang_vel_2
+                    elif abs(alpha)>thres3:
+                        if alpha>0 or alpha<-pi:
+                            move_cmd.linear.x=0
+                            move_cmd.angular.z=ang_vel_3
+                        else:
+                            move_cmd.linear.x=0
+                            move_cmd.angular.z=-ang_vel_3
                          
                     else:
                         x=distance*sin(alpha)
                         curv=2*x/pow(distance,2)
+                        lin_vel=0.06
+                        if distance<0.08:
+                            lin_vel=0.015
                         move_cmd.linear.x=lin_vel
                         move_cmd.angular.z=curv*lin_vel
                         
