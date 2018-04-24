@@ -143,10 +143,18 @@ class GotoPoint():
         thres1=np.deg2rad(30)
         thres2=np.deg2rad(15)
         thres3=np.deg2rad(8)
-        ang_vel_1=0.35
-        ang_vel_2=0.2
-        ang_vel_3=0.1
-        lin_vel=0.05
+
+        #at turtlebot3
+        # ang_vel_1=0.35 
+        # ang_vel_2=0.2
+        # ang_vel_3=0.04
+        # lin_vel=0.08
+
+        #at hengel bot  
+        ang_vel_1=0.08
+        ang_vel_2=0.04
+        ang_vel_3=0.02
+        lin_vel=0.001
 
         waypoint_index = 1  #starting from index No. 1 (c.f. No.0 is at the origin(0,0))
 
@@ -211,7 +219,6 @@ class GotoPoint():
                         move_cmd.linear.x=lin_vel
                         move_cmd.angular.z=curv*lin_vel
                         
-                  
                     self.cmd_vel.publish(move_cmd)
 
                     (position, rotation) = self.get_odom()
@@ -254,7 +261,15 @@ class GotoPoint():
         pnt.x=pnt.x-self.offset_x
         pnt.y=pnt.y-self.offset_y
 
-        return (pnt, rotation[2])
+        heading = rotation[2]-self.offset_rot
+        
+        if heading>pi:
+            heading=heading-2*pi
+        elif heading<-pi:
+            heading=heading+2*pi
+
+
+        return (pnt, heading)
 
         #2. Lidar(Velodyne VLP-16) SLAM (blam, https://github.com/erik-nelson/blam)
 
