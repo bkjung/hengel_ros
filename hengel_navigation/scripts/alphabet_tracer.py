@@ -20,22 +20,12 @@
 import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
 import tf
-from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor
+from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos
 from tf.transformations import euler_from_quaternion
 import numpy as np
 import sys
 from PIL import Image
 
-msg = """
-control your Turtlebot3!
------------------------
-Insert xyz - coordinate.
-x : position x (m)
-y : position y (m)
-z : orientation z (degree: -180 ~ 180)
-If you want to close, insert 's'
------------------------
-"""
 
 waypoint_increment = 3
 waypoints_length = 0
@@ -45,6 +35,13 @@ cnt_letter = 0
 cnt_path_points = 0
 path_points = []
 
+def normalize_rad(input_angle):
+    if input_angle>pi:
+        return input_angle-2*pi
+    elif input_angle<=-pi:
+        return input_angle+2*pi
+    else:
+        return input_angle
 
 def get_path(word):
     global cnt_letter
@@ -121,15 +118,17 @@ class GotoPoint():
                 rospy.loginfo("Cannot find transform between /odom and /base_link or /base_footprint")
                 rospy.signal_shutdown("tf Exception")
         
-        (position, rotation) = self.get_odom()
+        (init_position, init_rotation) = self.get_odom()
         if self.isFirst:
-            self.offset_x=position.x
-            self.offset_y=position.y
-            self.offset_rot=rotation
+            self.offset_x=init_position.x
+            self.offset_y=init_position.y
+            # self.offset_rot=init_rotation-pi/2.0
+            self.offset_rot=init_rotation
             self.isFirst=False
+            print("offset_x, offset_y, offset_rotation", self.offset_x, self.offset_y, self.offset_rot)
             print("offset initialized")
         (position, rotation) = self.get_odom()
-        print("x, y, rotation", position.x, position.y, np.rad2deg(rotation))
+        print("x, y, rotation", position.x, position.y, rotation)
 
 
         # go through path array
@@ -138,7 +137,7 @@ class GotoPoint():
         for idx in range(waypoints_length):
             waypoints.append([arr_path[idx][0]-arr_path[0][0], arr_path[idx][1]-arr_path[0][1]])
 
-        print("size of waypoints = ", len(waypoints), len(waypoints[0]))
+        print("size of waypoints = ", len(waypoints))
 
         thres1=np.deg2rad(30)
         thres2=np.deg2rad(15)
@@ -175,15 +174,14 @@ class GotoPoint():
                     
                     print("goal_position", '%.3f' % current_waypoint[0], '%.3f' % current_waypoint[1], "current_position", '%.3f' % position.x, '%.3f' % position.y)
                     # alpha=atan2(goal_x-x_start, goal_y-y_start)-rotation
-                    alpha=atan2(current_waypoint[1]-position.y, current_waypoint[0]-position.x)-rotation
+                    alpha=normalize_rad(atan2(current_waypoint[1]-position.y, current_waypoint[0]-position.x))-rotation
 
                     #Alpha normalization
-                    if alpha>pi:
-                        alpha=alpha-2*pi
-                    elif alpha<-pi:
-                        alpha=alpha+2*pi
+                    alpha=normalize_rad(alpha)
 
-                    print("goal_angle", '%.3f' % np.rad2deg(alpha),"current_angle", '%.3f' % np.rad2deg(rotation))
+                    # print("goal_angle", '%.3f' % np.rad2deg(alpha),"current_angle", '%.3f' % np.rad2deg(rotation))
+                    # print("goal_angle", '%.3f' % alpha,"current_angle", '%.3f' % rotation)
+                    print("heading error", '%.3f' % alpha)
 
                     if abs(alpha)> thres1: #abs?
                         if alpha>0 or alpha<-pi:
@@ -263,11 +261,7 @@ class GotoPoint():
 
         heading = rotation[2]-self.offset_rot
         
-        if heading>pi:
-            heading=heading-2*pi
-        elif heading<-pi:
-            heading=heading+2*pi
-
+        heading=normalize_rad(heading)
 
         return (pnt, heading)
 
@@ -297,7 +291,7 @@ class GotoPoint():
         print("cnt_path_points = ", cnt_path_points)
         
         for i in range(cnt_path_points):
-            print(path_points[i][0], path_points[i][1])
+            # print(path_points[i][0], path_points[i][1])
             x = 0.99 if path_points[i][0]==1.0 else path_points[i][0]
             y = 0.99 if (1.0-path_points[i][1])==1.0 else (1.0-path_points[i][1])
             x = (int)(floor(x*100))
@@ -314,7 +308,6 @@ class GotoPoint():
         print("Pathmap image saved at "+sys.argv[1]+"/output_pathmap/output.png")
         img.save(sys.argv[1]+"/output_pathmap/output1.png", "PNG")
         
-
 
     def shutdown(self):
         self.cmd_vel.publish(Twist())
