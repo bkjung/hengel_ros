@@ -35,6 +35,23 @@ cnt_letter = 0
 cnt_path_points = 0
 path_points = []
 
+thres1=np.deg2rad(30)
+thres2=np.deg2rad(15)
+thres3=np.deg2rad(8)
+
+#at turtlebot3
+# ang_vel_1=0.35 
+# ang_vel_2=0.2
+# ang_vel_3=0.04
+# lin_vel=0.06
+
+#at hengel bot  
+ang_vel_1=0.08
+ang_vel_2=0.04
+ang_vel_3=0.02
+lin_vel=0.03
+
+
 def normalize_rad(input_angle):
     if input_angle>pi:
         return input_angle-2*pi
@@ -123,7 +140,8 @@ class GotoPoint():
             self.offset_x=init_position.x
             self.offset_y=init_position.y
             # self.offset_rot=init_rotation-pi/2.0
-            self.offset_rot=init_rotation
+            # self.offset_rot=init_rotation
+            self.offset_rot=0
             self.isFirst=False
             print("offset_x, offset_y, offset_rotation", self.offset_x, self.offset_y, self.offset_rot)
             print("offset initialized")
@@ -138,22 +156,6 @@ class GotoPoint():
             waypoints.append([arr_path[idx][0]-arr_path[0][0], arr_path[idx][1]-arr_path[0][1]])
 
         print("size of waypoints = ", len(waypoints))
-
-        thres1=np.deg2rad(30)
-        thres2=np.deg2rad(15)
-        thres3=np.deg2rad(8)
-
-        #at turtlebot3
-        # ang_vel_1=0.35 
-        # ang_vel_2=0.2
-        # ang_vel_3=0.04
-        # lin_vel=0.08
-
-        #at hengel bot  
-        ang_vel_1=0.08
-        ang_vel_2=0.04
-        ang_vel_3=0.02
-        lin_vel=0.001
 
         waypoint_index = 1  #starting from index No. 1 (c.f. No.0 is at the origin(0,0))
 
@@ -174,10 +176,7 @@ class GotoPoint():
                     
                     print("goal_position", '%.3f' % current_waypoint[0], '%.3f' % current_waypoint[1], "current_position", '%.3f' % position.x, '%.3f' % position.y)
                     # alpha=atan2(goal_x-x_start, goal_y-y_start)-rotation
-                    alpha=normalize_rad(atan2(current_waypoint[1]-position.y, current_waypoint[0]-position.x))-rotation
-
-                    #Alpha normalization
-                    alpha=normalize_rad(alpha)
+                    alpha=normalize_rad( normalize_rad(atan2(current_waypoint[1]-position.y, current_waypoint[0]-position.x))-rotation )
 
                     # print("goal_angle", '%.3f' % np.rad2deg(alpha),"current_angle", '%.3f' % np.rad2deg(rotation))
                     # print("goal_angle", '%.3f' % alpha,"current_angle", '%.3f' % rotation)
@@ -211,11 +210,14 @@ class GotoPoint():
                     else:
                         x=distance*sin(alpha)
                         curv=2*x/pow(distance,2)
-                        lin_vel=0.06
+                        
                         if distance<0.08:
-                            lin_vel=0.015
-                        move_cmd.linear.x=lin_vel
-                        move_cmd.angular.z=curv*lin_vel
+                            lin_vel_scaled=lin_vel/4.0
+                        else:
+                            lin_vel_scaled=lin_vel
+
+                        move_cmd.linear.x=lin_vel_scaled
+                        move_cmd.angular.z=curv*lin_vel_scaled
                         
                     self.cmd_vel.publish(move_cmd)
 
@@ -259,10 +261,9 @@ class GotoPoint():
         pnt.x=pnt.x-self.offset_x
         pnt.y=pnt.y-self.offset_y
 
-        heading = rotation[2]-self.offset_rot
+        # heading = normalize_rad( normalize_rad(rotation[2])-self.offset_rot )
+        heading = rotation[2]
         
-        heading=normalize_rad(heading)
-
         return (pnt, heading)
 
         #2. Lidar(Velodyne VLP-16) SLAM (blam, https://github.com/erik-nelson/blam)
@@ -280,7 +281,7 @@ class GotoPoint():
         rotation=euler_from_quaternion(quat)
         
         self.lidar_estimated_pnt = pnt
-        self.lidar_estimated_rotation = rotation[2]
+        self.lidar_estimated_rotation = normalize_rad(rotation[2])
 
 
     def generate_pathmap(self):
