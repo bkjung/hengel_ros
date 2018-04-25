@@ -1,7 +1,6 @@
-#Hengelbot_pathmaker
+# Hengelbot_pathmaker
 
-##Prerequisite:
+## Prerequisite:
 install python-imagetk
-'''
-$ sudo apt-get install python-imaging-tk
-'''
+
+    $ sudo apt-get install python-imaging-tk
