@@ -50,7 +50,7 @@ thres3=np.deg2rad(8)
 ang_vel_1=0.08
 ang_vel_2=0.04
 ang_vel_3=0.02
-lin_vel=0.03
+lin_vel=0.06
 
 
 def normalize_rad(input_angle):
@@ -140,9 +140,9 @@ class PaintWords():
         if self.isFirst:
             self.offset_x=init_position.x
             self.offset_y=init_position.y
-            # self.offset_rot=init_rotation-pi/2.0
+            self.offset_rot=init_rotation-pi/2.0
             # self.offset_rot=init_rotation
-            self.offset_rot=0
+            # self.offset_rot=0
             self.isFirst=False
             print("offset_x, offset_y, offset_rotation", self.offset_x, self.offset_y, self.offset_rot)
             print("offset initialized")
@@ -306,9 +306,7 @@ class PaintWords():
                 for t in range(scale):
                     img.putpixel((x*scale + t, y*scale + k), (0, 0, 0))
 
-        #img.save(sys.argv[1]+"/output_pathmap/"+rospy.get_param("/turtlebot3_purepursuit/start_time"))
         print("Pathmap image saved at "+sys.argv[1]+"/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png")
-        # img.save(sys.argv[1]+"/output_pathmap/output1.png", "PNG")
         img.save(sys.argv[1]+"/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png", "PNG")
         
 
