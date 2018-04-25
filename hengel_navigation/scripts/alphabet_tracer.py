@@ -25,6 +25,7 @@ from tf.transformations import euler_from_quaternion
 import numpy as np
 import sys
 from PIL import Image
+import time
 
 
 waypoint_increment = 3
@@ -95,7 +96,7 @@ def get_path(word):
 #             break
 # now we imported arr_path_B from file to arr_path_B
 
-class GotoPoint():
+class PaintWords():
     def __init__(self, arr_path):
         global waypoints_length
         global waypoints
@@ -306,8 +307,9 @@ class GotoPoint():
                     img.putpixel((x*scale + t, y*scale + k), (0, 0, 0))
 
         #img.save(sys.argv[1]+"/output_pathmap/"+rospy.get_param("/turtlebot3_purepursuit/start_time"))
-        print("Pathmap image saved at "+sys.argv[1]+"/output_pathmap/output.png")
-        img.save(sys.argv[1]+"/output_pathmap/output1.png", "PNG")
+        print("Pathmap image saved at "+sys.argv[1]+"/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png")
+        # img.save(sys.argv[1]+"/output_pathmap/output1.png", "PNG")
+        img.save(sys.argv[1]+"/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png", "PNG")
         
 
     def shutdown(self):
@@ -321,7 +323,7 @@ if __name__ == '__main__':
         print("word:", word)
         path=get_path(word)
         print("path loaded")
-        GotoPoint(path)
+        PaintWords(path)
 
         print("End of Main Function")
 
