@@ -26,6 +26,7 @@ import numpy as np
 import sys
 from PIL import Image
 import time
+import os
 
 
 waypoint_increment = 3
@@ -321,6 +322,7 @@ if __name__ == '__main__':
         print("word:", word)
         path=get_path(word)
         print("path loaded")
+        os.system("mkdir -p output_pathmap")
         PaintWords(path)
 
         print("End of Main Function")

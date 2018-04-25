@@ -4,6 +4,7 @@ import Tkinter
 from math import pow, sqrt
 from Tkinter import *
 from PIL import Image, ImageTk
+import os
 
 path=[[-1,-1]]
 circle_array=[]
@@ -51,6 +52,7 @@ def quit():
 if __name__ =="__main__":
     root = Tk()
     root.title("Path")
+    os.system("mkdir -p txtfile")
     # img=Image.open("./alphabet_imgs/"+filename+".jpeg")
     # img.thumbnail(size, Image.ANTIALIAS)
     # photo=ImageTk.PhotoImage(img)
