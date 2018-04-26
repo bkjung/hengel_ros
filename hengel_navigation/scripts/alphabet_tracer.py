@@ -59,7 +59,7 @@ ODOMETRY_LIDAR = 1
 #initially detect odometry by wheel encoder
 odometry_method = ODOMETRY_WHEEL
 
-if sys.argv[1]=='wheel':
+if sys.argv[2]=='wheel':
     odometry_method = ODOMETRY_WHEEL
     print("Wheel odometry method selected")
 elif sys.argv[2]=='lidar':
