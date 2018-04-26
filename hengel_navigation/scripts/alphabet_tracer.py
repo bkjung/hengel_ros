@@ -281,16 +281,15 @@ class PaintWords():
     def get_odom(self):
         try:
             (trans, rot) = self.tf_listener.lookupTransform(self.odom_frame, self.base_frame, rospy.Time(0))
+            pnt=Point(*trans)
+            pnt.x=pnt.x-self.offset_x
+            pnt.y=pnt.y-self.offset_y
             rotation = euler_from_quaternion(rot)
             #heading = normalize_rad( normalize_rad(rotation[2])-self.offset_rot )
             heading = rotation[2]
 
             #1. Wheel Odometry
             if odometry_method==ODOMETRY_WHEEL:
-                pnt=Point(*trans)
-                pnt.x=pnt.x-self.offset_x
-                pnt.y=pnt.y-self.offset_y
-
                 return (pnt, heading)
 
             #2. Lidar(Velodyne VLP-16) SLAM (blam, https://github.com/erik-nelson/blam)
