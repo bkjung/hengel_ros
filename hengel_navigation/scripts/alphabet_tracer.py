@@ -53,6 +53,23 @@ ang_vel_2=0.04
 ang_vel_3=0.02
 lin_vel=0.06
 
+ODOMETRY_WHEEL = 0
+ODOMETRY_LIDAR = 1
+
+#initially detect odometry by wheel encoder
+odometry_method = ODOMETRY_WHEEL
+
+if sys.argv[1]=='wheel':
+    odometry_method = ODOMETRY_WHEEL
+    print("Wheel odometry method selected")
+elif sys.argv[2]=='lidar':
+    odometry_method = ODOMETRY_LIDAR
+    print("Lidar odometry method selected")
+else:
+    print("!!!!!WRONG launch_file input of argv choosing odometry method. Wheel odometry selected as default.")
+
+
+
 
 def normalize_rad(input_angle):
     if input_angle>pi:
@@ -106,8 +123,9 @@ class PaintWords():
         rospy.on_shutdown(self.shutdown)
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
 
-        #Subscriber for Lidar SLAM estimated point, heading
-        self.blam_position_estimate = rospy.Subscriber('/blam/blam_slam/localization_integrated_estimate', PoseStamped, self.callback_blam_position)
+        if odometry_method==ODOMETRY_LIDAR:
+            #Subscriber for Lidar SLAM estimated point, heading
+            self.blam_position_estimate = rospy.Subscriber('/blam/blam_slam/localization_integrated_estimate', PoseStamped, self.callback_blam_position)
 
         position = Point()
         move_cmd = Twist()
@@ -251,28 +269,28 @@ class PaintWords():
         self.cmd_vel.publish(Twist())
 
     def get_odom(self):
-        #1. Wheel Odometry
         try:
             (trans, rot) = self.tf_listener.lookupTransform(self.odom_frame, self.base_frame, rospy.Time(0))
             rotation = euler_from_quaternion(rot)
+            heading = normalize_rad( normalize_rad(rotation[2])-self.offset_rot )
+            # heading = rotation[2]
 
         except (tf.Exception, tf.ConnectivityException, tf.LookupException):
             rospy.loginfo("TF Exception")
             return
-        pnt=Point(*trans)
-        pnt.x=pnt.x-self.offset_x
-        pnt.y=pnt.y-self.offset_y
 
-        # heading = normalize_rad( normalize_rad(rotation[2])-self.offset_rot )
-        heading = rotation[2]
-        
-        return (pnt, heading)
+        #1. Wheel Odometry
+        if odometry_method==ODOMETRY_WHEEL:
+            pnt=Point(*trans)
+            pnt.x=pnt.x-self.offset_x
+            pnt.y=pnt.y-self.offset_y
+            
+            return (pnt, heading)
 
         #2. Lidar(Velodyne VLP-16) SLAM (blam, https://github.com/erik-nelson/blam)
+        elif odometry_method==ODOMETRY_LIDAR:
+            return (self.lidar_estimated_pnt, heading)
 
-
-        #return (self.lidar_estimated_pnt, rotation[2])
-        
 
     def callback_blam_position(self, data):
         pnt=Point()
