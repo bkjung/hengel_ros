@@ -29,7 +29,7 @@ import time
 import os
 
 
-waypoint_increment = 3
+waypoint_increment = 1
 waypoints_length = 0
 waypoints=[]
 cnt_letter = 0
@@ -40,7 +40,8 @@ path_points = []
 thres1=np.deg2rad(30)
 thres2=np.deg2rad(15)
 #thres3=np.deg2rad(8)
-thres3=np.deg2rad(12)
+thres3=np.deg2rad(4)
+#thres3=np.deg2rad(12)
 
 #at turtlebot3
 # ang_vel_1=0.35
@@ -52,11 +53,11 @@ thres3=np.deg2rad(12)
 # ang_vel_1=0.08
 # ang_vel_2=0.04
 # ang_vel_3=0.02
-ang_vel_1=0.60
-ang_vel_2=0.50
-ang_vel_3=0.40
-#lin_vel=0.08
-lin_vel=0.12
+ang_vel_1=0.15
+ang_vel_2=0.1
+ang_vel_3=0.06
+lin_vel=0.07
+#lin_vel=0.09
 
 ODOMETRY_WHEEL = 0
 ODOMETRY_LIDAR = 1
@@ -134,7 +135,7 @@ class PaintWords():
 
         position = Point()
         move_cmd = Twist()
-        r = rospy.Rate(10)
+        r = rospy.Rate(50)
 
         self.tf_listener = tf.TransformListener()
         self.odom_frame = '/odom'
@@ -197,16 +198,16 @@ class PaintWords():
 
             while distance > 0.03:
                 try:
-                    print ("distance= ", '%.3f' % distance)
+                    ################3print ("distance= ", '%.3f' % distance)
 
-                    print("goal_position", '%.3f' % current_waypoint[0], '%.3f' % current_waypoint[1], "current_position", '%.3f' % position.x, '%.3f' % position.y)
+                    ################3print("goal_position", '%.3f' % current_waypoint[0], '%.3f' % current_waypoint[1], "current_position", '%.3f' % position.x, '%.3f' % position.y)
                     # alpha=atan2(goal_x-x_start, goal_y-y_start)-rotation
                     # alpha=normalize_rad( normalize_rad(atan2(current_waypoint[1]-position.y, current_waypoint[0]-position.x))-rotation )
                     alpha=normalize_rad(atan2(current_waypoint[1]-position.y, current_waypoint[0]-position.x)-rotation)
 
                     # print("goal_angle", '%.3f' % np.rad2deg(alpha),"current_angle", '%.3f' % np.rad2deg(rotation))
                     # print("goal_angle", '%.3f' % alpha,"current_angle", '%.3f' % rotation)
-                    print("heading error", '%.3f' % alpha)
+                    print("heading error", '%.3f' % np.rad2deg(alpha))
 
                     if abs(alpha)> thres1: #abs?
                         if alpha>0 or alpha<-pi:
@@ -246,6 +247,7 @@ class PaintWords():
                         move_cmd.linear.x=lin_vel_scaled
                         move_cmd.angular.z=curv*lin_vel_scaled
 
+                    #print("DEBUG. alpha=", np.rad2deg(alpha), " angular.z=", move_cmd.angular.z)
                     self.cmd_vel.publish(move_cmd)
 
                     (position, rotation) = self.get_odom()
@@ -273,6 +275,7 @@ class PaintWords():
         rospy.loginfo("Stopping the robot at the final destination")
         self.generate_pathmap()
 
+        print("DEBUG-publish0")
         self.cmd_vel.publish(Twist())
 
     def get_odom(self):
@@ -339,6 +342,7 @@ class PaintWords():
 
 
     def shutdown(self):
+        print("DEBUG-publish1")
         self.cmd_vel.publish(Twist())
         rospy.sleep(1)
 
