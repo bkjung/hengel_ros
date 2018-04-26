@@ -24,6 +24,23 @@ class VisualOdometry():
 
         while True:
             #####
+            #Step 1. Capture current k_th frame
+
+
+            #Step 2. Predict current position, assuming continuous motion. (pred_p_k = p_k-1 + (p_k-1 - p_k-2) )
+
+
+            #Step 3. Predict Homography Matrix H_k^- (using SVD)
+
+
+            #Step 4. determine search window according to H_k^-. Find corresponding pixels F_k-1^' by lucas-kanade algorithm
+
+
+            #Step 5. Compute initial estimate of homography matrix H_k^' (using RANSAC)
+
+
+            #Step 6. 
+
             
 
     def callback_image_sub(self, _image):
