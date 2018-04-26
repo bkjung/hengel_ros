@@ -274,22 +274,24 @@ class PaintWords():
             rotation = euler_from_quaternion(rot)
             heading = normalize_rad( normalize_rad(rotation[2])-self.offset_rot )
             # heading = rotation[2]
+            
+            #1. Wheel Odometry
+            if odometry_method==ODOMETRY_WHEEL:
+                pnt=Point(*trans)
+                pnt.x=pnt.x-self.offset_x
+                pnt.y=pnt.y-self.offset_y
+                
+                return (pnt, heading)
+
+            #2. Lidar(Velodyne VLP-16) SLAM (blam, https://github.com/erik-nelson/blam)
+            elif odometry_method==ODOMETRY_LIDAR:
+                return (self.lidar_estimated_pnt, heading)
 
         except (tf.Exception, tf.ConnectivityException, tf.LookupException):
             rospy.loginfo("TF Exception")
             return
 
-        #1. Wheel Odometry
-        if odometry_method==ODOMETRY_WHEEL:
-            pnt=Point(*trans)
-            pnt.x=pnt.x-self.offset_x
-            pnt.y=pnt.y-self.offset_y
-            
-            return (pnt, heading)
-
-        #2. Lidar(Velodyne VLP-16) SLAM (blam, https://github.com/erik-nelson/blam)
-        elif odometry_method==ODOMETRY_LIDAR:
-            return (self.lidar_estimated_pnt, heading)
+        
 
 
     def callback_blam_position(self, data):
