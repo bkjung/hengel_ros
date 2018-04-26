@@ -39,22 +39,24 @@ path_points = []
 
 thres1=np.deg2rad(30)
 thres2=np.deg2rad(15)
-thres3=np.deg2rad(8)
+#thres3=np.deg2rad(8)
+thres3=np.deg2rad(12)
 
 #at turtlebot3
-# ang_vel_1=0.35 
+# ang_vel_1=0.35
 # ang_vel_2=0.2
 # ang_vel_3=0.04
 # lin_vel=0.06
 
-#at hengel bot  
+#at hengel bot
 # ang_vel_1=0.08
 # ang_vel_2=0.04
 # ang_vel_3=0.02
-ang_vel_1=0.24
-ang_vel_2=0.12
-ang_vel_3=0.06
-lin_vel=0.06
+ang_vel_1=0.60
+ang_vel_2=0.50
+ang_vel_3=0.40
+#lin_vel=0.08
+lin_vel=0.12
 
 ODOMETRY_WHEEL = 0
 ODOMETRY_LIDAR = 1
@@ -103,7 +105,7 @@ def get_path(word):
 
         #count the number of letters including spacing
         cnt_letter = cnt_letter + 1
-        
+
     return arr_path
 
 # arr_path_B = []
@@ -157,7 +159,7 @@ class PaintWords():
             except (tf.Exception, tf.ConnectivityException, tf.LookupException):
                 rospy.loginfo("Cannot find transform between /odom and /base_link or /base_footprint")
                 rospy.signal_shutdown("tf Exception")
-        
+
         (init_position, init_rotation) = self.get_odom()
         if self.isFirst:
             self.offset_x=init_position.x
@@ -173,8 +175,8 @@ class PaintWords():
 
 
         # go through path array
-        
-        waypoints_length = len(arr_path)        
+
+        waypoints_length = len(arr_path)
         for idx in range(waypoints_length):
             waypoints.append([arr_path[idx][0]-arr_path[0][0], arr_path[idx][1]-arr_path[0][1]])
 
@@ -189,17 +191,18 @@ class PaintWords():
             #     self.shutdown()
             # goal_z = np.deg2rad(goal_z)
             # (position,rotation) = self.get_odom()
-            
+
             goal_distance = sqrt(pow(current_waypoint[0] - position.x, 2) + pow(current_waypoint[1] - position.y, 2))
             distance = goal_distance
-            
+
             while distance > 0.03:
                 try:
                     print ("distance= ", '%.3f' % distance)
-                    
+
                     print("goal_position", '%.3f' % current_waypoint[0], '%.3f' % current_waypoint[1], "current_position", '%.3f' % position.x, '%.3f' % position.y)
                     # alpha=atan2(goal_x-x_start, goal_y-y_start)-rotation
-                    alpha=normalize_rad( normalize_rad(atan2(current_waypoint[1]-position.y, current_waypoint[0]-position.x))-rotation )
+                    # alpha=normalize_rad( normalize_rad(atan2(current_waypoint[1]-position.y, current_waypoint[0]-position.x))-rotation )
+                    alpha=normalize_rad(atan2(current_waypoint[1]-position.y, current_waypoint[0]-position.x)-rotation)
 
                     # print("goal_angle", '%.3f' % np.rad2deg(alpha),"current_angle", '%.3f' % np.rad2deg(rotation))
                     # print("goal_angle", '%.3f' % alpha,"current_angle", '%.3f' % rotation)
@@ -209,16 +212,16 @@ class PaintWords():
                         if alpha>0 or alpha<-pi:
                             move_cmd.linear.x=0
                             move_cmd.angular.z=ang_vel_1
-                          
+
                         else:
                             move_cmd.linear.x=0
                             move_cmd.angular.z=-ang_vel_1
-                         
+
                     elif abs(alpha)>thres2:
                         if alpha>0 or alpha<-pi:
                             move_cmd.linear.x=0
                             move_cmd.angular.z=ang_vel_2
-                         
+
                         else:
                             move_cmd.linear.x=0
                             move_cmd.angular.z=-ang_vel_2
@@ -229,23 +232,24 @@ class PaintWords():
                         else:
                             move_cmd.linear.x=0
                             move_cmd.angular.z=-ang_vel_3
-                         
+
                     else:
                         x=distance*sin(alpha)
                         curv=2*x/pow(distance,2)
-                        
+
                         if distance<0.08:
-                            lin_vel_scaled=lin_vel/4.0
+                            #lin_vel_scaled=lin_vel/4.0
+                            lin_vel_scaled=lin_vel/2.0
                         else:
                             lin_vel_scaled=lin_vel
 
                         move_cmd.linear.x=lin_vel_scaled
                         move_cmd.angular.z=curv*lin_vel_scaled
-                        
+
                     self.cmd_vel.publish(move_cmd)
 
                     (position, rotation) = self.get_odom()
-                    
+
                     global cnt_path_points
                     global path_points
 
@@ -257,9 +261,9 @@ class PaintWords():
                     r.sleep()
                 except KeyboardInterrupt:
                     print("Got KeyboardInterrupt")
-                    rospy.signal_shutdown("KeboardInterrupt")                    
+                    rospy.signal_shutdown("KeboardInterrupt")
                     break
-            
+
             print("Now at Waypoint No.", waypoint_index)
             waypoint_index = waypoint_index + waypoint_increment
 
@@ -275,15 +279,15 @@ class PaintWords():
         try:
             (trans, rot) = self.tf_listener.lookupTransform(self.odom_frame, self.base_frame, rospy.Time(0))
             rotation = euler_from_quaternion(rot)
-            heading = normalize_rad( normalize_rad(rotation[2])-self.offset_rot )
-            # heading = rotation[2]
-            
+            #heading = normalize_rad( normalize_rad(rotation[2])-self.offset_rot )
+            heading = rotation[2]
+
             #1. Wheel Odometry
             if odometry_method==ODOMETRY_WHEEL:
                 pnt=Point(*trans)
                 pnt.x=pnt.x-self.offset_x
                 pnt.y=pnt.y-self.offset_y
-                
+
                 return (pnt, heading)
 
             #2. Lidar(Velodyne VLP-16) SLAM (blam, https://github.com/erik-nelson/blam)
@@ -294,17 +298,17 @@ class PaintWords():
             rospy.loginfo("TF Exception")
             return
 
-        
+
 
 
     def callback_blam_position(self, data):
         pnt=Point()
         pnt.x=data.pose.position.x
         pnt.y=data.pose.position.y
-        
+
         quat=[data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w]
         rotation=euler_from_quaternion(quat)
-        
+
         self.lidar_estimated_pnt = pnt
         self.lidar_estimated_rotation = normalize_rad(rotation[2])
 
@@ -315,7 +319,7 @@ class PaintWords():
         img = Image.new("RGB", ((100+pixel_size*cnt_letter)*scale, (100+pixel_size)*scale), (255, 255, 255))
 
         print("cnt_path_points = ", cnt_path_points)
-        
+
         for i in range(cnt_path_points):
             # print(path_points[i][0], path_points[i][1])
             x = 0.99 if path_points[i][0]==1.0 else path_points[i][0]
@@ -332,7 +336,7 @@ class PaintWords():
 
         print("Pathmap image saved at "+sys.argv[1]+"/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png")
         img.save(sys.argv[1]+"/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png", "PNG")
-        
+
 
     def shutdown(self):
         self.cmd_vel.publish(Twist())
