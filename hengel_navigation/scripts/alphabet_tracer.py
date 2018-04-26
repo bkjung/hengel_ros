@@ -48,9 +48,12 @@ thres3=np.deg2rad(8)
 # lin_vel=0.06
 
 #at hengel bot  
-ang_vel_1=0.08
-ang_vel_2=0.04
-ang_vel_3=0.02
+# ang_vel_1=0.08
+# ang_vel_2=0.04
+# ang_vel_3=0.02
+ang_vel_1=0.24
+ang_vel_2=0.12
+ang_vel_3=0.06
 lin_vel=0.06
 
 ODOMETRY_WHEEL = 0
