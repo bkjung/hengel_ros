@@ -1,0 +1,5 @@
+<launch>
+  <!-- hengel_teleop_key already has its own built in velocity smoother -->
+  <node pkg="hengel_teleop" type="hengel_teleop_key" name="hengel_teleop_keyboard"  output="screen">
+  </node>
+</launch>
