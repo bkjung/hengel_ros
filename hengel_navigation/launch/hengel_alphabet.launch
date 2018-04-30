@@ -1,0 +1,6 @@
+<launch>
+  <!-- turtlebot3_teleop_key already has its own built in velocity smoother -->
+  <!-- Following Second argument in 'args' can be 'wheel' or 'lidar'. It determines the way hengel_bot determines its odometry -->
+  <node pkg="hengel_navigation" type="alphabet_tracer.py" name="hengel_alphabet_tracer"  output="screen" args="$(find hengel_navigation) wheel">
+  </node>
+</launch>
