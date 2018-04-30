@@ -7,7 +7,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from matplotlib import pyplot as plt
 
-def birdview_transformation(_image)
+def birdview_transform(_image)
     #Initialize the node with rospy
     # rospy.init_node('publisher_node')
     #Create publisher
@@ -25,7 +25,7 @@ def birdview_transformation(_image)
 
     i=0
     z=0 #to print number of frames
-    cap = cv2.VideoCapture(1)
+    # cap = cv2.VideoCapture(1)
 
 
     ##############New Calibration###################################
