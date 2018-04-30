@@ -5,6 +5,8 @@ from math import pow, sqrt
 from Tkinter import *
 from PIL import Image, ImageTk
 import os
+import time
+
 
 path=[[-1,-1]]
 circle_array=[]
@@ -42,7 +44,7 @@ def cancel():
     return
 
 def save():
-    f=open("./txtfile/path.txt",'w')
+    f=open("./txtfile/pathmaker_"+time.strftime("%y%m%d_%H%M%S")+".txt",'w')
     for i in range(1,len(path)):
         data=str(path[i][0])+"  "+str(path[i][1])+"\n"
         f.write(data)
