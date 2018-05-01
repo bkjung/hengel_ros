@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import Tkinter
+# import Tkinter
 # import win32gui
 from math import pow, sqrt
 from Tkinter import *
