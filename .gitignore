@@ -46,5 +46,5 @@ qtcreator-*
 # Catkin custom files
 CATKIN_IGNORE
 
-hengel_navigation/output_pathmap/
+hengel_path_manager/output_pathmap/
 hengel_path_manager/path_made/
