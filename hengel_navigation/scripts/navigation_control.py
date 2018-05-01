@@ -95,12 +95,12 @@ def get_path(word):
 
     return arr_path
 
-class PaintWords():
+class NavigationControl():
     def __init__(self, arr_path):
         global waypoints_length
         global waypoints
 
-        rospy.init_node('printer_letter', anonymous=False, disable_signals=True)
+        rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
         self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10) 

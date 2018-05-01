@@ -104,6 +104,8 @@ class PaintWords():
         rospy.on_shutdown(self.shutdown)
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
 
+        self.initialOptionSelect()
+
         position = Point()
         move_cmd = Twist()
         
@@ -284,6 +286,12 @@ class PaintWords():
         print("Pathmap image saved at "+image_save_path)
         img.save(image_save_path, "PNG")
 
+
+
+    def initialOptionSelect(self):
+        word=raw_input("HENGEL ROBOT Made By NAVER LABS Robotics 5th Intern.\nThere are two options of painting.\n[1] Print Letters.\n[2] Print Drawing of Yours.\nType 1 or 2 :")
+        print("Input:"+word)
+        self.runningOption = int(word)
 
     def shutdown(self):
         print("DEBUG-publish1")
