@@ -264,6 +264,9 @@ class PaintWords():
         print("DEBUG-publish0")
         self.cmd_vel.publish(Twist())
 
+    def get_odom(self):
+        
+
 
 
     def generate_pathmap(self):

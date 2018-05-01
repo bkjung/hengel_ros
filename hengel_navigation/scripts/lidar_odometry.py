@@ -27,14 +27,10 @@ class WheelOdometry():
             self.isFirst = True
 
             while(True):
-                (trans, rot) = self.tf_listener.lookupTransform(self.odom_frame, self.base_frame, rospy.Time(0))
-                self.pnt=Point(*trans)
-                self.rotation = euler_from_quaternion(rot)[2]
-
                 if self.isFirst:
-                    self.offset_x=pnt.x
-                    self.offset_y=pnt.y
-                    self.offset_rot=rotation-pi/2.0
+                    self.offset_x=self.pnt.x
+                    self.offset_y=self.pnt.y
+                    self.offset_rot=self.rotation-pi/2.0
                     self.isFirst = False
 
                 self.pnt.x=self.pnt.x-self.offset_x
