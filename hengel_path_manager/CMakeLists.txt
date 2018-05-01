@@ -41,7 +41,7 @@ catkin_package(
 # Install
 ################################################################################
 catkin_install_python(PROGRAMS 
-  scripts/hengel_image_estimator.py
+  scripts/image_estimator.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

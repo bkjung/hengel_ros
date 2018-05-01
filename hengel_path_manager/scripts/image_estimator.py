@@ -52,11 +52,13 @@ class HengelEstimator():
         self.current_position = Point()
         self.current_heading = Float32()
 
+        rospy.init_node('hengel_image_estimator')
+
         self.position_subscriber = rospy.Subscriber('/hengel_ros/hengel_navigation/current_position', Point, self.callback_position)
         self.heading_subscriber = rospy.Subscriber('/hengel_ros/hengel_navigation/current_heading', Float32, self.callback_heading)
 
-        self.prev_position = current_position
-        self.prev_heading = current_heading
+        self.prev_position = self.current_position
+        self.prev_heading = self.current_heading
         sleep(0.2)
 
         while(True):
@@ -79,26 +81,31 @@ def command_quit():
 root = Tk()
 c=Canvas(root, height=500, width=500, bg="white")
 if __name__ =="__main__":
-    root.title("Hengel Cam Image Estimator")
+    try:
+        root.title("Hengel Cam Image Estimator")
 
-    _str=str(size_x)+"x"+str(size_y)
-    root.geometry(_str)
+        _str=str(size_x)+"x"+str(size_y)
+        root.geometry(_str)
 
-    c.pack(expand=YES, fill=BOTH)
-    c.grid(row=1, column=0)
+        c.pack(expand=YES, fill=BOTH)
+        c.grid(row=1, column=0)
 
-    f=Frame(root)
-    f.grid(row=0, column=0, sticky="n")
+        f=Frame(root)
+        f.grid(row=0, column=0, sticky="n")
 
-    button_clear=Button(f, text="Clear", command=command_clear)
-    button_clear.grid(row=0, column=0)
+        button_clear=Button(f, text="Clear", command=command_clear)
+        button_clear.grid(row=0, column=0)
 
-    button_quit=Button(f, text="Quit", command=command_quit)
-    button_quit.grid(row=0, column=1)
+        button_quit=Button(f, text="Quit", command=command_quit)
+        button_quit.grid(row=0, column=1)
 
-    HengelEstimator()
+        HengelEstimator()
 
-    # c.bind("<B1-Motion>", callback)
-    root.mainloop()
-
+        # c.bind("<B1-Motion>", callback)
+        root.mainloop()
     
+    except Exception as e:
+        print(e)
+        rospy.loginfo("shutdown program.")
+
+        

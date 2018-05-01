@@ -1,4 +1,4 @@
 <launch>
-  <node pkg="hengel_path_manager" type="hengel_image_estimator.py" name="hengel_image_estimator"  output="screen">
+  <node pkg="hengel_path_manager" type="image_estimator.py" name="hengel_image_estimator"  output="screen">
   </node>
 </launch>
