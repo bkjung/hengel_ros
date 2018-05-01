@@ -47,3 +47,4 @@ qtcreator-*
 CATKIN_IGNORE
 
 hengel_navigation/output_pathmap/
+hengel_pathmaker/txtfile/

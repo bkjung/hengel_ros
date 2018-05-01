@@ -5,6 +5,8 @@ from math import pow, sqrt
 from Tkinter import *
 from PIL import Image, ImageTk
 import os
+import time
+
 
 path=[[-1,-1]]
 circle_array=[]
@@ -41,16 +43,21 @@ def cancel():
     c.delete(circle_array[-1])
     return
 
-def quit():
-    f=open("./txtfile/path.txt",'w')
+def save():
+    f=open("./txtfile/pathmaker_"+time.strftime("%y%m%d_%H%M%S")+".txt",'w')
     for i in range(1,len(path)):
         data=str(path[i][0])+"  "+str(path[i][1])+"\n"
         f.write(data)
     f.close()
     return
 
+def quit():
+    global root
+    root.quit()
+
+
+root = Tk()
 if __name__ =="__main__":
-    root = Tk()
     root.title("Path")
     os.system("mkdir -p txtfile")
     # img=Image.open("./alphabet_imgs/"+filename+".jpeg")
@@ -75,8 +82,11 @@ if __name__ =="__main__":
     button_cancel=Button(f, text="Cancel", command=cancel)
     button_cancel.grid(row=0, column=1)
 
-    button_quit=Button(f, text="Save", command=quit)
-    button_quit.grid(row=0, column=2)
+    button_save=Button(f, text="Save", command=save)
+    button_save.grid(row=0, column=2)
+
+    button_quit=Button(f, text="Quit", command=quit)
+    button_quit.grid(row=0, column=3)
 
     # label_entry=Entry(f, width=10)
     # label_entry.grid(row=0, column=2)
