@@ -2,7 +2,7 @@
 # CMake
 ################################################################################
 cmake_minimum_required(VERSION 2.8.3)
-project(hengel_navigation)
+project(hengel_path_manager)
 
 ################################################################################
 # Packages
@@ -10,6 +10,7 @@ project(hengel_navigation)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   geometry_msgs
+  std_msgs
 )
 
 ################################################################################
@@ -29,7 +30,7 @@ catkin_python_setup()
 # Catkin specific configuration
 ################################################################################
 catkin_package(
-  CATKIN_DEPENDS rospy geometry_msgs
+  CATKIN_DEPENDS rospy geometry_msgs std_msgs
 )
 
 ################################################################################
@@ -40,7 +41,7 @@ catkin_package(
 # Install
 ################################################################################
 catkin_install_python(PROGRAMS 
-  scripts/alphabet_tracer.py
+  scripts/hengel_image_estimator.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

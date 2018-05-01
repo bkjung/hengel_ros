@@ -19,6 +19,7 @@
 
 import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
+from std_msgs.msg import Float32
 import tf
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos
 from tf.transformations import euler_from_quaternion
@@ -121,6 +122,8 @@ class PaintWords():
         rospy.init_node('hengel_alphabet_tracer', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
+        self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10) 
+        self.heading_publisher = rospy.Publisher('/current_heading', Float32, queue_size=10)
 
         if odometry_method==ODOMETRY_LIDAR:
             #Subscriber for Lidar SLAM estimated point, heading
@@ -128,6 +131,8 @@ class PaintWords():
 
         position = Point()
         move_cmd = Twist()
+        heading = Float32()
+        
         r = rospy.Rate(50)
 
         self.tf_listener = tf.TransformListener()
@@ -166,6 +171,10 @@ class PaintWords():
             print("offset initialized")
         (position, rotation) = self.get_odom()
         print("x, y, rotation", position.x, position.y, rotation)
+        heading.data=rotation
+        self.position_publisher.publish(position)
+        self.heading_publisher.publish(rotation)
+        
 
 
         # go through path array
@@ -244,6 +253,9 @@ class PaintWords():
                     self.cmd_vel.publish(move_cmd)
 
                     (position, rotation) = self.get_odom()
+                    heading.data=rotation
+                    self.position_publisher.publish(position)
+                    self.heading_publisher.publish(rotation)
 
                     global cnt_path_points
                     global path_points
