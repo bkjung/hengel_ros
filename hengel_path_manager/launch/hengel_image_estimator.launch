@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="hengel_path_manager" type="alphabet_tracer.py" name="hengel_alphabet_tracer"  output="screen" args="wheel">
+  </node>
+</launch>

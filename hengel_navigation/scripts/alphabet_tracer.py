@@ -65,10 +65,14 @@ ODOMETRY_LIDAR = 1
 #initially detect odometry by wheel encoder
 odometry_method = ODOMETRY_WHEEL
 
-if sys.argv[2]=='wheel':
+package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
+os.system("mkdir -p "+package_base_path+"/hengel_path_manager/output_pathmap")
+
+
+if sys.argv[1]=='wheel':
     odometry_method = ODOMETRY_WHEEL
     print("Wheel odometry method selected")
-elif sys.argv[2]=='lidar':
+elif sys.argv[1]]=='lidar':
     odometry_method = ODOMETRY_LIDAR
     print("Lidar odometry method selected")
 else:
@@ -88,7 +92,7 @@ def normalize_rad(input_angle):
 def get_path(word):
     global cnt_letter
     arr_path=[]
-    dir_1= sys.argv[1]+"/data_path/path_"
+    dir_1= package_base_path+"/hengel_path_manager/alphabet_path/path_"
     dir_2=".txt"
     cnt_letter = 0
     for letter in word:
@@ -108,17 +112,6 @@ def get_path(word):
         cnt_letter = cnt_letter + 1
 
     return arr_path
-
-# arr_path_B = []
-# with open(sys.argv[1], "r") as file_path_B:
-#     for idx, line in enumerate(file_path_B):
-#         str = line.split()
-#         if not (len(str)==0):
-#             #print(str)
-#             arr_path_B.append([(float)(str[1]), (float)(str[0])])
-#         else:
-#             break
-# now we imported arr_path_B from file to arr_path_B
 
 class PaintWords():
     def __init__(self, arr_path):
@@ -336,8 +329,9 @@ class PaintWords():
                 for t in range(scale):
                     img.putpixel((x*scale + t, y*scale + k), (0, 0, 0))
 
-        print("Pathmap image saved at "+sys.argv[1]+"/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png")
-        img.save(sys.argv[1]+"/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png", "PNG")
+        image_save_path = package_base_path+"/hengel_path_manager/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png"
+        print("Pathmap image saved at "+image_save_path)
+        img.save(image_save_path, "PNG")
 
 
     def shutdown(self):
