@@ -11,8 +11,10 @@ from time import sleep
 
 path=[[-1,-1]]
 circle_array=[]
-size_x=500
-size_y=540
+length_side=1000
+size_x=1000
+size_y=1080
+
 radius=2
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
@@ -59,7 +61,7 @@ def command_quit():
 
 
 root = Tk()
-c=Canvas(root, height=500, width=500, bg="white")
+c=Canvas(root, height=size_x, width=size_x, bg="white")
 if __name__ =="__main__":
     root.title("Path player")
 

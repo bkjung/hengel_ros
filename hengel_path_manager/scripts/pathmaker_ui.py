@@ -10,8 +10,10 @@ import time
 
 path=[[-1,-1]]
 circle_array=[]
-size_x=500
-size_y=540
+length_side=1000
+size_x=1000
+size_y=1080
+
 dist=0.02415
 radius=2
 global isDrawmode
@@ -24,7 +26,7 @@ def callback(event):
     if isDrawmode:
         circle=c.create_oval(event.x-radius, event.y-radius, event.x+radius, event.y+radius, width=2, fill='black')
         circle_array.append(circle)
-        path_append(float(event.x)/size_x, float(event.y)/size_y)
+        path_append(float(event.x)/length_side, float(event.y)/length_side)
 
 def path_append(x,y):
     last_x, last_y=path[-1]
@@ -73,7 +75,7 @@ if __name__ =="__main__":
     _str=str(size_x)+"x"+str(size_y)
     root.geometry(_str)
 
-    c=Canvas(root, height=500, width=500, bg="white")
+    c=Canvas(root, height=size_x, width=size_x, bg="white")
     c.pack(expand=YES, fill=BOTH)
     c.grid(row=1, column=0)
 

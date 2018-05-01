@@ -358,7 +358,6 @@ if __name__ == '__main__':
         print("word:", word)
         path=get_path(word)
         print("path loaded")
-        os.system("mkdir -p output_pathmap")
         PaintWords(path)
 
         print("End of Main Function")
