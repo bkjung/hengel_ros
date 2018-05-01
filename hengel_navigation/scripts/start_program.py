@@ -14,7 +14,7 @@ class HengelMain():
             r = rospy.Rate(50)
             self.runningOption = 0
 
-            self.programStart()
+            self.intialOptionSelect()
 
             if runningOption == OPTION_LETTERS:
                 package = 'hengel_navigation'
@@ -50,7 +50,7 @@ class HengelMain():
             sys.exit()
 
 
-    def programStart(self):
+    def intialOptionSelect(self):
         word=raw_input("HENGEL ROBOT Made By NAVER LABS Robotics 5th Intern.\nThere are two options of painting.\n[1] Print Letters.\n[2] Print Drawing of Yours.\nType 1 or 2 :")
         print("Input:"+word)
         self.runningOption = int(word)
