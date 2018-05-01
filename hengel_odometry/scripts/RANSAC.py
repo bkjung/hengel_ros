@@ -105,7 +105,6 @@ def ransac(points_list, iters = 50 , error = 10, good_model_num = 5):
             if (max(dists) < error) and (max(dists) < model_error):
                 model_error = max(dists)
                 model_H = H
-
     return model_H
 
 # if __name__ == "__main__":
