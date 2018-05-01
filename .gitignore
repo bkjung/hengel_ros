@@ -47,4 +47,4 @@ qtcreator-*
 CATKIN_IGNORE
 
 hengel_navigation/output_pathmap/
-hengel_pathmaker/path_made/
+hengel_path_manager/path_made/
