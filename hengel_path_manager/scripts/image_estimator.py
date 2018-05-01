@@ -63,6 +63,9 @@ class HengelEstimator():
 
         while(True):
             draw_line(self.prev_position, self.current_position)
+            self.prev_position = self.current_position
+            self.prev_heading = self.current_heading
+            print(self.current_position, self.current_heading)
             root.update()
             sleep(0.2)
 
