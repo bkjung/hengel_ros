@@ -73,7 +73,7 @@ os.system("mkdir -p "+package_base_path+"/hengel_path_manager/output_pathmap")
 if sys.argv[1]=='wheel':
     odometry_method = ODOMETRY_WHEEL
     print("Wheel odometry method selected")
-elif sys.argv[1]]=='lidar':
+elif sys.argv[1]=='lidar':
     odometry_method = ODOMETRY_LIDAR
     print("Lidar odometry method selected")
 else:
