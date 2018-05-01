@@ -80,8 +80,6 @@ else:
     print("!!!!!WRONG launch_file input of argv choosing odometry method. Wheel odometry selected as default.")
 
 
-
-
 def normalize_rad(input_angle):
     if input_angle>pi:
         return input_angle-2*pi
