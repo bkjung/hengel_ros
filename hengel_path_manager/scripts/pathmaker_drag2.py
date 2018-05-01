@@ -44,7 +44,7 @@ if __name__ =="__main__":
         l.bind("<B1-Motion>", callback)
         root.mainloop()
     except(KeyboardInterrupt):
-        f=open("./txtfile/path_"+alpha.capitalize()+".txt",'w')
+        f=open("./path_made/path_"+alpha.capitalize()+".txt",'w')
         for i in range(1,len(path)):
             data=str(path[i][0])+"  "+str(path[i][1])+"\n"
             f.write(data)

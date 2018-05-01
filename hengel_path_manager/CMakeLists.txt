@@ -2,7 +2,7 @@
 # CMake
 ################################################################################
 cmake_minimum_required(VERSION 2.8.3)
-project(hengel_navigation)
+project(hengel_path_manager)
 
 ################################################################################
 # Packages
@@ -41,7 +41,7 @@ catkin_package(
 # Install
 ################################################################################
 catkin_install_python(PROGRAMS 
-  scripts/alphabet_tracer.py
+  scripts/image_estimator.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
