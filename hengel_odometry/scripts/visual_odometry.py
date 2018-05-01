@@ -15,47 +15,47 @@ class VisualOdometry():
     image=[]
     gray =[]
     def __init__(self):
-        try:
-            #Initialize the node with rospy
-            rospy.init_node('visual_odometry_node')
-            ################
-            rospy.on_shutdown(self.shutdown)
-            ################
-            #Create publisher
-            self.vo_point_pub=rospy.Publisher("vo_current_point", Point, queue_size=50)
-            init_status= True
+        #Initialize the node with rospy
+        rospy.init_node('visual_odometry_node')
+        ################
+        rospy.on_shutdown(self.shutdown)
+        ################
+        #Create publisher
+        self.vo_point_pub=rospy.Publisher("vo_current_point", Point, queue_size=50)
+        init_status= True
 
-            position = Point()
-            x_state=[[0,0,0,0,0,0]]
+        position = Point()
+        x_state=[[0,0,0,0,0,0]]
 
-            #3x3 matrix containing information about intrinsic, extrinsic parameters of the cam
-            M=np.identity(3)
-            
-            #Parameters for feature detection
-            feature_params = dict( maxCorners = 100,
-                                qualityLevel = 0.3,
-                                minDistance = 7,
-                                blockSize = 7 )
+        #3x3 matrix containing information about intrinsic, extrinsic parameters of the cam
+        M=np.identity(3)
+        
+        #Parameters for feature detection
+        feature_params = dict( maxCorners = 100,
+                            qualityLevel = 0.3,
+                            minDistance = 7,
+                            blockSize = 7 )
 
-            #For KF (state estimation)
-            A=np.zeros((6,6))
-            for i in range(6):
-                if i%2==0:
-                    A[i]=1
-                    A[i+1]=1
-                else:
-                    A[i]=1
-            cap=cv2.VideoCapture(0)
-            ret, old_frame=cap.read()
-            old_gray=cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
-            old_corners = cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
-                
-            while True:
+        #For KF (state estimation)
+        A=np.zeros((6,6))
+        for i in range(6):
+            if i%2==0:
+                A[i]=1
+                A[i+1]=1
+            else:
+                A[i]=1
+        cap=cv2.VideoCapture(0)
+        ret, old_frame=cap.read()
+        old_gray=cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
+        old_corners = cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
+        while not rospy.is_shutdown():
+            try:        
                 #####
                 #Step 1. Capture current k_th frame
                 ret, old_frame=cap.read()
                 # rospy.Subscriber('/usb_cam/image_raw', Image, self.callback_image_sub)
                 frame_gray=cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
+                birdview.birdview_transform(frame_gray)
                 # cv2.cvtColor(self.image, self.gray, cv2.COLOR_BGR2GRAY)
                 
                     #############Corner detection###########
@@ -90,27 +90,37 @@ class VisualOdometry():
                 T=inv(M)*H*M
                 tx=T[0][2]/T[2][2]
                 ty=T[1][2]/T[2][2]
-                theta=math.atan(ty/tx)
+                theta=math.atan2(tx,ty)
                 xk=x_state[-1][0]+tx
                 yk=x_state[-1][2]+ty
                 thk=x_state[-1][4]+theta
                 x_state.append([xk, tx, yk, ty, thk, theta])
-                cv2.waitKey(100)
 
-        except Exception as e:
-            print(e)
+                msg=Point()
+                msg.x=xk
+                msg.y=yk
+                msg.z=thk
+                self.vo_point_pub.publish(msg)
+                cv2.waitKey(100)
+            except KeyboardInterrupt:
+                print("Interrupted")
+                rospy.signal_shutdown("KeyboardInterrupt")
+                break
+
+        cv_file=cv2.FileStorage("path", cv2.FILE_STORAGE_WRITE)
+        cv_file.write("path_arr", x_state)
+        cv_file.release()
+        
 
     def callback_image_sub(self, msg):
-        try:
-            bridge= CvBridge()
-            image_cv=bridge.imgmsg_to_cv2(msg)
-            self.image = birdview.birdview_transform(image_cv)
-            
-        except Exception as e:
-            print(e)
-
+        bridge= CvBridge()
+        image_cv=bridge.imgmsg_to_cv2(msg)
+        self.image = birdview.birdview_transform(image_cv)
+         
     def shutdown(self):
+        rospy.signal_shutdown("shud down")
         print("Shut Down!")
+        
 
 
 if __name__ == '__main__':

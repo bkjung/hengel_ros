@@ -89,8 +89,7 @@ def birdview_transform(image_arr):
         #         breaknd
         # image=Image.fromarray(image_arr, 'RGB')
         bird_img=cv2.warpPerspective(image_arr, H, (1000,1000))
-        print(type(bird_img))
-        print("d")
+        
         return bird_img        
     except Exception as e:
         print(e)
