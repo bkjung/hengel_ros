@@ -19,6 +19,7 @@
 
 import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
+from std_msgs.msg import Float32
 import tf
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos
 from tf.transformations import euler_from_quaternion
@@ -65,10 +66,14 @@ ODOMETRY_LIDAR = 1
 #initially detect odometry by wheel encoder
 odometry_method = ODOMETRY_WHEEL
 
-if sys.argv[2]=='wheel':
+package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
+os.system("mkdir -p "+package_base_path+"/hengel_path_manager/output_pathmap")
+
+
+if sys.argv[1]=='wheel':
     odometry_method = ODOMETRY_WHEEL
     print("Wheel odometry method selected")
-elif sys.argv[2]=='lidar':
+elif sys.argv[1]=='lidar':
     odometry_method = ODOMETRY_LIDAR
     print("Lidar odometry method selected")
 else:
@@ -88,7 +93,7 @@ def normalize_rad(input_angle):
 def get_path(word):
     global cnt_letter
     arr_path=[]
-    dir_1= sys.argv[1]+"/data_path/path_"
+    dir_1= package_base_path+"/hengel_path_manager/alphabet_path/path_"
     dir_2=".txt"
     cnt_letter = 0
     for letter in word:
@@ -109,17 +114,6 @@ def get_path(word):
 
     return arr_path
 
-# arr_path_B = []
-# with open(sys.argv[1], "r") as file_path_B:
-#     for idx, line in enumerate(file_path_B):
-#         str = line.split()
-#         if not (len(str)==0):
-#             #print(str)
-#             arr_path_B.append([(float)(str[1]), (float)(str[0])])
-#         else:
-#             break
-# now we imported arr_path_B from file to arr_path_B
-
 class PaintWords():
     def __init__(self, arr_path):
         global waypoints_length
@@ -128,6 +122,8 @@ class PaintWords():
         rospy.init_node('hengel_alphabet_tracer', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
+        self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10) 
+        self.heading_publisher = rospy.Publisher('/current_heading', Float32, queue_size=10)
 
         if odometry_method==ODOMETRY_LIDAR:
             #Subscriber for Lidar SLAM estimated point, heading
@@ -135,6 +131,8 @@ class PaintWords():
 
         position = Point()
         move_cmd = Twist()
+        heading = Float32()
+        
         r = rospy.Rate(50)
 
         self.tf_listener = tf.TransformListener()
@@ -173,6 +171,10 @@ class PaintWords():
             print("offset initialized")
         (position, rotation) = self.get_odom()
         print("x, y, rotation", position.x, position.y, rotation)
+        heading.data=rotation
+        self.position_publisher.publish(position)
+        self.heading_publisher.publish(rotation)
+        
 
 
         # go through path array
@@ -251,6 +253,9 @@ class PaintWords():
                     self.cmd_vel.publish(move_cmd)
 
                     (position, rotation) = self.get_odom()
+                    heading.data=rotation
+                    self.position_publisher.publish(position)
+                    self.heading_publisher.publish(rotation)
 
                     global cnt_path_points
                     global path_points
@@ -336,8 +341,9 @@ class PaintWords():
                 for t in range(scale):
                     img.putpixel((x*scale + t, y*scale + k), (0, 0, 0))
 
-        print("Pathmap image saved at "+sys.argv[1]+"/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png")
-        img.save(sys.argv[1]+"/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png", "PNG")
+        image_save_path = package_base_path+"/hengel_path_manager/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png"
+        print("Pathmap image saved at "+image_save_path)
+        img.save(image_save_path, "PNG")
 
 
     def shutdown(self):
@@ -352,7 +358,6 @@ if __name__ == '__main__':
         print("word:", word)
         path=get_path(word)
         print("path loaded")
-        os.system("mkdir -p output_pathmap")
         PaintWords(path)
 
         print("End of Main Function")
