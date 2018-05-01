@@ -12,8 +12,9 @@ from std_msgs.msg import Float32
 
 path=[[-1,-1]]
 circle_array=[]
-size_x=500
-size_y=540
+length_side=1000
+size_x=1200
+size_y=1280
 radius=2
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
@@ -28,7 +29,7 @@ def draw_circle(x,y):
 
 def draw_line(start_point, goal_point):
     global c
-    c.create_line(start_point.x*size_x, start_point.y*size_y, goal_point.x*size_x, goal_point.y*size_y)
+    c.create_line(start_point.x*size_x+100.0, start_point.y*size_y+100.0, goal_point.x*size_x+100.0, goal_point.y*size_y+100.0)
 
 def command_clear():
     global c
@@ -54,8 +55,8 @@ class HengelEstimator():
 
         rospy.init_node('hengel_image_estimator')
 
-        self.position_subscriber = rospy.Subscriber('/hengel_ros/hengel_navigation/current_position', Point, self.callback_position)
-        self.heading_subscriber = rospy.Subscriber('/hengel_ros/hengel_navigation/current_heading', Float32, self.callback_heading)
+        self.position_subscriber = rospy.Subscriber('/current_position', Point, self.callback_position)
+        self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
 
         self.prev_position = self.current_position
         self.prev_heading = self.current_heading
@@ -82,7 +83,7 @@ def command_quit():
 
 
 root = Tk()
-c=Canvas(root, height=500, width=500, bg="white")
+c=Canvas(root, height=size_x, width=size_x, bg="white")
 if __name__ =="__main__":
     try:
         root.title("Hengel Cam Image Estimator")
