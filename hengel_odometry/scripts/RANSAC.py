@@ -7,29 +7,9 @@ from random import choice
 from PIL import Image
 import sys
 
-# from sift import *
 from homography import *
 
 import pdb
-
-# New version coming soon.
-def get_points(locs1, locs2, matchscores):
-    '''
-        Return the corresponding points in both the images
-    '''
-    plist = []
-    t = min(len(locs1), len(locs2))
-    for i in range(len(matchscores)):
-        if (matchscores[i] > 0):
-            y1 = int(locs1[i, 1])
-            x1 = int(locs1[i, 0])
-
-            y2 = int(locs2[int(matchscores[i]), 1])
-            x2 = int(locs2[int(matchscores[i]), 0])
-
-            plist.append([[x1,y1],[x2,y2]])
-    return plist
-
 
 def ransac(points_list, iters = 50 , error = 10, good_model_num = 5):
     '''
@@ -106,74 +86,3 @@ def ransac(points_list, iters = 50 , error = 10, good_model_num = 5):
                 model_error = max(dists)
                 model_H = H
     return model_H
-
-# if __name__ == "__main__":
-#     try:
-#         os.mkdir("temp")
-#     except OSError:
-#         pass
-
-#     try:
-#         # Load images from command prompt
-#         im1 = Image.open(sys.argv[1])
-#         im2 = Image.open(sys.argv[2])
-#     except IndexError:
-#         print('Usage: python ransac.py image1 image2')
-#         sys.exit()
-#     im1.convert('L').save('temp/1.pgm')
-#     im2.convert('L').save('temp/2.pgm')
-#     im1 = asarray(im1)
-#     im2 = asarray(im2)
-#     process_image('temp/1.pgm', 'temp/1.key')
-#     process_image('temp/2.pgm', 'temp/2.key')
-#     key1 = read_features_from_file('temp/1.key')
-#     key2 = read_features_from_file('temp/2.key')
-#     score = match(key1[1], key2[1])
-#     plist = get_points(key1[0], key2[0], score)
-#     plot_matches(im1,im2,key1[0],key2[0],score)
-    
-#     # Compare ransac and simple homography matrix
-#     out_ransac = ransac(im1, im2, plist)
-#     out_simple = get_homography(plist)
-
-#     H_ransac = inv(out_ransac)
-#     H_simple = inv(out_simple)
-
-#     im_ransac = affine_transform2(im1,
-#                                   H_ransac[:2, :2],
-#                                   [H_ransac[0][2], H_ransac[1][2]])
-
-#     im_simple = affine_transform2(im1,
-#                                   H_simple[:2, :2],
-#                                   [H_simple[0][2], H_simple[1][2]])
-
-#     Image.fromarray(im2).show()
-#     Image.fromarray(im_ransac).show()
-#     Image.fromarray(im_simple).show()
-
-def RANSAC(image1, image2):
-
-    im1=image1
-    im2=image2
-
-    im1.convert('L').save('temp/1.pgm')
-    im2.convert('L').save('temp/2.pgm')
-    im1 = asarray(im1)
-    im2 = asarray(im2)
-    process_image('temp/1.pgm', 'temp/1.key')
-    process_image('temp/2.pgm', 'temp/2.key')
-    key1 = read_features_from_file('temp/1.key')
-    key2 = read_features_from_file('temp/2.key')
-    score = match(key1[1], key2[1])
-    plist = get_points(key1[0], key2[0], score)
-    plot_matches(im1,im2,key1[0],key2[0],score)
-    
-    # Compare ransac and simple homography matrix
-    out_ransac = ransac( plist)
-
-    H_ransac = inv(out_ransac)
-
-    im_ransac = affine_transform2(im1,
-                                  H_ransac[:2, :2],
-                                  [H_ransac[0][2], H_ransac[1][2]])
-    return H_ransac
