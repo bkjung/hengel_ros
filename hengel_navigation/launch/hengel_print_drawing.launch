@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="hengel_navigation" type="printer_drawing.py" name="hengel_print_drawing"  output="screen">
+  </node>
+</launch>

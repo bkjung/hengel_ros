@@ -1,21 +1,4 @@
 #!/usr/bin/env python
-#################################################################################
-# Copyright 2018 ROBOTIS CO., LTD.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#################################################################################
-
-# Authors: Gilbert #
 
 import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
@@ -117,32 +100,17 @@ class PaintWords():
         global waypoints_length
         global waypoints
 
-        rospy.init_node('hengel_alphabet_tracer', anonymous=False, disable_signals=True)
+        rospy.init_node('printer_letter', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
-        self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10) 
-        self.heading_publisher = rospy.Publisher('/current_heading', Float32, queue_size=10)
-
-        if odometry_method==ODOMETRY_LIDAR:
-            #Subscriber for Lidar SLAM estimated point, heading
-            self.blam_position_estimate = rospy.Subscriber('/blam/blam_slam/localization_integrated_estimate', PoseStamped, self.callback_blam_position)
 
         position = Point()
         move_cmd = Twist()
-        heading = Float32()
         
         r = rospy.Rate(50)
 
         self.tf_listener = tf.TransformListener()
         self.odom_frame = '/odom'
-        self.isFirst = True
-        print("isFirst initialized")
-        self.offset_x=0
-        self.offset_y=0
-        self.offset_rot=0
-
-        self.lidar_estimated_pnt = Point()
-        self.lidar_estimated_rotation = 0
 
         try:
             self.tf_listener.waitForTransform(self.odom_frame, '/base_footprint', rospy.Time(), rospy.Duration(1.0))
@@ -157,22 +125,10 @@ class PaintWords():
                 rospy.loginfo("Cannot find transform between /odom and /base_link or /base_footprint")
                 rospy.signal_shutdown("tf Exception")
 
-        (init_position, init_rotation) = self.get_odom()
-        if self.isFirst:
-            self.offset_x=init_position.x
-            self.offset_y=init_position.y
-            self.offset_rot=init_rotation-pi/2.0
-            # self.offset_rot=init_rotation
-            # self.offset_rot=0
-            self.isFirst=False
-            print("offset_x, offset_y, offset_rotation", self.offset_x, self.offset_y, self.offset_rot)
-            print("offset initialized")
+
         (position, rotation) = self.get_odom()
         print("x, y, rotation", position.x, position.y, rotation)
-        heading.data=rotation
-        self.position_publisher.publish(position)
-        self.heading_publisher.publish(rotation)
-        
+
 
 
         # go through path array
@@ -251,9 +207,7 @@ class PaintWords():
                     self.cmd_vel.publish(move_cmd)
 
                     (position, rotation) = self.get_odom()
-                    heading.data=rotation
-                    self.position_publisher.publish(position)
-                    self.heading_publisher.publish(rotation)
+
 
                     global cnt_path_points
                     global path_points
@@ -303,19 +257,6 @@ class PaintWords():
             rospy.loginfo("TF Exception")
             return
 
-
-
-
-    def callback_blam_position(self, data):
-        pnt=Point()
-        pnt.x=data.pose.position.x
-        pnt.y=data.pose.position.y
-
-        quat=[data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w]
-        rotation=euler_from_quaternion(quat)
-
-        self.lidar_estimated_pnt = pnt
-        self.lidar_estimated_rotation = normalize_rad(rotation[2])
 
 
     def generate_pathmap(self):

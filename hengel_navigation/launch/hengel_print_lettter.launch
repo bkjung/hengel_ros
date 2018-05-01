@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="hengel_navigation" type="printer_letter.py" name="hengel_print_letter"  output="screen">
+  </node>
+</launch>

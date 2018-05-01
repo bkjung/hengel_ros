@@ -41,7 +41,10 @@ catkin_package(
 # Install
 ################################################################################
 catkin_install_python(PROGRAMS 
-  scripts/alphabet_tracer.py
+  scripts/start_program.py
+  scripts/navigation_control.py
+  scripts/printer_drawing.py
+  scripts/printer_letter.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
