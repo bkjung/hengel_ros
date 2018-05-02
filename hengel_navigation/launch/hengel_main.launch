@@ -1,0 +1,5 @@
+<launch>
+  <include file="$(find hengel_navigation)/launch/hengel_navigation_control.launch"/>
+  <node pkg="hengel_navigation" type="main_program.py" name="hengel_main_program"  output="screen">
+  </node>
+</launch>

@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="hengel_navigation" type="navigation_control.py" name="hengel_navigation_control"  output="screen">
+  </node>
+</launch>
