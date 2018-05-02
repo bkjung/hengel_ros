@@ -11,7 +11,8 @@ import sys
 from PIL import Image
 import time
 import os
-from pathmaker_ui import *
+from pathmaker_ui import PathMaker
+from navigation_control import NavigationControl
 
 
 class PaintDrawing():

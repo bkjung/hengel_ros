@@ -3,6 +3,8 @@
 import rospy
 import roslaunch
 import sys
+from paint_drawing import PaintDrawing
+from paint_letter import PaintLetter
 
 
 OPTION_LETTERS = 1
