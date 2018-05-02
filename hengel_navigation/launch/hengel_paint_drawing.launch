@@ -1,5 +1,0 @@
-<launch>
-  <include file="$(find hengel_path_manager)/launch/hengel_image_drawing_input.launch"/>
-  <node pkg="hengel_navigation" type="paint_drawing.py" name="hengel_print_drawing"  output="screen">
-  </node>
-</launch>
