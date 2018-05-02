@@ -11,6 +11,7 @@ import sys
 from PIL import Image
 import time
 import os
+from pathmaker_ui import *
 
 
 waypoint_increment = 1
@@ -20,28 +21,6 @@ cnt_letter = 0
 
 cnt_path_points = 0
 path_points = []
-
-thres1=np.deg2rad(30)
-thres2=np.deg2rad(15)
-#thres3=np.deg2rad(8)
-thres3=np.deg2rad(4)
-#thres3=np.deg2rad(12)
-
-#at turtlebot3
-# ang_vel_1=0.35
-# ang_vel_2=0.2
-# ang_vel_3=0.04
-# lin_vel=0.06
-
-#at hengel bot
-# ang_vel_1=0.08
-# ang_vel_2=0.04
-# ang_vel_3=0.02
-ang_vel_1=0.15
-ang_vel_2=0.1
-ang_vel_3=0.06
-lin_vel=0.07
-#lin_vel=0.09
 
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
@@ -80,63 +59,25 @@ def get_path(word):
 
     return arr_path
 
-class NavigationControl():
+class PaintDrawing():
     def __init__(self, arr_path):
         global waypoints_length
         global waypoints
 
-        rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
+        rospy.init_node('hengel_paint_drawing', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
-        self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10) 
-        self.heading_publisher = rospy.Publisher('/current_heading', Float32, queue_size=10)
 
         position = Point()
         move_cmd = Twist()
-        heading = Float32()
         
         r = rospy.Rate(50)
 
-        self.tf_listener = tf.TransformListener()
-        self.odom_frame = '/odom'
-        self.isFirst = True
-        print("isFirst initialized")
-        self.offset_x=0
-        self.offset_y=0
-        self.offset_rot=0
 
-        self.lidar_estimated_pnt = Point()
-        self.lidar_estimated_rotation = 0
 
-        try:
-            self.tf_listener.waitForTransform(self.odom_frame, '/base_footprint', rospy.Time(), rospy.Duration(1.0))
-            self.base_frame = '/base_footprint'
-            print("base_footprint")
-        except (tf.Exception, tf.ConnectivityException, tf.LookupException):
-            try:
-                self.tf_listener.waitForTransform(self.odom_frame, '/base_link', rospy.Time(), rospy.Duration(1.0))
-                self.base_frame = '/base_link'
-                print("base_link")
-            except (tf.Exception, tf.ConnectivityException, tf.LookupException):
-                rospy.loginfo("Cannot find transform between /odom and /base_link or /base_footprint")
-                rospy.signal_shutdown("tf Exception")
-
-        (init_position, init_rotation) = self.get_odom()
-        if self.isFirst:
-            self.offset_x=init_position.x
-            self.offset_y=init_position.y
-            self.offset_rot=init_rotation-pi/2.0
-            # self.offset_rot=init_rotation
-            # self.offset_rot=0
-            self.isFirst=False
-            print("offset_x, offset_y, offset_rotation", self.offset_x, self.offset_y, self.offset_rot)
-            print("offset initialized")
         (position, rotation) = self.get_odom()
         print("x, y, rotation", position.x, position.y, rotation)
-        heading.data=rotation
-        self.position_publisher.publish(position)
-        self.heading_publisher.publish(rotation)
-        
+
 
 
         # go through path array
@@ -215,9 +156,7 @@ class NavigationControl():
                     self.cmd_vel.publish(move_cmd)
 
                     (position, rotation) = self.get_odom()
-                    heading.data=rotation
-                    self.position_publisher.publish(position)
-                    self.heading_publisher.publish(rotation)
+
 
                     global cnt_path_points
                     global path_points
@@ -244,10 +183,6 @@ class NavigationControl():
 
         print("DEBUG-publish0")
         self.cmd_vel.publish(Twist())
-
-    def get_odom(self):
-        
-
 
 
     def generate_pathmap(self):
@@ -277,16 +212,19 @@ class NavigationControl():
 
 
     def shutdown(self):
+        print("DEBUG-publish1")
         self.cmd_vel.publish(Twist())
         rospy.sleep(1)
 
 
 if __name__ == '__main__':
     try:
-        NavigationControl()
+        path=get_path(word)
+        print("path loaded")
+        PaintDrawing(path)
+
         print("End of Main Function")
 
     except Exception as e:
         print(e)
         rospy.loginfo("shutdown program.")
-        sys.exit()

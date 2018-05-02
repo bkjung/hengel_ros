@@ -1,4 +1,0 @@
-<launch>
-  <node pkg="hengel_navigation" type="lidar_odometry.py" name="hengel_lidar_odometry"  output="screen">
-  </node>
-</launch>
