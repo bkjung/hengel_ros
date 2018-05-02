@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#############script directory#################33
 import rospy
 import numpy as np
 import cv2, sys, time, math
@@ -7,6 +8,10 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from matplotlib import pyplot as plt
 
+# if __name__ == '__main__':
+#     cap = cv2.VideoCapture(0)
+#     ret, image=cap.read()
+#     image_arr=image
 def birdview_transform(image_arr):
     try:
         #Initialize the node with rospy
@@ -32,12 +37,12 @@ def birdview_transform(image_arr):
         ##############New Calibration###################################
         # ret, mtx, dist, rvecs, tves=image_calibrate.calibration(_image, board_w, board_h, n_board)
         ##############Load Calibration##################################
-        cv_file_int=cv2.FileStorage("Intrinsic.xml", cv2.FILE_STORAGE_READ)
-        cv_file_dist=cv2.FileStorage("Distortion.xml",cv2.FILE_STORAGE_READ)
-        mtx=cv_file_int.getNode("Intrinsic").mat()
-        dist=cv_file_dist.getNode("Distortion").mat()
-        cv_file_int.release()
-        cv_file_dist.release()
+        # cv_file_int=cv2.FileStorage("Intrinsic.xml", cv2.FILE_STORAGE_READ)
+        # cv_file_dist=cv2.FileStorage("Distortion.xml",cv2.FILE_STORAGE_READ)
+        # mtx=cv_file_int.getNode("Intrinsic").mat()
+        # dist=cv_file_dist.getNode("Distortion").mat()
+        # cv_file_int.release()
+        # cv_file_dist.release()
         ################################################################
 
 
@@ -89,7 +94,14 @@ def birdview_transform(image_arr):
         #         breaknd
         # image=Image.fromarray(image_arr, 'RGB')
         bird_img=cv2.warpPerspective(image_arr, H, (1000,1000))
-        
-        return bird_img        
+        # cv2.imshow("bird view", bird_img)
+        # return bird_img        
     except Exception as e:
         print(e)
+        rospy.signal_shutdown("error in birdview")
+
+
+# if __name__ == '__main__':
+#     cap = cv2.VideoCapture(1)
+#     ret, image=cap.read()
+#     birdview_transform(image)
