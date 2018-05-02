@@ -7,7 +7,7 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
 
   ros::Publisher pub=nh.advertise<sandbot_valve_control::ValveInput>("valve_input", 10);
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(1);
 
   sandbot_valve_control::ValveInput msg;
 
@@ -23,7 +23,6 @@ int main(int argc, char **argv)
     }
     pub.publish(msg);
     loop_rate.sleep();
-
   }
   return 0;
 }
