@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="hengel_navigation" type="odometry_publisher.py" name="hengel_odometry_publisher"  output="screen">
+  </node>
+</launch>
