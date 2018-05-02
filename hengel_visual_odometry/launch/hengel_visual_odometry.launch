@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="hengel_visual_odometry" type="visual_odometry.py" name="visual_odometry_node"  output="screen" args="microsoft_lifecam_studio" />
+</launch>
