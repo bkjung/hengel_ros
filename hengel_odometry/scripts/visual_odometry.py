@@ -44,27 +44,42 @@ class VisualOdometry():
                 A[i+1]=1
             else:
                 A[i]=1
-        cap=cv2.VideoCapture(0)
-        ret, old_frame=cap.read()
-        old_gray=cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
-        old_corners = cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
+        cap=cv2.VideoCapture(1)
+
+        #Initialization
+        try:
+            ret, old_frame=cap.read()
+            # old_bird_frame=birdview.birdview_transform(old_frame)
+            # old_gray=cv2.cvtColor(old_bird_frame, cv2.COLOR_BGR2GRAY)
+            old_gray=cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
+            old_corners = cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
+        except KeyboardInterrupt:
+            rospy.signal_shutdown("keyboard interrupt")
+        #Create some random color
+        color=np.random.randint(0,255,(500,3))
+        #Create a mask image for drawing purposes
+        mask=np.zeros_like(old_frame)
+        m=0
         while not rospy.is_shutdown():
+            print(m)
+            m=m+1
             try:        
-                #####
                 #Step 1. Capture current k_th frame
-                ret, old_frame=cap.read()
+                ret, frame=cap.read()
                 # rospy.Subscriber('/usb_cam/image_raw', Image, self.callback_image_sub)
-                frame_gray=cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
-                birdview.birdview_transform(frame_gray)
-                # cv2.cvtColor(self.image, self.gray, cv2.COLOR_BGR2GRAY)
-                
+                # frame_bird=birdview.birdview_transform(frame)
+                # frame_gray=cv2.cvtColor(frame_bird, cv2.COLOR_BGR2GRAY)
+                frame_gray=cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                                
                     #############Corner detection###########
                 #Step 4. determine search window according to H_k^-. Find corresponding pixels F_k-1^' by lucas-kanade algorithm
-                winsize_arr=[]
-                for corner in old_corners:
-                    ######Determine Search Window##########
-                    winsize_arr.append((10,10))
-                    winsize=(10,10)
+                
+                # winsize_arr=[]
+                # for corner in old_corners:
+                #     ######Determine Search Window##########
+                #     winsize_arr.append((10,10))
+                winsize=(10,10)
+                
                 lk_params = dict( winSize= winsize,
                                 maxLevel = 2,
                                 criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
@@ -81,13 +96,22 @@ class VisualOdometry():
                     a,b = new.ravel()
                     c,d = old.ravel()
                     data.append([[a,b],[c,d]])
+
+                    #Drawing lines
+                    mask = cv2.line(mask, (a,b),(c,d), color[i].tolist(),2)
+                    frame=cv2.circle(frame, (a,b), 5, color[i].tolist(), -1)
+                
+                img=cv2.add(frame, mask)
+                cv2.imshow('frame', img)
                 #Step 5. Compute initial estimate of homography matrix H_k^' (using RANSAC)
                 H=RANSAC.ransac(data)
+                if H is None:
+                    continue
 
                 #Step 6. Outlier rejection
 
                 #Step 7. estimate camera's ego-motion through homography, estimate current pos., update the state
-                T=inv(M)*H*M
+                T=np.matmul(np.matmul(inv(M),H),M)
                 tx=T[0][2]/T[2][2]
                 ty=T[1][2]/T[2][2]
                 theta=math.atan2(tx,ty)
@@ -95,7 +119,10 @@ class VisualOdometry():
                 yk=x_state[-1][2]+ty
                 thk=x_state[-1][4]+theta
                 x_state.append([xk, tx, yk, ty, thk, theta])
-
+                old_gray=frame_gray.copy()
+                old_corners=good_new.reshape(-1,1,2)
+                
+                #Step 8. publish path
                 msg=Point()
                 msg.x=xk
                 msg.y=yk
@@ -106,10 +133,16 @@ class VisualOdometry():
                 print("Interrupted")
                 rospy.signal_shutdown("KeyboardInterrupt")
                 break
+        print(x_state)
 
-        cv_file=cv2.FileStorage("path", cv2.FILE_STORAGE_WRITE)
+        cv_file=cv2.FileStorage("path.xml", cv2.FILE_STORAGE_WRITE)
+        x_state=np.array(x_state)
         cv_file.write("path_arr", x_state)
         cv_file.release()
+
+        # f=cv2.FileStorage('path.yml', flags=1)
+        # f.write(name='path', value=x_state)
+        # f.release()
         
 
     def callback_image_sub(self, msg):
