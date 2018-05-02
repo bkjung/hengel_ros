@@ -11,6 +11,9 @@ from cv_bridge import CvBridge, CvBridgeError
 from matplotlib import pyplot as plt
 from numpy.linalg import inv
 
+package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
+os.system("mkdir -p "+package_base_path+"/hengel_visual_odometry/output_path")
+
 class VisualOdometry():
     image=[]
     gray =[]
@@ -27,8 +30,18 @@ class VisualOdometry():
         position = Point()
         x_state=[[0,0,0,0,0,0]]
 
+
+
         #3x3 matrix containing information about intrinsic, extrinsic parameters of the cam
-        M=np.identity(3)
+        # cv_file_homo=cv2.FileStorage("../calibrate_info/"+sys.argv[1]+".xml", cv2.FILE_STORAGE_READ)
+        print(sys.argv[1])
+        cv_file_homo=cv2.FileStorage(package_base_path+"/hengel_visual_odometry/calibrate_info/"+sys.argv[1]+".xml", cv2.FILE_STORAGE_READ)
+        H=cv_file_homo.getNode("H").mat()
+        cv_file_homo.release()
+        print(H)
+
+        # M=np.identity(3)
+        M=H
         
         #Parameters for feature detection
         feature_params = dict( maxCorners = 100,
@@ -56,13 +69,10 @@ class VisualOdometry():
         except KeyboardInterrupt:
             rospy.signal_shutdown("keyboard interrupt")
         #Create some random color
-        color=np.random.randint(0,255,(500,3))
+        color=np.random.randint(0,255,(1000,3))
         #Create a mask image for drawing purposes
         mask=np.zeros_like(old_frame)
-        m=0
         while not rospy.is_shutdown():
-            print(m)
-            m=m+1
             try:        
                 #Step 1. Capture current k_th frame
                 ret, frame=cap.read()
@@ -90,7 +100,6 @@ class VisualOdometry():
                 # Select good points
                 good_new = new_corners[st==1]
                 good_old = old_corners[st==1]
-
                 data=[]
                 for i,(new,old) in enumerate(zip(good_new,good_old)):
                     a,b = new.ravel()
@@ -100,14 +109,13 @@ class VisualOdometry():
                     #Drawing lines
                     mask = cv2.line(mask, (a,b),(c,d), color[i].tolist(),2)
                     frame=cv2.circle(frame, (a,b), 5, color[i].tolist(), -1)
-                
+
                 img=cv2.add(frame, mask)
                 cv2.imshow('frame', img)
                 #Step 5. Compute initial estimate of homography matrix H_k^' (using RANSAC)
                 H=RANSAC.ransac(data)
                 if H is None:
                     continue
-
                 #Step 6. Outlier rejection
 
                 #Step 7. estimate camera's ego-motion through homography, estimate current pos., update the state
@@ -134,16 +142,10 @@ class VisualOdometry():
                 rospy.signal_shutdown("KeyboardInterrupt")
                 break
         print(x_state)
-
-        cv_file=cv2.FileStorage("path.xml", cv2.FILE_STORAGE_WRITE)
+        cv_file=cv2.FileStorage(package_base_path+"/hengel_visual_odometry/output_path/"+time.strftime("%y%m%d_%H%M%S")+".xml", cv2.FILE_STORAGE_WRITE)
         x_state=np.array(x_state)
         cv_file.write("path_arr", x_state)
         cv_file.release()
-
-        # f=cv2.FileStorage('path.yml', flags=1)
-        # f.write(name='path', value=x_state)
-        # f.release()
-        
 
     def callback_image_sub(self, msg):
         bridge= CvBridge()
