@@ -2,6 +2,8 @@
 
 import rospy
 import roslaunch
+import sys
+
 
 OPTION_LETTERS = 1
 OPTION_DRAWING = 2
@@ -14,11 +16,11 @@ class HengelMain():
             r = rospy.Rate(50)
             self.runningOption = 0
 
-            self.programStart()
+            self.initialOptionSelect()
 
-            if runningOption == OPTION_LETTERS:
+            if self.runningOption == OPTION_LETTERS:
                 package = 'hengel_navigation'
-                executable = 'printer_letter'
+                executable = 'paint_letter'
                 node = roslaunch.core.Node(package, executable)
 
                 launch = roslaunch.scriptapi.ROSLaunch()
@@ -28,9 +30,9 @@ class HengelMain():
                 # print process.is_alive()
                 # process.stop()
 
-            elif runningOption == OPTION_DRAWING:
+            elif self.runningOption == OPTION_DRAWING:
                 package = 'hengel_navigation'
-                executable = 'printer_drawing'
+                executable = 'paint_drawing'
                 node = roslaunch.core.Node(package, executable)
 
                 launch = roslaunch.scriptapi.ROSLaunch()
@@ -50,7 +52,7 @@ class HengelMain():
             sys.exit()
 
 
-    def programStart(self):
+    def initialOptionSelect(self):
         word=raw_input("HENGEL ROBOT Made By NAVER LABS Robotics 5th Intern.\nThere are two options of painting.\n[1] Print Letters.\n[2] Print Drawing of Yours.\nType 1 or 2 :")
         print("Input:"+word)
         self.runningOption = int(word)

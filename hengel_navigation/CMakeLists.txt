@@ -13,6 +13,20 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
 )
 
+SET(PY_PROJECT_NAME hengel_path_manager)
+SET(PY_PACKAGE_DIR src/hengel_path_manager)
+
+# The first argument is the name of the project. This is the library name
+# that you have specified in module.cpp (with lib prepended), and
+# in your __init__.py file. In this example, ${PROJECT_NAME} is
+# rocket_python, so the resulting library will be called librocket_python
+#
+# The second argument tells CMake where to find the __init__.py file so
+# that it can be installed
+add_python_export_library(${PY_PROJECT_NAME} ${PY_PACKAGE_DIR}
+  scripts/pathmaker_ui.py
+)
+
 ################################################################################
 # Python scripts and modules
 ################################################################################
