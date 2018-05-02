@@ -1,0 +1,5 @@
+<launch>
+  <!-- <arg name="mode" default="DESCRETE_MODE" /> -->
+  <node pkg="sandbot_valve_control" type="valve_input_publisher" name="valve_input_publisher"/>
+  <node pkg="sandbot_valve_control" type="valve_control" name="valve_control" output="screen"/>
+</launch>
