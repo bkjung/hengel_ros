@@ -56,30 +56,6 @@ def normalize_rad(input_angle):
     else:
         return input_angle
 
-def get_path(word):
-    global cnt_letter
-    arr_path=[]
-    dir_1= package_base_path+"/hengel_path_manager/alphabet_path/path_"
-    dir_2=".txt"
-    cnt_letter = 0
-    for letter in word:
-        if letter==' ':
-            pass
-            #if spacing is included
-        else:
-            with open(dir_1+letter.capitalize()+dir_2,"r") as file_path:
-                for idx, line in enumerate(file_path):
-                    _str = line.split()
-                    if not len(_str)==0:
-                        arr_path.append([(float)(_str[0])+(float)(cnt_letter)-(2*(float)(cnt_letter)-1)*250/1632, 1.0-(float)(_str[1])])
-                    else:
-                        pass
-
-        #count the number of letters including spacing
-        cnt_letter = cnt_letter + 1
-
-    return arr_path
-
 class NavigationControl():
     def __init__(self, arr_path):
         global waypoints_length
@@ -88,59 +64,17 @@ class NavigationControl():
         rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
-        self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10) 
-        self.heading_publisher = rospy.Publisher('/current_heading', Float32, queue_size=10)
+        self.position_subscriber = rospy.Sublisher('/current_position', Point, self.callback_position) 
+        self.heading_subscriber = rospy.Sublisher('/current_heading', Float32, self.callback_heading)
 
-        position = Point()
+        self.point = Point()
+        self.heading = Float32()
         move_cmd = Twist()
-        heading = Float32()
         
-        r = rospy.Rate(50)
-
-        self.tf_listener = tf.TransformListener()
-        self.odom_frame = '/odom'
-        self.isFirst = True
-        print("isFirst initialized")
-        self.offset_x=0
-        self.offset_y=0
-        self.offset_rot=0
-
-        self.lidar_estimated_pnt = Point()
-        self.lidar_estimated_rotation = 0
-
-        try:
-            self.tf_listener.waitForTransform(self.odom_frame, '/base_footprint', rospy.Time(), rospy.Duration(1.0))
-            self.base_frame = '/base_footprint'
-            print("base_footprint")
-        except (tf.Exception, tf.ConnectivityException, tf.LookupException):
-            try:
-                self.tf_listener.waitForTransform(self.odom_frame, '/base_link', rospy.Time(), rospy.Duration(1.0))
-                self.base_frame = '/base_link'
-                print("base_link")
-            except (tf.Exception, tf.ConnectivityException, tf.LookupException):
-                rospy.loginfo("Cannot find transform between /odom and /base_link or /base_footprint")
-                rospy.signal_shutdown("tf Exception")
-
-        (init_position, init_rotation) = self.get_odom()
-        if self.isFirst:
-            self.offset_x=init_position.x
-            self.offset_y=init_position.y
-            self.offset_rot=init_rotation-pi/2.0
-            # self.offset_rot=init_rotation
-            # self.offset_rot=0
-            self.isFirst=False
-            print("offset_x, offset_y, offset_rotation", self.offset_x, self.offset_y, self.offset_rot)
-            print("offset initialized")
-        (position, rotation) = self.get_odom()
-        print("x, y, rotation", position.x, position.y, rotation)
-        heading.data=rotation
-        self.position_publisher.publish(position)
-        self.heading_publisher.publish(rotation)
-        
+        r = rospy.Rate(50)        
 
 
         # go through path array
-
         waypoints_length = len(arr_path)
         for idx in range(waypoints_length):
             waypoints.append([arr_path[idx][0]-arr_path[0][0], arr_path[idx][1]-arr_path[0][1]])
@@ -245,9 +179,13 @@ class NavigationControl():
         print("DEBUG-publish0")
         self.cmd_vel.publish(Twist())
 
-    def get_odom(self):
+    def callback_position(self, _data):
+        self.point.x = data.x
+        self.point.y = data.y
         
 
+    def callback_heading(self, _data):
+        self.heading.data = _data.data
 
 
     def generate_pathmap(self):
@@ -281,12 +219,13 @@ class NavigationControl():
         rospy.sleep(1)
 
 
-if __name__ == '__main__':
-    try:
-        NavigationControl()
-        print("End of Main Function")
+# if __name__ == '__main__':
+#     try:
+#         path=#########
+#         NavigationControl(path)
+#         print("End of Main Function")
 
-    except Exception as e:
-        print(e)
-        rospy.loginfo("shutdown program.")
-        sys.exit()
+#     except Exception as e:
+#         print(e)
+#         rospy.loginfo("shutdown program.")
+#         sys.exit()

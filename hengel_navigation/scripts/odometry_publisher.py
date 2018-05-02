@@ -9,10 +9,6 @@ from time import sleep
 from math import pi
 import sys
 
-odometry_method = 0
-ODOMETRY_WHEEL = 1
-ODOMETRY_LIDAR = 2
-
 class LidarOdometry():
     def __init__(self):
         try:
@@ -26,7 +22,7 @@ class LidarOdometry():
             self.offset_rot=0
 
             self.pnt = Point()
-            self.rotation = 0
+            self.heading = Float32()
 
             self.isFirst = True
 
@@ -34,18 +30,16 @@ class LidarOdometry():
                 if self.isFirst:
                     self.offset_x=self.pnt.x
                     self.offset_y=self.pnt.y
-                    self.offset_rot=self.rotation-pi/2.0
+                    self.offset_rot=self.heading-pi/2.0
                     self.isFirst = False
 
                 self.pnt.x=self.pnt.x-self.offset_x
                 self.pnt.y=self.pnt.y-self.offset_y
-                #self.rotation = normalize_rad( normalize_rad(self.rotation)-self.offset_rot )
-                self.rotation = self.rotation
+                #self.heading.data = normalize_rad( normalize_rad(self.heading.data)-self.offset_rot )
+                
 
-                heading=Float32()                
-                heading.data=self.rotation
                 self.position_publisher.publish(self.pnt)
-                self.heading_publisher.publish(heading)
+                self.heading_publisher.publish(self.heading)
 
                 sleep(0.01)
 
@@ -54,16 +48,16 @@ class LidarOdometry():
             sys.exit()
 
 
-        def callback_blam_position(self, data):
+        def callback_blam_position(self, _data):
             pnt=Point()
-            pnt.x=data.pose.position.x
-            pnt.y=data.pose.position.y
+            pnt.x=_data.pose.position.x
+            pnt.y=_data.pose.position.y
 
-            quat=[data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w]
+            quat=[_data.pose.orientation.x, _data.pose.orientation.y, _data.pose.orientation.z, _data.pose.orientation.w]
             rotation=euler_from_quaternion(quat)
 
             self.pnt = pnt
-            self.rotation = normalize_rad(rotation[2])
+            self.heading.data = normalize_rad(rotation[2])
 
 
 class WheelOdometry():
@@ -78,11 +72,11 @@ class WheelOdometry():
             self.offset_rot=0
 
             self.pnt = Point()
-            self.rotation = 0
+            self.heading = Float32()
 
             self.isFirst = True
 
-            self.tf_listener = tf.TransformListener()
+            self.tf_listener = tf.TransformListener().data = 0
             self.odom_frame = '/odom'
 
             try:
@@ -101,23 +95,20 @@ class WheelOdometry():
             while(True):
                 (trans, rot) = self.tf_listener.lookupTransform(self.odom_frame, self.base_frame, rospy.Time(0))
                 self.pnt=Point(*trans)
-                self.rotation = euler_from_quaternion(rot)[2]
+                self.heading.data = euler_from_quaternion(rot)[2]
 
                 if self.isFirst:
                     self.offset_x=self.pnt.x
                     self.offset_y=self.pnt.y
-                    self.offset_rot=self.rotation-pi/2.0
+                    self.offset_rot=self.heading.data-pi/2.0
                     self.isFirst = False
 
                 self.pnt.x=self.pnt.x-self.offset_x
                 self.pnt.y=self.pnt.y-self.offset_y
-                #self.rotation = normalize_rad( normalize_rad(self.rotation)-self.offset_rot )
-                self.rotation = self.rotation
+                #self.heading.data = normalize_rad( normalize_rad(self.heading.data)-self.offset_rot )
 
-                heading=Float32()                
-                heading.data=self.rotation
                 self.position_publisher.publish(self.pnt)
-                self.heading_publisher.publish(heading)
+                self.heading_publisher.publish(self.heading)
 
                 sleep(0.01)
 
@@ -129,22 +120,21 @@ class WheelOdometry():
             print(e)
             sys.exit()
 
-def initialOptionSelect():
-    global odometry_method
-    word=raw_input("There are two options of odometry.\n[1] Wheel Odometry.\n[2] Lidar (Velodyne) Odometry.\nType 1 or 2 :")
-    print("Input:"+word)
-    odometry_method = int(word)
 
+def initialOptionSelect():
+    if sys.argv[1]=='wheel':
+        WheelOdometry()
+        print("Wheel odometry method selected")
+    elif sys.argv[1]=='lidar':
+        LidarOdometry()
+        print("Lidar odometry method selected")
+    else:
+        print("!!!!!WRONG launch_file input of argv choosing odometry method. Wheel odometry selected as default.")
+        raise Exception("WRONG INPUT OPTION FOR ODOMETRY (Neither wheel nor lidar)")
 
 if __name__ == '__main__':
     try:
         initialOptionSelect()
-        if odometry_method == 1:
-            WheelOdometry()
-        elif odometry_method == 2:
-            LidarOdometry()
-        else:
-            raise Exception("WRONG INPUT OPTION FOR ODOMETRY (Neither 1 nor 2)")
 
         print("End of Main Function")
 

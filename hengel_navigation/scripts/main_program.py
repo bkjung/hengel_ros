@@ -19,28 +19,10 @@ class HengelMain():
             self.initialOptionSelect()
 
             if self.runningOption == OPTION_LETTERS:
-                package = 'hengel_navigation'
-                executable = 'paint_letter'
-                node = roslaunch.core.Node(package, executable)
-
-                launch = roslaunch.scriptapi.ROSLaunch()
-                launch.start()
-
-                process = launch.launch(node)
-                # print process.is_alive()
-                # process.stop()
+                PaintLetter()
 
             elif self.runningOption == OPTION_DRAWING:
-                package = 'hengel_navigation'
-                executable = 'paint_drawing'
-                node = roslaunch.core.Node(package, executable)
-
-                launch = roslaunch.scriptapi.ROSLaunch()
-                launch.start()
-
-                process = launch.launch(node)
-                # print process.is_alive()
-                # process.stop()
+                PaintDrawing()
 
 
             else:
