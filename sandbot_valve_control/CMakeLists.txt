@@ -15,6 +15,7 @@ add_message_files(
   FILES
   ValveInput.msg
   MotorInput.msg
+  OperationMode.msg
 #   Message1.msg
 #   Message2.msg
 )
@@ -107,6 +108,8 @@ add_library(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(valve_control src/valve_control.cpp)
+add_executable(valve_input_publisher src/publisher.cpp)
+add_executable(valve_input_publisher_mode src/publisher_mode.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -117,18 +120,19 @@ add_executable(valve_control src/valve_control.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(valve_control ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamixel)
+add_dependencies(valve_input_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamixel)
+add_dependencies(valve_input_publisher_mode ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamixel)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(valve_control
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}
 )
-
-add_executable(valve_input_publisher src/publisher.cpp)
-add_dependencies(valve_input_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamixel)
-
-
 target_link_libraries(valve_input_publisher
+  ${catkin_LIBRARIES}
+  ${PROJECT_NAME}
+)
+target_link_libraries(valve_input_publisher_mode
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}
 )
