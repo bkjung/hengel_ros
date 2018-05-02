@@ -30,6 +30,7 @@ catkin_python_setup()
 # Catkin specific configuration
 ################################################################################
 catkin_package(
+  INCLUDE_DIRS scripts
   CATKIN_DEPENDS rospy geometry_msgs std_msgs
 )
 
