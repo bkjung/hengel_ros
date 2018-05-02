@@ -1,4 +1,4 @@
-# Hengel_odometry
+# Hengel_visual_odometry
 
 ## Prerequisite:
 install dependencies
