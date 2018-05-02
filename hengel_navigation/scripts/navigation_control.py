@@ -164,7 +164,7 @@ class NavigationControl():
                     r.sleep()
                 except KeyboardInterrupt:
                     print("Got KeyboardInterrupt")
-                    rospy.signal_shutdown("KeboardInterrupt")
+                    rospy.signal_shutdown("KeyboardInterrupt")
                     break
 
             print("Now at Waypoint No.", waypoint_index)
