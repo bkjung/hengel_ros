@@ -59,21 +59,37 @@ def normalize_rad(input_angle):
         return input_angle
 
 class NavigationControl():
-    def __init__(self, arr_path):
+    def __init__(self, arr_path, valve_option_arg):
         global waypoints_length
         global waypoints
-
-        rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
-        rospy.on_shutdown(self.shutdown)
-        self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
-        self.position_subscriber = rospy.Sublisher('/current_position', Point, self.callback_position) 
-        self.heading_subscriber = rospy.Sublisher('/current_heading', Float32, self.callback_heading)
 
         self.point = Point()
         self.heading = Float32()
         self.move_cmd = Twist()
-        
-        r = rospy.Rate(50)        
+
+        self.valve_operation_mode = OperationMode()
+        self.valve_input = ValveInput()
+
+        r = rospy.Rate(50)
+
+        rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
+        rospy.on_shutdown(self.shutdown)
+
+        self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
+        self.valve_operation_mode_publisher = rospy.Publisher('/operation_mode', OperationMode, queue_size=5)
+        if valve_option_arg=='continuous':
+            valve_operation_mode.mode=0
+            self.valve_operation_mode_publisher.publish(valve_operation_mode)
+        elif valve_option_arg=='discrete':
+            valve_operation_mode.mode=1
+            self.valve_operation_mode_publisher.publish(valve_operation_mode)
+        else:
+            rospy.signal_shutdown("Valve Mode Input ERROR")
+            return
+
+        self.position_subscriber = rospy.Subscriber('/current_position', Point, self.callback_position) 
+        self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
+
 
 
         # go through path array
@@ -83,7 +99,8 @@ class NavigationControl():
 
         print("size of waypoints = ", len(waypoints))
 
-        waypoint_index = 1  #starting from index No. 1 (c.f. No.0 is at the origin(0,0))
+        #waypoint_index = 1  #starting from index No. 1 (c.f. No.0 is at the origin(0,0))
+        waypoint_index = 0  # No.0 is at the origin(0,0)
 
         while waypoint_index < waypoints_length:
             current_waypoint = [waypoints[waypoint_index][0], waypoints[waypoint_index][1]]
@@ -97,10 +114,12 @@ class NavigationControl():
             distance = goal_distance
 
             while distance > 0.03:
+                if rospy.is_shutdown():
+                    break
                 try:
-                    ################3print ("distance= ", '%.3f' % distance)
+                    ################print ("distance= ", '%.3f' % distance)
 
-                    ################3print("goal_position", '%.3f' % current_waypoint[0], '%.3f' % current_waypoint[1], "current_position", '%.3f' % position.x, '%.3f' % position.y)
+                    ################print("goal_position", '%.3f' % current_waypoint[0], '%.3f' % current_waypoint[1], "current_position", '%.3f' % position.x, '%.3f' % position.y)
                     # alpha=atan2(goal_x-x_start, goal_y-y_start)-rotation
                     # alpha=normalize_rad( normalize_rad(atan2(current_waypoint[1]-position.y, current_waypoint[0]-position.x))-rotation )
                     alpha=normalize_rad(atan2(current_waypoint[1]-position.y, current_waypoint[0]-position.x)-rotation)
@@ -134,7 +153,7 @@ class NavigationControl():
                             self.move_cmd.linear.x=0
                             self.move_cmd.angular.z=-ang_vel_3
 
-                    else:
+                    else:self.heading_publisher.publish(rotation)
                         x=distance*sin(alpha)
                         curv=2*x/pow(distance,2)
 
@@ -172,13 +191,9 @@ class NavigationControl():
             print("Now at Waypoint No.", waypoint_index)
             waypoint_index = waypoint_index + waypoint_increment
 
-            if rospy.is_shutdown():
-                break
-
         rospy.loginfo("Stopping the robot at the final destination")
         self.generate_pathmap()
 
-        print("DEBUG-publish0")
         self.cmd_vel.publish(Twist())
 
     def callback_position(self, _data):

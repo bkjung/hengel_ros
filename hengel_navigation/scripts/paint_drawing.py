@@ -20,7 +20,7 @@ class PaintDrawing():
         PathUI = PathMaker()
 
         if PathUI.isFinishedCorrectly == True:
-            NavigationControl(PathUI.path_drawing_saved)
+            NavigationControl(PathUI.path_drawing_saved, sys.argv[1])
         else:
             raise Exception("Path Drawing UI did not finish correctly")
 
