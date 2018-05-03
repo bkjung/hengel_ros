@@ -11,6 +11,8 @@ import sys
 from PIL import Image
 import time
 import os
+from navigation_control import NavigationControl
+
 
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
@@ -19,7 +21,6 @@ os.system("mkdir -p "+package_base_path+"/hengel_path_manager/output_pathmap")
 
 
 def get_path(word):
-    global cnt_letter
     arr_path=[]
     dir_1= package_base_path+"/hengel_path_manager/alphabet_path/path_"
     dir_2=".txt"

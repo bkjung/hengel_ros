@@ -68,7 +68,10 @@ class NavigationControl():
         self.move_cmd = Twist()
 
         self.valve_operation_mode = OperationMode()
-        self.valve_input = ValveInput()
+        self.valve_input_angle = ValveInput()
+        self.valve_input_angle.goal_position=512    #closed
+
+        self.isDrawing = False
 
         r = rospy.Rate(50)
 
@@ -76,12 +79,13 @@ class NavigationControl():
         rospy.on_shutdown(self.shutdown)
 
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
+        self.valve_input_publisher = rospy.Publisher('/valve_input', ValveInput, queue_size=5)
         self.valve_operation_mode_publisher = rospy.Publisher('/operation_mode', OperationMode, queue_size=5)
         if valve_option_arg=='continuous':
-            valve_operation_mode.mode=0
+            self.valve_operation_mode.mode=0
             self.valve_operation_mode_publisher.publish(valve_operation_mode)
         elif valve_option_arg=='discrete':
-            valve_operation_mode.mode=1
+            self.valve_operation_mode.mode=1
             self.valve_operation_mode_publisher.publish(valve_operation_mode)
         else:
             rospy.signal_shutdown("Valve Mode Input ERROR")
@@ -89,8 +93,6 @@ class NavigationControl():
 
         self.position_subscriber = rospy.Subscriber('/current_position', Point, self.callback_position) 
         self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
-
-
 
         # go through path array
         waypoints_length = len(arr_path)
@@ -204,6 +206,18 @@ class NavigationControl():
     def callback_heading(self, _data):
         self.heading.data = _data.data
 
+    def control_valve(self):
+        if self.valve_operation_mode.mode == 0: #continuous
+            self.valve_input_angle.goal_position = 1023 #open
+            self.valve_input_publisher.publish(self.valve_input_angle)
+
+        elif self.valve_operation_mode.mode == 1: #discrete
+            if self.valve_input_angle.goal_position == 1023: #open
+                self.valve_input_angle.goal_position = 512  #close
+            elif self.valve_input_angle.goal_position == 512: #close
+                self.valve_input_angle.goal_position = 1023: #open
+            
+            self.valve_input_publisher.publish(self.valve_input_angle)
 
     def generate_pathmap(self):
         scale = 10
