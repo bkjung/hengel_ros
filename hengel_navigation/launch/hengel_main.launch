@@ -1,4 +1,4 @@
 <launch>
-  <node pkg="hengel_navigation" type="odometry_publisher.py" name="hengel_odometry_publisher"  output="screen"/>
+  <node pkg="hengel_navigation" type="odometry_publisher.py" name="hengel_odometry_publisher"  output="screen"  args="wheel"/>
   <node pkg="hengel_navigation" type="main_program.py" name="hengel_main_program"  output="screen"/>
 </launch>

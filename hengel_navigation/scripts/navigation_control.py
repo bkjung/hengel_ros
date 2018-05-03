@@ -30,6 +30,9 @@ def normalize_rad(input_angle):
 
 class NavigationControl():
     def __init__(self, _arr_path, _draw_start_index):
+        self.arr_path = _arr_path
+        self.draw_start_index  = _draw_start_index
+
         self.initial_setting()
         self.run()
 
@@ -66,9 +69,6 @@ class NavigationControl():
         self.ang_vel_3=0.06
         self.lin_vel=0.07
 
-        self.arr_path = _arr_path
-        self.draw_start_index  = _draw_start_index
-
         rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
 
@@ -76,7 +76,7 @@ class NavigationControl():
         self.valve_input_publisher = rospy.Publisher('/valve_input', ValveInput, queue_size=5)
         self.valve_operation_mode_publisher = rospy.Publisher('/operation_mode', OperationMode, queue_size=5)
 
-        self.position_subscriber = rospy.Subscriber('/current_position', Point, self.callback_position) 
+        self.position_subscriber = rospy.Subscriber('/current_position', Point, self.callback_position)
         self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
 
     def run(self):
@@ -100,7 +100,7 @@ class NavigationControl():
                     self.valve_operation_mode_publisher.publish(self.valve_operation_mode)
                     self.valve_input_angle.goal_position = self.valve_status
                     self.valve_publisher.publish(self.valve_input_angle)
-                    
+
                     alpha=normalize_rad(atan2(current_waypoint[1]-self.point.y, current_waypoint[0]-self.point.x)-self.heading.data)
 
                     print("heading error", '%.3f' % np.rad2deg(alpha))
@@ -202,10 +202,10 @@ class NavigationControl():
 
     def control_valve(self):
         for i in range(len(self.draw_start_index)):
-            if self.waypoint_index < self.draw_start_index[i] && self.waypoint_index + self.waypoint_increment >= self.draw_start_index[i]:
+            if self.waypoint_index < self.draw_start_index[i] and (self.waypoint_index + self.waypoint_increment) >= self.draw_start_index[i]:
                 self.valve_status = VALVE_CLOSE
                 return
-        
+
         self.valve_status = VALVE_OPEN
 
 
