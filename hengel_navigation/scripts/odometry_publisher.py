@@ -13,7 +13,7 @@ class LidarOdometry():
     def __init__(self):
         try:
             rospy.init_node('hengel_odometry_publisher', anonymous=False, disable_signals=True)
-            self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10) 
+            self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10)
             self.heading_publisher = rospy.Publisher('/current_heading', Float32, queue_size=10)
             self.blam_position_estimate = rospy.Subscriber('/blam/blam_slam/localization_integrated_estimate', PoseStamped, self.callback_blam_position)
 
@@ -36,14 +36,14 @@ class LidarOdometry():
                 self.pnt.x=self.pnt.x-self.offset_x
                 self.pnt.y=self.pnt.y-self.offset_y
                 #self.heading.data = normalize_rad( normalize_rad(self.heading.data)-self.offset_rot )
-                
+
 
                 self.position_publisher.publish(self.pnt)
                 self.heading_publisher.publish(self.heading)
 
                 sleep(0.01)
 
-        except Exceptoin as e:
+        except Exception as e:
             print(e)
             sys.exit()
 
@@ -64,7 +64,7 @@ class WheelOdometry():
     def __init__(self):
         try:
             rospy.init_node('hengel_odometry_publisher', anonymous=False, disable_signals=True)
-            self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10) 
+            self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10)
             self.heading_publisher = rospy.Publisher('/current_heading', Float32, queue_size=10)
 
             self.offset_x=0
@@ -76,18 +76,16 @@ class WheelOdometry():
 
             self.isFirst = True
 
-            self.tf_listener = tf.TransformListener().data = 0
+            self.tf_listener = tf.TransformListener()
             self.odom_frame = '/odom'
 
             try:
                 self.tf_listener.waitForTransform(self.odom_frame, '/base_footprint', rospy.Time(), rospy.Duration(1.0))
                 self.base_frame = '/base_footprint'
-                print("base_footprint")
             except (tf.Exception, tf.ConnectivityException, tf.LookupException):
                 try:
                     self.tf_listener.waitForTransform(self.odom_frame, '/base_link', rospy.Time(), rospy.Duration(1.0))
                     self.base_frame = '/base_link'
-                    print("base_link")
                 except (tf.Exception, tf.ConnectivityException, tf.LookupException):
                     rospy.loginfo("Cannot find transform between /odom and /base_link or /base_footprint")
                     rospy.signal_shutdown("tf Exception")
@@ -113,10 +111,10 @@ class WheelOdometry():
                 sleep(0.01)
 
         except (tf.Exception, tf.ConnectivityException, tf.LookupException):
-            rospy.loginfo("TF Exception at wheel_odometry.py)
+            rospy.loginfo("TF Exception at wheel_odometry.py")
             sys.exit()
-        
-        except Exceptoin as e:
+
+        except Exception as e:
             print(e)
             sys.exit()
 
