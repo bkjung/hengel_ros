@@ -8,6 +8,7 @@ project(hengel_navigation)
 # Packages
 ################################################################################
 find_package(catkin REQUIRED COMPONENTS
+  message_generation
   rospy
   geometry_msgs
   std_msgs
@@ -22,10 +23,15 @@ catkin_python_setup()
 # Declare ROS messages, services and actions
 ################################################################################
 add_message_files(
-  FILES
-  ValveInput.msg
-  OperationMode.msg
-)
+    FILES
+    ValveInput.msg
+    OperationMode.msg
+    )
+
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+    )
 ################################################################################
 # Declare ROS dynamic reconfigure parameters
 ################################################################################
@@ -34,9 +40,8 @@ add_message_files(
 # Catkin specific configuration
 ################################################################################
 catkin_package(
-  INCLUDE_DIRS scripts
-  CATKIN_DEPENDS rospy geometry_msgs std_msgs
-)
+  CATKIN_DEPENDS message_runtime rospy geometry_msgs std_msgs
+  )
 
 ################################################################################
 # Build
@@ -45,7 +50,7 @@ catkin_package(
 ################################################################################
 # Install
 ################################################################################
-catkin_install_python(PROGRAMS 
+catkin_install_python(PROGRAMS
   scripts/main_program.py
   scripts/navigation_control.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

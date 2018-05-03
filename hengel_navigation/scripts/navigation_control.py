@@ -3,8 +3,7 @@
 import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
 from std_msgs.msg import Float32
-from OperationMode.msg import *
-from ValveInput.msg import *
+from hengel_navigation.msg import ValveInput, OperationMode
 import tf
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos
 from tf.transformations import euler_from_quaternion
@@ -14,37 +13,8 @@ from PIL import Image
 import time
 import os
 
-
-waypoint_increment = 1
-waypoints_length = 0
-waypoints=[]
-cnt_letter = 0
-
-cnt_path_points = 0
-path_points = []
-
-thres1=np.deg2rad(30)
-thres2=np.deg2rad(15)
-#thres3=np.deg2rad(8)
-thres3=np.deg2rad(4)
-#thres3=np.deg2rad(12)
-
-#at turtlebot3
-# ang_vel_1=0.35
-# ang_vel_2=0.2
-# ang_vel_3=0.04
-# lin_vel=0.06
-
-#at hengel bot
-# ang_vel_1=0.08
-# ang_vel_2=0.04
-# ang_vel_3=0.02
-ang_vel_1=0.15
-ang_vel_2=0.1
-ang_vel_3=0.06
-lin_vel=0.07
-#lin_vel=0.09
-
+VALVE_OPEN = 1023
+VALVE_CLOSE = 512
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
 os.system("mkdir -p "+package_base_path+"/hengel_path_manager/output_pathmap")
@@ -59,21 +29,45 @@ def normalize_rad(input_angle):
         return input_angle
 
 class NavigationControl():
-    def __init__(self, arr_path, valve_option_arg):
-        global waypoints_length
-        global waypoints
+    def __init__(self, _arr_path, _draw_start_index):
+        self.initial_setting()
+        self.run()
 
+
+    def initial_setting(self):
         self.point = Point()
         self.heading = Float32()
         self.move_cmd = Twist()
 
         self.valve_operation_mode = OperationMode()
+        self.valve_operation_mode.mode=1
         self.valve_input_angle = ValveInput()
-        self.valve_input_angle.goal_position=512    #closed
 
-        self.isDrawing = False
+        self.valve_status = VALVE_OPEN
 
-        r = rospy.Rate(50)
+        self.r = rospy.Rate(50)
+
+        self.waypoint_increment = 1
+        self.waypoints_length = 0
+        self.waypoint_index = 1  #starting from index No. 1 (c.f. No.0 is at the origin(0,0))
+        #self.waypoint_index = 0  # No.0 is at the origin(0,0)
+        self.waypoints=[]
+        self.cnt_letter = 0
+
+        self.cnt_path_points = 0
+        self.path_points = []
+
+        self.thres1=np.deg2rad(30)
+        self.thres2=np.deg2rad(15)
+        self.thres3=np.deg2rad(4)
+
+        self.ang_vel_1=0.15
+        self.ang_vel_2=0.1
+        self.ang_vel_3=0.06
+        self.lin_vel=0.07
+
+        self.arr_path = _arr_path
+        self.draw_start_index  = _draw_start_index
 
         rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
@@ -81,60 +75,40 @@ class NavigationControl():
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
         self.valve_input_publisher = rospy.Publisher('/valve_input', ValveInput, queue_size=5)
         self.valve_operation_mode_publisher = rospy.Publisher('/operation_mode', OperationMode, queue_size=5)
-        if valve_option_arg=='continuous':
-            self.valve_operation_mode.mode=0
-            self.valve_operation_mode_publisher.publish(valve_operation_mode)
-        elif valve_option_arg=='discrete':
-            self.valve_operation_mode.mode=1
-            self.valve_operation_mode_publisher.publish(valve_operation_mode)
-        else:
-            rospy.signal_shutdown("Valve Mode Input ERROR")
-            return
 
         self.position_subscriber = rospy.Subscriber('/current_position', Point, self.callback_position) 
         self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
 
+    def run(self):
         # go through path array
-        waypoints_length = len(arr_path)
-        for idx in range(waypoints_length):
-            waypoints.append([arr_path[idx][0]-arr_path[0][0], arr_path[idx][1]-arr_path[0][1]])
+        self.waypoints_length = len(self.arr_path)
+        for idx in range(self.waypoints_length):
+            self.waypoints.append([self.arr_path[idx][0]-self.arr_path[0][0], self.arr_path[idx][1]-self.arr_path[0][1]])
 
-        print("size of waypoints = ", len(waypoints))
+        print("size of waypoints = ", len(self.waypoints))
 
-        #waypoint_index = 1  #starting from index No. 1 (c.f. No.0 is at the origin(0,0))
-        waypoint_index = 0  # No.0 is at the origin(0,0)
+        while self.waypoint_index < waypoints_length:
+            current_waypoint = [self.waypoints[self.waypoint_index][0], waypoints[self.waypoint_index][1]]
 
-        while waypoint_index < waypoints_length:
-            current_waypoint = [waypoints[waypoint_index][0], waypoints[waypoint_index][1]]
-            # if goal_z > 180 or goal_z < -180:
-            #     print("you input worng z range.")
-            #     self.shutdown()
-            # goal_z = np.deg2rad(goal_z)
-            # (position,rotation) = self.get_odom()
-
-            goal_distance = sqrt(pow(current_waypoint[0] - position.x, 2) + pow(current_waypoint[1] - position.y, 2))
+            goal_distance = sqrt(pow(current_waypoint[0] - self.point.x, 2) + pow(current_waypoint[1] - self.point.y, 2))
             distance = goal_distance
 
             while distance > 0.03:
                 if rospy.is_shutdown():
                     break
                 try:
-                    ################print ("distance= ", '%.3f' % distance)
+                    self.valve_operation_mode_publisher.publish(self.valve_operation_mode)
+                    self.valve_input_angle.goal_position = self.valve_status
+                    self.valve_publisher.publish(self.valve_input_angle)
+                    
+                    alpha=normalize_rad(atan2(current_waypoint[1]-self.point.y, current_waypoint[0]-self.point.x)-self.heading.data)
 
-                    ################print("goal_position", '%.3f' % current_waypoint[0], '%.3f' % current_waypoint[1], "current_position", '%.3f' % position.x, '%.3f' % position.y)
-                    # alpha=atan2(goal_x-x_start, goal_y-y_start)-rotation
-                    # alpha=normalize_rad( normalize_rad(atan2(current_waypoint[1]-position.y, current_waypoint[0]-position.x))-rotation )
-                    alpha=normalize_rad(atan2(current_waypoint[1]-position.y, current_waypoint[0]-position.x)-rotation)
-
-                    # print("goal_angle", '%.3f' % np.rad2deg(alpha),"current_angle", '%.3f' % np.rad2deg(rotation))
-                    # print("goal_angle", '%.3f' % alpha,"current_angle", '%.3f' % rotation)
                     print("heading error", '%.3f' % np.rad2deg(alpha))
 
                     if abs(alpha)> thres1: #abs?
                         if alpha>0 or alpha<-pi:
                             self.move_cmd.linear.x=0
                             self.move_cmd.angular.z=ang_vel_1
-
                         else:
                             self.move_cmd.linear.x=0
                             self.move_cmd.angular.z=-ang_vel_1
@@ -143,10 +117,10 @@ class NavigationControl():
                         if alpha>0 or alpha<-pi:
                             self.move_cmd.linear.x=0
                             self.move_cmd.angular.z=ang_vel_2
-
                         else:
                             self.move_cmd.linear.x=0
                             self.move_cmd.angular.z=-ang_vel_2
+
                     elif abs(alpha)>thres3:
                         if alpha>0 or alpha<-pi:
                             self.move_cmd.linear.x=0
@@ -155,12 +129,11 @@ class NavigationControl():
                             self.move_cmd.linear.x=0
                             self.move_cmd.angular.z=-ang_vel_3
 
-                    else:self.heading_publisher.publish(rotation)
+                    else:
                         x=distance*sin(alpha)
                         curv=2*x/pow(distance,2)
 
                         if distance<0.08:
-                            #lin_vel_scaled=lin_vel/4.0
                             lin_vel_scaled=lin_vel/2.0
                         else:
                             lin_vel_scaled=lin_vel
@@ -168,56 +141,39 @@ class NavigationControl():
                         self.move_cmd.linear.x=lin_vel_scaled
                         self.move_cmd.angular.z=curv*lin_vel_scaled
 
-                    #print("DEBUG. alpha=", np.rad2deg(alpha), " angular.z=", self.move_cmd.angular.z)
                     self.cmd_vel.publish(self.move_cmd)
 
-                    (position, rotation) = self.get_odom()
-                    heading.data=rotation
-                    self.position_publisher.publish(position)
-                    self.heading_publisher.publish(rotation)
+                    self.cnt_path_points = self.cnt_path_points + 1
+                    self.path_points.append([self.point.x, self.point.y])
 
-                    global cnt_path_points
-                    global path_points
+                    distance = sqrt(pow((current_waypoint[0] - self.point.x), 2) + pow((current_waypoint[1] - self.point.y), 2))
 
-                    cnt_path_points = cnt_path_points + 1
-                    path_points.append([position.x, position.y])
+                    self.r.sleep()
 
-                    distance = sqrt(pow((current_waypoint[0] - position.x), 2) + pow((current_waypoint[1] - position.y), 2))
-
-                    r.sleep()
                 except KeyboardInterrupt:
                     print("Got KeyboardInterrupt")
                     rospy.signal_shutdown("KeyboardInterrupt")
                     break
 
-            print("Now at Waypoint No.", waypoint_index)
-            waypoint_index = waypoint_index + waypoint_increment
+            print("Now at Waypoint No.", self.waypoint_index)
+            self.control_valve()
+
+            self.waypoint_index = self.waypoint_index + self.waypoint_increment
+
+        #Wait for 2 seconds to close valve
+        self.quit_valve()
 
         rospy.loginfo("Stopping the robot at the final destination")
-        self.generate_pathmap()
-
         self.cmd_vel.publish(Twist())
 
+        self.generate_pathmap()
+
     def callback_position(self, _data):
-        self.point.x = data.x
-        self.point.y = data.y
-        
+        self.point.x = _data.x
+        self.point.y = _data.y
 
     def callback_heading(self, _data):
         self.heading.data = _data.data
-
-    def control_valve(self):
-        if self.valve_operation_mode.mode == 0: #continuous
-            self.valve_input_angle.goal_position = 1023 #open
-            self.valve_input_publisher.publish(self.valve_input_angle)
-
-        elif self.valve_operation_mode.mode == 1: #discrete
-            if self.valve_input_angle.goal_position == 1023: #open
-                self.valve_input_angle.goal_position = 512  #close
-            elif self.valve_input_angle.goal_position == 512: #close
-                self.valve_input_angle.goal_position = 1023: #open
-            
-            self.valve_input_publisher.publish(self.valve_input_angle)
 
     def generate_pathmap(self):
         scale = 10
@@ -244,6 +200,22 @@ class NavigationControl():
         print("Pathmap image saved at "+image_save_path)
         img.save(image_save_path, "PNG")
 
+    def control_valve(self):
+        for i in range(len(self.draw_start_index)):
+            if self.waypoint_index < self.draw_start_index[i] && self.waypoint_index + self.waypoint_increment >= self.draw_start_index[i]:
+                self.valve_status = VALVE_CLOSE
+                return
+        
+        self.valve_status = VALVE_OPEN
+
+
+    def quit_valve(self):
+        for ind_quit in range(100):
+            self.valve_input_angle.goal_position = VALVE_CLOSE
+            self.valve_publisher.publish(self.valve_input_angle)
+
+            ind_quit = ind_quit+1
+            self.r.sleep()
 
     def shutdown(self):
         self.cmd_vel.publish(Twist())

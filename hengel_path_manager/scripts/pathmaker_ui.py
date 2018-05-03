@@ -40,7 +40,8 @@ class PathMaker():
         self.root.geometry(_str)
         self.isDrawmode = False
         self.path_drawing=[[-1,-1]]
-        self.path_drawing_saved=[[-1,-1]]
+        self.cnt_waypoint=0
+        self.draw_start_index=[]
         self.isFinishedCorrectly = False
 
         self.c=Canvas(self.root, height=size_x, width=size_x, bg="white")
@@ -53,9 +54,6 @@ class PathMaker():
         self.button_draw=Button(self.frame, text="Draw", relief="raised", command=self.command_drawing)
         self.button_draw.grid(row=0, column=0)
 
-        # self.button_cancel=Button(self.frame, text="Cancel", command=self.command_cancel)
-        # self.button_cancel.grid(row=0, column=1)
-
         self.button_save=Button(self.frame, text="Save", command=self.command_save)
         self.button_save.grid(row=0, column=1)
 
@@ -65,13 +63,18 @@ class PathMaker():
         # label_entry=Entry(self.frame, width=10)
         # label_entry.grid(row=0, column=2)
 
-        self.c.bind("<B1-Motion>", self.callback)
+        self.c.bind("<Button-1>", self.callback_mouse_clicked)
+        self.c.bind("<B1-Motion>", self.callback_move_with_button_held_down)
         self.root.mainloop()    #this will run unti UI closes
 
-    def callback(self, event):
+    def callback_mouse_clicked(self, event):
+        self.draw_start_index.append(self.cnt_waypoint)
+
+    def callback_move_with_button_held_down(self, event):
         if self.isDrawmode:
             circle=self.c.create_oval(event.x-radius, event.y-radius, event.x+radius, event.y+radius, width=2, fill='black')
             self.path_append(float(event.x)/length_side, float(event.y)/length_side)
+            self.cnt_waypoint = self.cnt_waypoint + 1
 
     def path_append(self, x,y):
         last_x, last_y=self.path_drawing[-1]
@@ -96,7 +99,6 @@ class PathMaker():
             f.write(data)
         f.close()
         print("path saved at " + self.file_path)
-        self.path_drawing_saved = self.path_drawing
         self.isFinishedCorrectly = True
         return
  

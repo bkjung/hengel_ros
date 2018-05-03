@@ -17,19 +17,20 @@ from navigation_control import NavigationControl
 
 class PaintDrawing():
     def __init__(self):
-        PathUI = PathMaker()
+        self.PathUI = PathMaker()
+        self.run()
 
-        if PathUI.isFinishedCorrectly == True:
-            NavigationControl(PathUI.path_drawing_saved, sys.argv[1])
+    def run(self):
+        if self.PathUI.isFinishedCorrectly == True:
+            NavigationControl(self.PathUI.path_drawing, self.PathUI.draw_start_index)
         else:
             raise Exception("Path Drawing UI did not finish correctly")
-
-
         
 
 if __name__ == '__main__':
     try:
         PaintDrawing()
+
         print("End of Main Function")
 
     except Exception as e:

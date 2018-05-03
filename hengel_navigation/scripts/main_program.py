@@ -26,7 +26,6 @@ class HengelMain():
             elif self.runningOption == OPTION_DRAWING:
                 PaintDrawing()
 
-
             else:
                 raise Exception("WRONG INPUT OPTION FOR PAINTING (Neither 1 nor 2)")
 
