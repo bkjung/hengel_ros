@@ -3,6 +3,8 @@
 import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
 from std_msgs.msg import Float32
+from OperationMode.msg import *
+from ValveInput.msg import *
 import tf
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos
 from tf.transformations import euler_from_quaternion
@@ -69,7 +71,7 @@ class NavigationControl():
 
         self.point = Point()
         self.heading = Float32()
-        move_cmd = Twist()
+        self.move_cmd = Twist()
         
         r = rospy.Rate(50)        
 
@@ -109,28 +111,28 @@ class NavigationControl():
 
                     if abs(alpha)> thres1: #abs?
                         if alpha>0 or alpha<-pi:
-                            move_cmd.linear.x=0
-                            move_cmd.angular.z=ang_vel_1
+                            self.move_cmd.linear.x=0
+                            self.move_cmd.angular.z=ang_vel_1
 
                         else:
-                            move_cmd.linear.x=0
-                            move_cmd.angular.z=-ang_vel_1
+                            self.move_cmd.linear.x=0
+                            self.move_cmd.angular.z=-ang_vel_1
 
                     elif abs(alpha)>thres2:
                         if alpha>0 or alpha<-pi:
-                            move_cmd.linear.x=0
-                            move_cmd.angular.z=ang_vel_2
+                            self.move_cmd.linear.x=0
+                            self.move_cmd.angular.z=ang_vel_2
 
                         else:
-                            move_cmd.linear.x=0
-                            move_cmd.angular.z=-ang_vel_2
+                            self.move_cmd.linear.x=0
+                            self.move_cmd.angular.z=-ang_vel_2
                     elif abs(alpha)>thres3:
                         if alpha>0 or alpha<-pi:
-                            move_cmd.linear.x=0
-                            move_cmd.angular.z=ang_vel_3
+                            self.move_cmd.linear.x=0
+                            self.move_cmd.angular.z=ang_vel_3
                         else:
-                            move_cmd.linear.x=0
-                            move_cmd.angular.z=-ang_vel_3
+                            self.move_cmd.linear.x=0
+                            self.move_cmd.angular.z=-ang_vel_3
 
                     else:
                         x=distance*sin(alpha)
@@ -142,11 +144,11 @@ class NavigationControl():
                         else:
                             lin_vel_scaled=lin_vel
 
-                        move_cmd.linear.x=lin_vel_scaled
-                        move_cmd.angular.z=curv*lin_vel_scaled
+                        self.move_cmd.linear.x=lin_vel_scaled
+                        self.move_cmd.angular.z=curv*lin_vel_scaled
 
-                    #print("DEBUG. alpha=", np.rad2deg(alpha), " angular.z=", move_cmd.angular.z)
-                    self.cmd_vel.publish(move_cmd)
+                    #print("DEBUG. alpha=", np.rad2deg(alpha), " angular.z=", self.move_cmd.angular.z)
+                    self.cmd_vel.publish(self.move_cmd)
 
                     (position, rotation) = self.get_odom()
                     heading.data=rotation
