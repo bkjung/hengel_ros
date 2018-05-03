@@ -48,7 +48,7 @@ class PaintLetter():
         print("Input:", word)
         path_letter_saved=get_path(word)
 
-        NavigationControl(path_letter_saved)
+        NavigationControl(path_letter_saved, sys.argv[1])
  
 
 
