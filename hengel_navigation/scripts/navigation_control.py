@@ -13,7 +13,8 @@ from PIL import Image
 import time
 import os
 
-VALVE_OPEN = 1023
+#VALVE_OPEN = 1023
+VALVE_OPEN = 800
 VALVE_CLOSE = 512
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
@@ -44,7 +45,7 @@ class NavigationControl():
 
         self.valve_operation_mode = OperationMode()
         self.valve_operation_mode.mode=1
-        self.valve_input_angle = ValveInput()
+        self.valve_angle_input = ValveInput()
 
         self.valve_status = VALVE_OPEN
 
@@ -73,7 +74,7 @@ class NavigationControl():
         rospy.on_shutdown(self.shutdown)
 
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
-        self.valve_input_publisher = rospy.Publisher('/valve_input', ValveInput, queue_size=5)
+        self.valve_angle_publisher = rospy.Publisher('/valve_input', ValveInput, queue_size=5)
         self.valve_operation_mode_publisher = rospy.Publisher('/operation_mode', OperationMode, queue_size=5)
 
         self.position_subscriber = rospy.Subscriber('/current_position', Point, self.callback_position)
@@ -88,7 +89,7 @@ class NavigationControl():
         print("size of waypoints = ", len(self.waypoints))
 
         while self.waypoint_index < self.waypoints_length:
-            current_waypoint = [self.waypoints[self.waypoint_index][0], waypoints[self.waypoint_index][1]]
+            current_waypoint = [self.waypoints[self.waypoint_index][0], self.waypoints[self.waypoint_index][1]]
 
             goal_distance = sqrt(pow(current_waypoint[0] - self.point.x, 2) + pow(current_waypoint[1] - self.point.y, 2))
             distance = goal_distance
@@ -98,45 +99,45 @@ class NavigationControl():
                     break
                 try:
                     self.valve_operation_mode_publisher.publish(self.valve_operation_mode)
-                    self.valve_input_angle.goal_position = self.valve_status
-                    self.valve_publisher.publish(self.valve_input_angle)
+                    self.valve_angle_input.goal_position = self.valve_status
+                    self.valve_angle_publisher.publish(self.valve_angle_input)
 
                     alpha=normalize_rad(atan2(current_waypoint[1]-self.point.y, current_waypoint[0]-self.point.x)-self.heading.data)
 
                     print("heading error", '%.3f' % np.rad2deg(alpha))
 
-                    if abs(alpha)> thres1: #abs?
+                    if abs(alpha)> self.thres1: #abs?
                         if alpha>0 or alpha<-pi:
                             self.move_cmd.linear.x=0
-                            self.move_cmd.angular.z=ang_vel_1
+                            self.move_cmd.angular.z=self.ang_vel_1
                         else:
                             self.move_cmd.linear.x=0
-                            self.move_cmd.angular.z=-ang_vel_1
+                            self.move_cmd.angular.z=-self.ang_vel_1
 
-                    elif abs(alpha)>thres2:
+                    elif abs(alpha)>self.thres2:
                         if alpha>0 or alpha<-pi:
                             self.move_cmd.linear.x=0
-                            self.move_cmd.angular.z=ang_vel_2
+                            self.move_cmd.angular.z=self.ang_vel_2
                         else:
                             self.move_cmd.linear.x=0
-                            self.move_cmd.angular.z=-ang_vel_2
+                            self.move_cmd.angular.z=-self.ang_vel_2
 
-                    elif abs(alpha)>thres3:
+                    elif abs(alpha)>self.thres3:
                         if alpha>0 or alpha<-pi:
                             self.move_cmd.linear.x=0
-                            self.move_cmd.angular.z=ang_vel_3
+                            self.move_cmd.angular.z=self.ang_vel_3
                         else:
                             self.move_cmd.linear.x=0
-                            self.move_cmd.angular.z=-ang_vel_3
+                            self.move_cmd.angular.z=-self.ang_vel_3
 
                     else:
                         x=distance*sin(alpha)
                         curv=2*x/pow(distance,2)
 
                         if distance<0.08:
-                            lin_vel_scaled=lin_vel/2.0
+                            lin_vel_scaled=self.lin_vel/2.0
                         else:
-                            lin_vel_scaled=lin_vel
+                            lin_vel_scaled=self.lin_vel
 
                         self.move_cmd.linear.x=lin_vel_scaled
                         self.move_cmd.angular.z=curv*lin_vel_scaled
@@ -178,7 +179,7 @@ class NavigationControl():
     def generate_pathmap(self):
         scale = 10
         pixel_size = 100 #1m*1m canvas of 1cm accuracy points (including boundary points)
-        img = Image.new("RGB", ((100+pixel_size*cnt_letter)*scale, (100+pixel_size)*scale), (255, 255, 255))
+        img = Image.new("RGB", ((100+pixel_size*self.cnt_letter)*scale, (100+pixel_size)*scale), (255, 255, 255))
 
         print("cnt_path_points = ", cnt_path_points)
 
@@ -211,8 +212,8 @@ class NavigationControl():
 
     def quit_valve(self):
         for ind_quit in range(100):
-            self.valve_input_angle.goal_position = VALVE_CLOSE
-            self.valve_publisher.publish(self.valve_input_angle)
+            self.valve_angle_input.goal_position = VALVE_CLOSE
+            self.valve_angle_publisher.publish(self.valve_angle_input)
 
             ind_quit = ind_quit+1
             self.r.sleep()
