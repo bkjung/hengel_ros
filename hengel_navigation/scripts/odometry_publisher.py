@@ -8,6 +8,7 @@ from tf.transformations import euler_from_quaternion
 from time import sleep
 from math import pi
 import sys
+from navigation_control import normalize_rad
 
 class LidarOdometry():
     def __init__(self):
@@ -18,7 +19,7 @@ class LidarOdometry():
 
             self.offset_x=0
             self.offset_y=0
-            self.offset_rot=0
+            self.offset_heading=0
 
             self.pnt = Point()
             self.heading = Float32()
@@ -29,12 +30,12 @@ class LidarOdometry():
                 if self.isFirst:
                     self.offset_x=self.pnt.x
                     self.offset_y=self.pnt.y
-                    self.offset_rot=self.heading-pi/2.0
+                    self.offset_heading=self.heading-pi/2.0
                     self.isFirst = False
 
                 self.pnt.x=self.pnt.x-self.offset_x
                 self.pnt.y=self.pnt.y-self.offset_y
-                #self.heading.data = normalize_rad( normalize_rad(self.heading.data)-self.offset_rot )
+                self.heading.data = normalize_rad( self.heading.data-self.offset_heading )
 
 
                 self.position_publisher.publish(self.pnt)
