@@ -75,6 +75,9 @@ class WheelOdometry():
 
             self.isFirst = True
 
+            self.loop_cnt=0
+            self.isGoodToGo=False
+
             self.tf_listener = tf.TransformListener()
             self.odom_frame = '/odom'
 
@@ -90,22 +93,31 @@ class WheelOdometry():
                     rospy.signal_shutdown("tf Exception")
 
             while(True):
-                (trans, rot) = self.tf_listener.lookupTransform(self.odom_frame, self.base_frame, rospy.Time(0))
-                self.pnt=Point(*trans)
-                self.heading.data = euler_from_quaternion(rot)[2]
+                #wait for 2 sec after booting to set poistion&heading
+                if self.isGoodToGo==False:
+                    if self.loop_cnt==200:
+                        self.isGoodToGo=True
+                        continue
+                    else:
+                        self.loop_cnt=self.loop_cnt+1
+                        continue
+                else:
+                    (trans, rot) = self.tf_listener.lookupTransform(self.odom_frame, self.base_frame, rospy.Time(0))
+                    self.pnt=Point(*trans)
+                    self.heading.data = euler_from_quaternion(rot)[2]
 
-                if self.isFirst:
-                    self.offset_x=self.pnt.x
-                    self.offset_y=self.pnt.y
-                    self.offset_rot=self.heading.data-pi/2.0
-                    self.isFirst = False
+                    if self.isFirst:
+                        self.offset_x=self.pnt.x
+                        self.offset_y=self.pnt.y
+                        self.offset_rot=self.heading.data-pi/2.0
+                        self.isFirst = False
 
-                self.pnt.x=self.pnt.x-self.offset_x
-                self.pnt.y=self.pnt.y-self.offset_y
-                #self.heading.data = normalize_rad( normalize_rad(self.heading.data)-self.offset_rot )
+                    self.pnt.x=self.pnt.x-self.offset_x
+                    self.pnt.y=self.pnt.y-self.offset_y
+                    #self.heading.data = normalize_rad( normalize_rad(self.heading.data)-self.offset_rot )
 
-                self.position_publisher.publish(self.pnt)
-                self.heading_publisher.publish(self.heading)
+                    self.position_publisher.publish(self.pnt)
+                    self.heading_publisher.publish(self.heading)
 
                 sleep(0.01)
 
