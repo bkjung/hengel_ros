@@ -69,7 +69,7 @@ class NavigationControl():
         self.ang_vel_3=0.06
         self.lin_vel=0.07
 
-        rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
+        #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
 
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
