@@ -50,7 +50,7 @@ class NavigationControl():
 
         self.valve_status = VALVE_OPEN
 
-        self.r = rospy.Rate(50)
+        self.r = rospy.Rate(50) #50hz
 
         self.waypoint_increment = 1
         self.waypoints_length = 0
@@ -71,6 +71,9 @@ class NavigationControl():
         self.ang_vel_2=0.1
         self.ang_vel_3=0.06
         self.lin_vel=0.07
+
+        self.loop_cnt=0
+        self.isGoodToGo=False
 
         #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
@@ -101,61 +104,70 @@ class NavigationControl():
                 if rospy.is_shutdown():
                     break
                 try:
-                    self.valve_operation_mode_publisher.publish(self.valve_operation_mode)
-                    self.valve_angle_input.goal_position = self.valve_status
-                    self.valve_angle_publisher.publish(self.valve_angle_input)
-
-                    print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
-
-                    alpha=normalize_rad(atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x)-self.heading.data)
-
-                    print("heading error: %0.3f" % np.rad2deg(alpha))
-
-                    if abs(alpha)> self.thres1: #abs?
-                        # if alpha>0 or alpha<-pi:
-                        if alpha>0:
-                            self.move_cmd.linear.x=0
-                            self.move_cmd.angular.z=self.ang_vel_1
+                    #wait for 2sec to initialize position and heading input
+                    if self.isGoodToGo==False:
+                        if self.loop_cnt==100:
+                            self.isGoodToGo=True
+                            continue
                         else:
-                            self.move_cmd.linear.x=0
-                            self.move_cmd.angular.z=-self.ang_vel_1
-
-                    elif abs(alpha)>self.thres2:
-                        # if alpha>0 or alpha<-pi:
-                        if alpha>0:
-                            self.move_cmd.linear.x=0
-                            self.move_cmd.angular.z=self.ang_vel_2
-                        else:
-                            self.move_cmd.linear.x=0
-                            self.move_cmd.angular.z=-self.ang_vel_2
-
-                    elif abs(alpha)>self.thres3:
-                        # if alpha>0 or alpha<-pi:
-                        if alpha>0:
-                            self.move_cmd.linear.x=0
-                            self.move_cmd.angular.z=self.ang_vel_3
-                        else:
-                            self.move_cmd.linear.x=0
-                            self.move_cmd.angular.z=-self.ang_vel_3
-
+                            self.loop_cnt=self.loop_cnt+1
+                            continue
                     else:
-                        x=distance*sin(alpha)
-                        curv=2*x/pow(distance,2)
+                        self.valve_operation_mode_publisher.publish(self.valve_operation_mode)
+                        self.valve_angle_input.goal_position = self.valve_status
+                        self.valve_angle_publisher.publish(self.valve_angle_input)
 
-                        if distance<0.08:
-                            lin_vel_scaled=self.lin_vel/2.0
+                        print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
+
+                        alpha=normalize_rad(atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x)-self.heading.data)
+
+                        print("heading error: %0.3f" % np.rad2deg(alpha))
+
+                        if abs(alpha)> self.thres1: #abs?
+                            # if alpha>0 or alpha<-pi:
+                            if alpha>0:
+                                self.move_cmd.linear.x=0
+                                self.move_cmd.angular.z=self.ang_vel_1
+                            else:
+                                self.move_cmd.linear.x=0
+                                self.move_cmd.angular.z=-self.ang_vel_1
+
+                        elif abs(alpha)>self.thres2:
+                            # if alpha>0 or alpha<-pi:
+                            if alpha>0:
+                                self.move_cmd.linear.x=0
+                                self.move_cmd.angular.z=self.ang_vel_2
+                            else:
+                                self.move_cmd.linear.x=0
+                                self.move_cmd.angular.z=-self.ang_vel_2
+
+                        elif abs(alpha)>self.thres3:
+                            # if alpha>0 or alpha<-pi:
+                            if alpha>0:
+                                self.move_cmd.linear.x=0
+                                self.move_cmd.angular.z=self.ang_vel_3
+                            else:
+                                self.move_cmd.linear.x=0
+                                self.move_cmd.angular.z=-self.ang_vel_3
+
                         else:
-                            lin_vel_scaled=self.lin_vel
+                            x=distance*sin(alpha)
+                            curv=2*x/pow(distance,2)
 
-                        self.move_cmd.linear.x=lin_vel_scaled
-                        self.move_cmd.angular.z=curv*lin_vel_scaled
+                            if distance<0.08:
+                                lin_vel_scaled=self.lin_vel/2.0
+                            else:
+                                lin_vel_scaled=self.lin_vel
 
-                    self.cmd_vel.publish(self.move_cmd)
+                            self.move_cmd.linear.x=lin_vel_scaled
+                            self.move_cmd.angular.z=curv*lin_vel_scaled
 
-                    self.cnt_path_points = self.cnt_path_points + 1
-                    self.path_points.append([self.point.x, self.point.y])
+                        self.cmd_vel.publish(self.move_cmd)
 
-                    distance = sqrt(pow((self.current_waypoint[0] - self.point.x), 2) + pow((self.current_waypoint[1] - self.point.y), 2))
+                        self.cnt_path_points = self.cnt_path_points + 1
+                        self.path_points.append([self.point.x, self.point.y])
+
+                        distance = sqrt(pow((self.current_waypoint[0] - self.point.x), 2) + pow((self.current_waypoint[1] - self.point.y), 2))
 
                     self.r.sleep()
 
