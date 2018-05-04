@@ -56,6 +56,7 @@ class NavigationControl():
         self.waypoint_index = 1  #starting from index No. 1 (c.f. No.0 is at the origin(0,0))
         #self.waypoint_index = 0  # No.0 is at the origin(0,0)
         self.waypoints=[]
+        self.current_waypoint = []
         self.cnt_letter = 0
 
         self.cnt_path_points = 0
@@ -89,9 +90,10 @@ class NavigationControl():
         print("size of waypoints = ", len(self.waypoints))
 
         while self.waypoint_index < self.waypoints_length:
-            current_waypoint = [self.waypoints[self.waypoint_index][0], self.waypoints[self.waypoint_index][1]]
+            print("current waypoint index: "+str(self.waypoint_index))
+            self.current_waypoint = [self.waypoints[self.waypoint_index][0], self.waypoints[self.waypoint_index][1]]
 
-            goal_distance = sqrt(pow(current_waypoint[0] - self.point.x, 2) + pow(current_waypoint[1] - self.point.y, 2))
+            goal_distance = sqrt(pow(self.current_waypoint[0] - self.point.x, 2) + pow(self.current_waypoint[1] - self.point.y, 2))
             distance = goal_distance
 
             while distance > 0.03:
@@ -102,9 +104,11 @@ class NavigationControl():
                     self.valve_angle_input.goal_position = self.valve_status
                     self.valve_angle_publisher.publish(self.valve_angle_input)
 
-                    alpha=normalize_rad(atan2(current_waypoint[1]-self.point.y, current_waypoint[0]-self.point.x)-self.heading.data)
+                    print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
-                    print("heading error", '%.3f' % np.rad2deg(alpha))
+                    alpha=normalize_rad(atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x)-self.heading.data)
+
+                    print("heading error: %0.3f" % np.rad2deg(alpha))
 
                     if abs(alpha)> self.thres1: #abs?
                         if alpha>0 or alpha<-pi:
@@ -147,7 +151,7 @@ class NavigationControl():
                     self.cnt_path_points = self.cnt_path_points + 1
                     self.path_points.append([self.point.x, self.point.y])
 
-                    distance = sqrt(pow((current_waypoint[0] - self.point.x), 2) + pow((current_waypoint[1] - self.point.y), 2))
+                    distance = sqrt(pow((self.current_waypoint[0] - self.point.x), 2) + pow((self.current_waypoint[1] - self.point.y), 2))
 
                     self.r.sleep()
 
@@ -156,7 +160,7 @@ class NavigationControl():
                     rospy.signal_shutdown("KeyboardInterrupt")
                     break
 
-            print("Now at Waypoint No.", self.waypoint_index)
+            #print("Now at Waypoint No.", self.waypoint_index)
             self.control_valve()
 
             self.waypoint_index = self.waypoint_index + self.waypoint_increment
@@ -181,12 +185,12 @@ class NavigationControl():
         pixel_size = 100 #1m*1m canvas of 1cm accuracy points (including boundary points)
         img = Image.new("RGB", ((100+pixel_size*self.cnt_letter)*scale, (100+pixel_size)*scale), (255, 255, 255))
 
-        print("cnt_path_points = ", cnt_path_points)
+        print("cnt_path_points = ", self.cnt_path_points)
 
-        for i in range(cnt_path_points):
-            # print(path_points[i][0], path_points[i][1])
-            x = 0.99 if path_points[i][0]==1.0 else path_points[i][0]
-            y = 0.99 if (1.0-path_points[i][1])==1.0 else (1.0-path_points[i][1])
+        for i in range(self.cnt_path_points):
+            # print(self.path_points[i][0], self.path_points[i][1])
+            x = 0.99 if self.path_points[i][0]==1.0 else self.path_points[i][0]
+            y = 0.99 if (1.0-self.path_points[i][1])==1.0 else (1.0-self.path_points[i][1])
             x = (int)(floor(x*100))
             y = (int)(floor(y*100))
 
