@@ -14,7 +14,8 @@ import time
 import os
 
 #VALVE_OPEN = 1023
-VALVE_OPEN = 800
+#VALVE_OPEN = 800
+VALVE_OPEN=900
 VALVE_CLOSE = 512
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
