@@ -12,7 +12,6 @@ import sys
 class LidarOdometry():
     def __init__(self):
         try:
-            rospy.init_node('hengel_odometry_publisher', anonymous=False, disable_signals=True)
             self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10)
             self.heading_publisher = rospy.Publisher('/current_heading', Float32, queue_size=10)
             self.blam_position_estimate = rospy.Subscriber('/blam/blam_slam/localization_integrated_estimate', PoseStamped, self.callback_blam_position)
@@ -63,7 +62,6 @@ class LidarOdometry():
 class WheelOdometry():
     def __init__(self):
         try:
-            rospy.init_node('hengel_odometry_publisher', anonymous=False, disable_signals=True)
             self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10)
             self.heading_publisher = rospy.Publisher('/current_heading', Float32, queue_size=10)
 
@@ -132,6 +130,7 @@ def initialOptionSelect():
 
 if __name__ == '__main__':
     try:
+        rospy.init_node('hengel_odometry_publisher', anonymous=False, disable_signals=True)
         initialOptionSelect()
 
         print("End of Main Function")
