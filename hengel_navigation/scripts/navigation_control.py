@@ -87,7 +87,7 @@ class NavigationControl():
 
         print("size of waypoints = ", len(self.waypoints))
 
-        while self.waypoint_index < waypoints_length:
+        while self.waypoint_index < self.waypoints_length:
             current_waypoint = [self.waypoints[self.waypoint_index][0], waypoints[self.waypoint_index][1]]
 
             goal_distance = sqrt(pow(current_waypoint[0] - self.point.x, 2) + pow(current_waypoint[1] - self.point.y, 2))
