@@ -39,7 +39,9 @@ class PathMaker():
         _str=str(size_x)+"x"+str(size_y)
         self.root.geometry(_str)
         self.isDrawmode = False
-        self.path_drawing=[[-1,-1]]
+        #self.path_drawing=[[-1,-1]]
+        self.path_drawing=[]
+        self.isFirst=True
         self.cnt_waypoint=0
         self.draw_start_index=[]
         self.isFinishedCorrectly = False
@@ -77,10 +79,14 @@ class PathMaker():
             self.cnt_waypoint = self.cnt_waypoint + 1
 
     def path_append(self, x,y):
-        last_x, last_y=self.path_drawing[-1]
-        if sqrt(pow(last_x-x,2)+pow(last_y-y,2))>dist:
+        if self.isFirst == True:
             self.path_drawing.append([x,y])
-            print(x,y)
+            self.isFirst = False
+        else:
+            last_x, last_y=self.path_drawing[-1]
+            if sqrt(pow(last_x-x,2)+pow(last_y-y,2))>dist:
+                self.path_drawing.append([x,y])
+                print(x,y)
 
     def command_drawing(self):
         if self.button_draw.config('relief')[-1] == 'sunken':
@@ -101,7 +107,7 @@ class PathMaker():
         print("path saved at " + self.file_path)
         self.isFinishedCorrectly = True
         return
- 
+
     def command_quit(self):
         self.root.quit()
 
