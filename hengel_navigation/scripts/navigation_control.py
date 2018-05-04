@@ -108,10 +108,8 @@ class NavigationControl():
                     if self.isGoodToGo==False:
                         if self.loop_cnt==100:
                             self.isGoodToGo=True
-                            continue
                         else:
                             self.loop_cnt=self.loop_cnt+1
-                            continue
                     else:
                         self.valve_operation_mode_publisher.publish(self.valve_operation_mode)
                         self.valve_angle_input.goal_position = self.valve_status
