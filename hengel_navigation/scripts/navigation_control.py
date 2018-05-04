@@ -112,7 +112,8 @@ class NavigationControl():
                     print("heading error: %0.3f" % np.rad2deg(alpha))
 
                     if abs(alpha)> self.thres1: #abs?
-                        if alpha>0 or alpha<-pi:
+                        # if alpha>0 or alpha<-pi:
+                        if alpha>0:
                             self.move_cmd.linear.x=0
                             self.move_cmd.angular.z=self.ang_vel_1
                         else:
@@ -120,7 +121,8 @@ class NavigationControl():
                             self.move_cmd.angular.z=-self.ang_vel_1
 
                     elif abs(alpha)>self.thres2:
-                        if alpha>0 or alpha<-pi:
+                        # if alpha>0 or alpha<-pi:
+                        if alpha>0:
                             self.move_cmd.linear.x=0
                             self.move_cmd.angular.z=self.ang_vel_2
                         else:
@@ -128,7 +130,8 @@ class NavigationControl():
                             self.move_cmd.angular.z=-self.ang_vel_2
 
                     elif abs(alpha)>self.thres3:
-                        if alpha>0 or alpha<-pi:
+                        # if alpha>0 or alpha<-pi:
+                        if alpha>0:
                             self.move_cmd.linear.x=0
                             self.move_cmd.angular.z=self.ang_vel_3
                         else:
@@ -179,7 +182,7 @@ class NavigationControl():
         self.point.y = _data.y
 
     def callback_heading(self, _data):
-        self.heading.data = _data.data
+        self.heading.data = normalize_rad(_data.data)
 
     def generate_pathmap(self):
         scale = 10
