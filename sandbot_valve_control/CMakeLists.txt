@@ -16,6 +16,7 @@ add_message_files(
   ValveInput.msg
   MotorInput.msg
   OperationMode.msg
+  ShutDown.msg
 #   Message1.msg
 #   Message2.msg
 )
