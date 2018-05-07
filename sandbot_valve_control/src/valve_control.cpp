@@ -15,6 +15,7 @@
 #include "sandbot_valve_control/ValveInput.h"
 #include "sandbot_valve_control/MotorInput.h"
 #include "sandbot_valve_control/OperationMode.h"
+#include "sandbot_valve_control/ShutDown.h"
 #include "sandbot_valve_control/packet_handler.h"
 #include "sandbot_valve_control/port_handler.h"
 
@@ -48,8 +49,9 @@
 #define CONTINUOUS_MODE                 0
 #define DISCRETE_MODE                   1
 #define VALVE_OPEN                      1023
-int GOAL_POSITION;
+int GOAL_POSITION = 1023;
 int MODE;
+int SHUTDOWN = 0;
 
 #define ESC_ASCII_VALUE                 0x1b
 
@@ -87,6 +89,11 @@ void msgCallback(const sandbot_valve_control::ValveInput::ConstPtr& msg1)
 void msgCallback_mode(const sandbot_valve_control::OperationMode::ConstPtr& msg_mode)
 {
   MODE = msg_mode->mode;
+}
+
+void msgCallback_shutdown(const sandbot_valve_control::ShutDown::ConstPtr& msg_shutdown)
+{
+  SHUTDOWN = msg_shutdown->shutdown;
 }
 
 int main(int argc, char **argv)
@@ -190,12 +197,41 @@ int main(int argc, char **argv)
 
   ros::Subscriber sub = nh.subscribe("valve_input", 100, msgCallback);
   ros::Subscriber sub_mode = nh.subscribe("operation_mode", 100, msgCallback_mode);
+  ros::Subscriber sub_shutdown = nh.subscribe("shut_down", 100, msgCallback_shutdown);
 
-  // Write goal position
+  // Write goal position & Shutdown case
   while(ros::ok())
   {
     // ROS_INFO("GOAL_POSITION = %d\n", GOAL_POSITION);
     ros::spinOnce();
+    // Disable torque and Shutdown
+    if (SHUTDOWN != 0)
+    {
+      // Close valve
+      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 512, &dxl_error);
+      do
+      {
+        dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+        printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
+      } while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD));
+
+      // Disable torque
+      dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, DXL_ID_254, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
+      if (dxl_comm_result != COMM_SUCCESS)
+      {
+        printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
+      }
+      else if (dxl_error != 0)
+      {
+        printf("%s\n", packetHandler->getRxPacketError(dxl_error));
+      }
+      printf("dynimixel torque disabled\n");
+
+      // Shutdown
+      ros::shutdown();
+    }
+
+    // Write goal position
     if (MODE == 0)
     {
       dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, valve_open, &dxl_error);
