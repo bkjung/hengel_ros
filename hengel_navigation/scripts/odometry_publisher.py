@@ -8,7 +8,7 @@ from tf.transformations import euler_from_quaternion
 from time import sleep
 from math import pi
 import sys
-from navigation_control import normalize_rad
+from navigation_control import normalize_rad, angle_difference
 
 class LidarOdometry():
     def __init__(self):
@@ -30,12 +30,12 @@ class LidarOdometry():
                 if self.isFirst:
                     self.offset_x=self.pnt.x
                     self.offset_y=self.pnt.y
-                    self.offset_heading=self.heading-pi/2.0
+                    self.offset_heading=angle_difference(self.heading, pi/2.0)
                     self.isFirst = False
 
                 self.pnt.x=self.pnt.x-self.offset_x
                 self.pnt.y=self.pnt.y-self.offset_y
-                self.heading.data = normalize_rad( self.heading.data-self.offset_heading )
+                self.heading.data = angle_difference(self.heading.data, self.offset_heading)
 
 
                 self.position_publisher.publish(self.pnt)

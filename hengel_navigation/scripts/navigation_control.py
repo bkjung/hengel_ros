@@ -30,6 +30,9 @@ def normalize_rad(input_angle):
     else:
         return input_angle
 
+def angle_difference(angle1, angle2):
+    return normalize_rad( normalize_rad(angle1) - normalize_rad(angle2) )
+
 class NavigationControl():
     def __init__(self, _arr_path, _draw_start_index):
         self.arr_path = _arr_path
@@ -117,7 +120,7 @@ class NavigationControl():
 
                         print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
-                        alpha=normalize_rad(atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x)-self.heading.data)
+                        alpha=angle_difference( atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x), self.heading.data )
 
                         print("heading error: %0.3f" % np.rad2deg(alpha))
 
@@ -192,7 +195,7 @@ class NavigationControl():
         self.point.y = _data.y
 
     def callback_heading(self, _data):
-        self.heading.data = normalize_rad(_data.data)
+        self.heading.data = _data.data
 
     def generate_pathmap(self):
         scale = 10
