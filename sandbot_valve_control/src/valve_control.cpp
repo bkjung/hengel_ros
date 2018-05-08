@@ -117,7 +117,7 @@ int main(int argc, char **argv)
   dynamixel::PacketHandler *packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION);
 
   int dxl_comm_result = COMM_TX_FAIL;             // Communication result
-  int dxl_goal_velocity = DXL_MAXIMUM_VELOCITY;   // Goal velocity
+  int dxl_goal_velocity = DXL_MAXIMUM_VELOCITY * -1;   // Goal velocity
 
   uint8_t dxl_error = 0;                          // Dynamixel error
   int32_t dxl_present_position = 0;               // Present position
