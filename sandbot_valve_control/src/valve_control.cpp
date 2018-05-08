@@ -50,7 +50,7 @@
 #define DISCRETE_MODE                   1
 #define VALVE_OPEN                      1023
 int GOAL_POSITION = 512;
-int MODE;
+int MODE = 1;
 int SHUTDOWN = 0;
 
 #define ESC_ASCII_VALUE                 0x1b
