@@ -56,7 +56,10 @@ class NavigationControl():
 
         self.r = rospy.Rate(50) #50hz
 
+        #It SHOULD BE 1 for current code.
+        #If it's not 1, then self.check_whether_moving_to_next_start() should be modified
         self.waypoint_increment = 1
+
         self.waypoints_length = 0
         self.waypoint_index = 1  #starting from index No. 1 (c.f. No.0 is at the origin(0,0))
         #self.waypoint_index = 0  # No.0 is at the origin(0,0)
@@ -115,6 +118,8 @@ class NavigationControl():
                         else:
                             self.loop_cnt=self.loop_cnt+1
                     else:
+                        self.check_whether_moving_to_next_start()
+
                         self.valve_operation_mode_publisher.publish(self.valve_operation_mode)
                         self.valve_angle_input.goal_position = self.valve_status
                         self.valve_angle_publisher.publish(self.valve_angle_input)
@@ -183,8 +188,6 @@ class NavigationControl():
                     rospy.signal_shutdown("KeyboardInterrupt")
                     break
 
-            self.control_valve()
-
             self.waypoint_index = self.waypoint_index + self.waypoint_increment
 
         self.cmd_vel.publish(Twist())
@@ -228,13 +231,15 @@ class NavigationControl():
         print("Pathmap image saved at "+image_save_path)
         img.save(image_save_path, "PNG")
 
-    def control_valve(self):
+    def check_whether_moving_to_next_start(self):
         for i in range(len(self.draw_start_index)):
-            if self.waypoint_index < self.draw_start_index[i] and (self.waypoint_index + self.waypoint_increment) >= self.draw_start_index[i]:
+            #if self.waypoint_index < self.draw_start_index[i] and (self.waypoint_index + self.waypoint_increment) >= self.draw_start_index[i]:
+            if self.waypoint_index == self.draw_start_index[i]:
                 self.valve_status = VALVE_CLOSE
-                return
+                return True
 
         self.valve_status = VALVE_OPEN
+        return False
 
 
     def quit_valve(self):
