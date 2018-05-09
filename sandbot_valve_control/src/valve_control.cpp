@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 
   sandbot_valve_control::MotorInput msg2;
 
-  ros::Rate loop_rate(1);
+  ros::Rate loop_rate(50);
 
   // Initialize PortHandler instance
   // Set the port path
