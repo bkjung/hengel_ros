@@ -14,8 +14,9 @@ import time
 import os
 
 #VALVE_OPEN = 1023
-#VALVE_OPEN = 800
-VALVE_OPEN=900
+#VALVE_OPEN = 870
+VALVE_OPEN = 890
+#VALVE_OPEN=900
 VALVE_CLOSE = 512
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
@@ -124,34 +125,8 @@ class NavigationControl():
 
                         print("heading error: %0.3f" % np.rad2deg(alpha))
 
-                        if abs(alpha)> self.thres1: #abs?
-                            # if alpha>0 or alpha<-pi:
-                            if alpha>0:
-                                self.move_cmd.linear.x=0
-                                self.move_cmd.angular.z=self.ang_vel_1
-                            else:
-                                self.move_cmd.linear.x=0
-                                self.move_cmd.angular.z=-self.ang_vel_1
-
-                        elif abs(alpha)>self.thres2:
-                            # if alpha>0 or alpha<-pi:
-                            if alpha>0:
-                                self.move_cmd.linear.x=0
-                                self.move_cmd.angular.z=self.ang_vel_2
-                            else:
-                                self.move_cmd.linear.x=0
-                                self.move_cmd.angular.z=-self.ang_vel_2
-
-                        elif abs(alpha)>self.thres3:
-                            # if alpha>0 or alpha<-pi:
-                            if alpha>0:
-                                self.move_cmd.linear.x=0
-                                self.move_cmd.angular.z=self.ang_vel_3
-                            else:
-                                self.move_cmd.linear.x=0
-                                self.move_cmd.angular.z=-self.ang_vel_3
-
-                        else:
+                        if abs(alpha)<=self.thres3:
+                            self.valve_status=VALVE_OPEN
                             x=distance*sin(alpha)
                             curv=2*x/pow(distance,2)
 
@@ -162,6 +137,37 @@ class NavigationControl():
 
                             self.move_cmd.linear.x=lin_vel_scaled
                             self.move_cmd.angular.z=curv*lin_vel_scaled
+
+                        else:
+                            self.valve_status=VALVE_CLOSE
+
+                            if abs(alpha)> self.thres1: #abs?
+                                # if alpha>0 or alpha<-pi:
+                                if alpha>0:
+                                    self.move_cmd.linear.x=0
+                                    self.move_cmd.angular.z=self.ang_vel_1
+                                else:
+                                    self.move_cmd.linear.x=0
+                                    self.move_cmd.angular.z=-self.ang_vel_1
+
+                            elif abs(alpha)>self.thres2:
+                                # if alpha>0 or alpha<-pi:
+                                if alpha>0:
+                                    self.move_cmd.linear.x=0
+                                    self.move_cmd.angular.z=self.ang_vel_2
+                                else:
+                                    self.move_cmd.linear.x=0
+                                    self.move_cmd.angular.z=-self.ang_vel_2
+
+                            elif abs(alpha)>self.thres3:
+                                # if alpha>0 or alpha<-pi:
+                                if alpha>0:
+                                    self.move_cmd.linear.x=0
+                                    self.move_cmd.angular.z=self.ang_vel_3
+                                else:
+                                    self.move_cmd.linear.x=0
+                                    self.move_cmd.angular.z=-self.ang_vel_3
+
 
                         self.cmd_vel.publish(self.move_cmd)
 
@@ -177,11 +183,11 @@ class NavigationControl():
                     rospy.signal_shutdown("KeyboardInterrupt")
                     break
 
-            #print("Now at Waypoint No.", self.waypoint_index)
             self.control_valve()
 
             self.waypoint_index = self.waypoint_index + self.waypoint_increment
 
+        self.cmd_vel.publish(Twist())
         #Wait for 2 seconds to close valve
         self.quit_valve()
 
