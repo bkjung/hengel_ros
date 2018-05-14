@@ -11,16 +11,6 @@ CAMERA NODE RUNNING AT FULL SPEED
 NO IMAGE RECORDING
 '''
 
-# define values boundaries for color
-lower_yellow = np.array([15,50,100],np.uint8)
-upper_yellow = np.array([40,255,255],np.uint8)
-lower_white_hsv = np.array([0,0,120], np.uint8)
-upper_white_hsv = np.array([255,30,255], np.uint8)
-
-lower_white_rgb = np.array([190,190,190], np.uint8)
-upper_white_rgb = np.array([255,255,255], np.uint8)
-
-
 # Node to obtain call camera data. Separate I/O pipeline
 rospy.loginfo('Init Cameras...')
 cam_front = cv2.VideoCapture(0)
@@ -32,9 +22,9 @@ cam_front.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))     # COLLECT IMAGE IN MJPG 
 cam_left.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
 cam_left.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 cam_left.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
-# cam_right.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
-# cam_right.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-# cam_right.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
+cam_right.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
+cam_right.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+cam_right.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
 
 # DEFINE HOMOGRAPHIES
 
@@ -92,18 +82,18 @@ def imagePublisher():
         warp_pub = rospy.Publisher('around_img', Image, queue_size=1)
         rospy.init_node('around_img_publisher', anonymous=True)
         print("node initialized")
-        #rate=rospy.Rate(30)#10hz
+        # rate=rospy.Rate(30)#10hz
         bridge = CvBridge()
 
         while not rospy.is_shutdown():
             try:
                 _, front_img = cam_front.read()
                 _, left_img = cam_left.read()
-                # _, right_img = cam_right.read()
+                _, right_img = cam_right.read()
 
                 cv2.imshow("front", front_img)
                 cv2.imshow("left", left_img)
-                # cv2.imshow("right", right_img)
+                cv2.imshow("right", right_img)
 
                 h,w=front_img.shape[:2]
                 # optimalMat, roi = cv2.getOptimalNewCameraMatrix(intrin, dist, (w,h), 1, (w,h))
@@ -113,15 +103,13 @@ def imagePublisher():
                 init_time = time.time()
                 im_front = warp_image(front_img, homography_front).astype('uint8')
                 im_left = warp_image(left_img, homography_left).astype('uint8')
-                # im_right = warp_image(right_img, homography_right).astype('uint8')
+                im_right = warp_image(right_img, homography_right).astype('uint8')
                 # MULTIPLY WARPED IMAGE, THEN ADD TO BLANK IMAGE
                 im_mask_inv, im_mask = find_mask(im_front)
                 front_masked = np.multiply(im_front, im_mask_inv).astype('uint8')
                 left_masked = np.multiply(im_left, im_mask).astype('uint8')
                 # right_masked = np.multiply(im_right, im_mask).astype('uint8')
-                # summed_image = front_masked + left_masked+right_masked
-                summed_image=front_masked+left_masked
-                # summed_image=front_masked+right_masked
+                summed_image = front_masked + left_masked+right_masked
                 summed_image=cv2.resize(summed_image, (1400,950), interpolation=cv2.INTER_AREA)
 
                 cv2.imshow('warped', summed_image)
@@ -142,7 +130,7 @@ def imagePublisher():
         cv2.destroyAllWindows()
         cam_front.release()
         cam_left.release()
-        # cam_right.release()
+        cam_right.release()
     except KeyboardInterrupt:
         rospy.signal_shutdown("keyboard interrupt")
 
