@@ -24,8 +24,8 @@ upper_white_rgb = np.array([255,255,255], np.uint8)
 # Node to obtain call camera data. Separate I/O pipeline
 rospy.loginfo('Init Cameras...')
 cam_front = cv2.VideoCapture(0)
-cam_left = cv2.VideoCapture(2)
-# cam_right = cv2.VideoCapture(3)
+cam_left = cv2.VideoCapture(3)
+# cam_right = cv2.VideoCapture(2)
 cam_front.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
 cam_front.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 cam_front.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))     # COLLECT IMAGE IN MJPG FORM, SOLVE USB HUB BANDWIDTH ISSUE
@@ -37,32 +37,39 @@ cam_left.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
 # cam_right.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
 
 # DEFINE HOMOGRAPHIES
-# homography_front = np.array([[1.20578316901691e-05, 0.000329407217584187, -0.654631511346573],
-#         [0.000956007807820993, -0.00231196866646363, -0.755942976367266],
-#         [4.59523223437821e-08, -7.58289486150618e-06, -0.00119706768797383]])
 
-homography_front = np.array([[4.21260078, 5.50168937,-623.515151],
-        [-0.056711486, 12.9895610,-381.409009],
-        [1.47985693e-05, 7.72959730e-03, 1.0000000e+00]])
-# homography_left = np.array([[0.000718031591780952, -0.000165635757963769, 0.0810412365295545],
-#         [-0.000457696149644549, 0.00197605152199676, 0.996708002646204],
-#         [3.29970074027985e-07, 7.21616117600935e-06, 0.000904500215204792]])
-homography_left=np.array([[5.44147964e+00, 9.17160302e+00, 1.64443801e+03],[5.28461989e+00, 2.49527779e+01, -2.88454272e+03],[-3.80122568e-04, 1.55170299e-02, 1.00000e+00]])
-homography_right = np.array([[0.000915698708180926, 0.000160507016324320, -0.989937462884797],
-        [0.000940331110058012, -0.00341128707549284, -0.141453165043701],
-        [2.16613893241818e-07, -1.07504356915543e-05, -0.00119841227368443]])
+objPts=np.zeros((3,4,2), dtype=np.float32)
+objPts[0]=[[450,800],[950,800],[950,300],[450,300]] 
+objPts[1]=[[950,800],[1180,800],[1180,300],[950,300]]      #left_1
+objPts[2]=[[220,800],[450,800],[450,300],[220,300]]
 
-int_file=cv2.FileStorage("../calibrate_info/Intrinsic.xml", cv2.FILE_STORAGE_READ)
-dist_file=cv2.FileStorage("../calibrate_info/Distortion.xml", cv2.FILE_STORAGE_READ)
-intrin=int_file.getNode("Intrinsic").mat()
-dist=dist_file.getNode("Distortion").mat()
-int_file.release()
-dist_file.release()
+imgPts=np.zeros((3,4,2), dtype=np.float32)
+imgPts[0] =[[160,222.5],[477.8,223],[410,89.2],[218.8,89.8]] #front_1
+imgPts[1] =[[141,468],[264,398],[159,322],[67,348]] #left
+imgPts[2] =[[350,345],[481,414],[547,288],[452,264]]
+
+for i in range(3):
+    for j in range(4):
+        objPts[i][j][0]+=700
+        objPts[i][j][1]+=200
+    objPts[i]=np.array(objPts[i], np.float32)
+    imgPts[i]=np.array(imgPts[i], np.float32)
+    
+homography_front=cv2.getPerspectiveTransform(imgPts[0], objPts[0])
+homography_left= cv2.getPerspectiveTransform(imgPts[1], objPts[1])
+homography_right=cv2.getPerspectiveTransform(imgPts[2], objPts[2])
+
+# int_file=cv2.FileStorage("../calibrate_info/Intrinsic.xml", cv2.FILE_STORAGE_READ)
+# dist_file=cv2.FileStorage("../calibrate_info/Distortion.xml", cv2.FILE_STORAGE_READ)
+# intrin=int_file.getNode("Intrinsic").mat()
+# dist=dist_file.getNode("Distortion").mat()
+# int_file.release()
+# dist_file.release()
 
 
 
 def warp_image(image, homography):
-    im_out = cv2.warpPerspective(image, homography, (1400,1500))
+    im_out = cv2.warpPerspective(image, homography, (2800,1900))
     return im_out
 
 # EFFICIENT TRUE/FALSE MASKING - NUMPY MASKING
@@ -79,9 +86,9 @@ def find_mask(image):
 def imagePublisher():
     try:
         current_time = str(time.time())
-        print("current time:", current_time)
+        # print("current time:", current_time)
         # path = "/home/snuzero/"+current_time
-        # os.mkdir(path)
+        # os.mkdir(path) 
         warp_pub = rospy.Publisher('around_img', Image, queue_size=1)
         rospy.init_node('around_img_publisher', anonymous=True)
         print("node initialized")
@@ -92,25 +99,21 @@ def imagePublisher():
             try:
                 _, front_img = cam_front.read()
                 _, left_img = cam_left.read()
+                # _, right_img = cam_right.read()
 
-                cv2.imshow("front_distort", front_img)
-                cv2.imshow("left_distort", left_img)
+                cv2.imshow("front", front_img)
+                cv2.imshow("left", left_img)
+                # cv2.imshow("right", right_img)
+
                 h,w=front_img.shape[:2]
                 # optimalMat, roi = cv2.getOptimalNewCameraMatrix(intrin, dist, (w,h), 1, (w,h))
                 # undist_front = cv2.undistort(front_img, intrin, dist, None, intrin)
                 # undist_left= cv2.undistort(left_img,intrin, dist, None, intrin) 
-
-                # cv2.imshow("front_undist", undist_front)
-                # cv2.imshow("left_undist", undist_left)
-                
-                # _, right_img = cam_right.read()
-                print("cam read")
+               
                 init_time = time.time()
                 im_front = warp_image(front_img, homography_front).astype('uint8')
                 im_left = warp_image(left_img, homography_left).astype('uint8')
-
                 # im_right = warp_image(right_img, homography_right).astype('uint8')
-                print("image warping done")
                 # MULTIPLY WARPED IMAGE, THEN ADD TO BLANK IMAGE
                 im_mask_inv, im_mask = find_mask(im_front)
                 front_masked = np.multiply(im_front, im_mask_inv).astype('uint8')
@@ -118,14 +121,15 @@ def imagePublisher():
                 # right_masked = np.multiply(im_right, im_mask).astype('uint8')
                 # summed_image = front_masked + left_masked+right_masked
                 summed_image=front_masked+left_masked
-                summed_image=cv2.resize(summed_image, (700,750), interpolation=cv2.INTER_AREA)
+                # summed_image=front_masked+right_masked
+                summed_image=cv2.resize(summed_image, (1400,950), interpolation=cv2.INTER_AREA)
 
                 cv2.imshow('warped', summed_image)
                 
                 # SEND IMAGE AS ROS imgmsg
                 summed_image = bridge.cv2_to_imgmsg(summed_image, "bgr8")
-                rospy.loginfo("images sent")
-                print("Time taken: ", time.time() -init_time)
+                # rospy.loginfo("images sent")
+                # print("Time taken: ", time.time() -init_time)
                 k = cv2.waitKey(1) & 0xFF
                 if k ==27:
                     break
