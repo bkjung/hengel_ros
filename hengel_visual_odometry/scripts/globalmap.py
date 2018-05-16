@@ -41,21 +41,20 @@ class HengelGlobalMap():
         self.photo=[]
         self.photo=np.ndarray(self.photo)
 
-        ############## DEBUG ###########################
-        # self.photo=PIL.ImageTk.PhotoImage(_map)
-        # self.c.create_image(0,0,anchor="nw", image=self.photo)
-        self.image_debug()
-        photo_PIL=PIL.Image.fromarray(self.photo)
-        photo_PIL=PIL.ImageTk.PhotoImage(photo_PIL)
-        self.c.create_image(0,0,anchor="nw", image=photo_PIL)
-        ################################################
-
-
         # self.map_subscriber = rospy.Subscriber('/current_global_map', Image, callback_map)
         # self.position_subscriber = rospy.Subscriber('/current_position', Point, callback_position)
         # self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, callback_heading)
 
-              
+        ############## DEBUG ###########################
+        # self.photo=PIL.ImageTk.PhotoImage(_map)
+        # self.c.create_image(0,0,anchor="nw", image=self.photo)
+        self.image_debug()
+        ################################################
+
+        photo_PIL=PIL.Image.fromarray(self.photo)
+        photo_PIL=PIL.ImageTk.PhotoImage(photo_PIL)
+        self.c.create_image(0,0,anchor="nw", image=photo_PIL)
+                      
         x_px= scale_factor*self.x
         y_px= scale_factor*self.y
         r_px= scale_factor*robot_size
@@ -75,11 +74,12 @@ class HengelGlobalMap():
         self.crop_image()
         self.root.mainloop()
 
-    ############# DEBUG #########################
+    ################## DEBUG #########################
     def image_debug(self):
         print("image_debug")
         self.photo=cv2.imread("./abc.jpg", cv2.IMREAD_COLOR)
-        # self.photo=cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
+        self.photo=cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
+    ##################################################
     
     def callback_position(self, _position):
         self.x= _position.x
@@ -91,10 +91,8 @@ class HengelGlobalMap():
 
     def callback_map(self, _map):
         bridge=CvBridge()
-        cv_image=bridge.imgmsg_to_cv2(_map, "rgb8")
-        photo=PIL.Image.fromarray(cv_image)
-
-        self.c.create_image(0,0,anchor="nw", image=photo)
+        self.photo = bridge.imgmsg_to_cv2(_map, "rgb8")
+        self.photo = cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
         
     def crop_image(self):
         x_px= scale_factor*self.x
@@ -117,7 +115,6 @@ class HengelGlobalMap():
         cropped=res[rect[1]: rect[1] + rect[3], rect[0]: rect[0] + rect[2]]
 
         cv2.imshow("cropped", cropped)
-        cv2.imshow("same size", res)
         cv2.waitKey(0)
 
 
