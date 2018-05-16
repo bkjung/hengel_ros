@@ -15,7 +15,7 @@ NO IMAGE RECORDING
 rospy.loginfo('Init Cameras...')
 cam_front = cv2.VideoCapture(0)
 cam_left = cv2.VideoCapture(3)
-# cam_right = cv2.VideoCapture(2)
+cam_right = cv2.VideoCapture(2)
 cam_front.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
 cam_front.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 cam_front.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))     # COLLECT IMAGE IN MJPG FORM, SOLVE USB HUB BANDWIDTH ISSUE
@@ -34,9 +34,9 @@ objPts[1]=[[950,800],[1180,800],[1180,300],[950,300]]      #left_1
 objPts[2]=[[220,800],[450,800],[450,300],[220,300]]
 
 imgPts=np.zeros((3,4,2), dtype=np.float32)
-imgPts[0] =[[160,222.5],[477.8,223],[410,89.2],[218.8,89.8]] #front_1
-imgPts[1] =[[141,468],[264,398],[159,322],[67,348]] #left
-imgPts[2] =[[350,345],[481,414],[547,288],[452,264]]
+imgPts[0] =[[109.3,306.3],[506,307.7],[417.8,116],[200,116.7]] #front_1
+imgPts[1] =[[194.5,399.5],[311.8,317.5],[172.1,226.3],[74.1,258.3]] #left
+imgPts[2] =[[284.5,275],[402.8,354.2],[521.1,212],[425.1,183.6]]
 
 for i in range(3):
     for j in range(4):
@@ -91,9 +91,9 @@ def imagePublisher():
                 _, left_img = cam_left.read()
                 _, right_img = cam_right.read()
 
-                cv2.imshow("front", front_img)
-                cv2.imshow("left", left_img)
-                cv2.imshow("right", right_img)
+                # cv2.imshow("front", front_img)
+                # cv2.imshow("left", left_img)
+                # cv2.imshow("right", right_img)
 
                 h,w=front_img.shape[:2]
                 # optimalMat, roi = cv2.getOptimalNewCameraMatrix(intrin, dist, (w,h), 1, (w,h))
