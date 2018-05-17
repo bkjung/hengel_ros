@@ -12,6 +12,8 @@ import sys
 from PIL import Image
 import time
 import os
+import cv2
+import cv_bridge
 
 #VALVE_OPEN = 1023
 #VALVE_OPEN = 870
@@ -209,27 +211,43 @@ class NavigationControl():
     def generate_pathmap(self):
         scale = 10
         pixel_size = 100 #1m*1m canvas of 1cm accuracy points (including boundary points)
-        img = Image.new("RGB", ((100+pixel_size*self.cnt_letter)*scale, (100+pixel_size)*scale), (255, 255, 255))
+        # img = Image.new("RGB", ((100+pixel_size*self.cnt_letter)*scale, (100+pixel_size)*scale), (255, 255, 255))
+        pil_image = Image.new("RGB", ((pixel_size*self.cnt_letter)*scale, (pixel_size)*scale), (255, 255, 255))
 
         print("cnt_path_points = ", self.cnt_path_points)
 
         for i in range(self.cnt_path_points):
             # print(self.path_points[i][0], self.path_points[i][1])
+            if self.path_points[i][0]<0 || self.path_points[i][0]>1.0*self.cnt_letter:
+                continue
+            if (1.0-self.path_points[i][1])<0 || (1.0-self.path_points[i][1])>1.0:
+                continue
+
             x = 0.99 if self.path_points[i][0]==1.0 else self.path_points[i][0]
             y = 0.99 if (1.0-self.path_points[i][1])==1.0 else (1.0-self.path_points[i][1])
-            x = (int)(floor(x*100))
-            y = (int)(floor(y*100))
+            x = (int)(floor(x*pixel_size))
+            y = (int)(floor(y*pixel_size))
 
-            x=x+50
-            y=y+50
+            # x=x+50
+            # y=y+50
 
             for k in range(scale):
                 for t in range(scale):
-                    img.putpixel((x*scale + t, y*scale + k), (0, 0, 0))
+                    pil_image.putpixel((x*scale + t, y*scale + k), (0, 0, 0))
 
         image_save_path = package_base_path+"/hengel_path_manager/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png"
         print("Pathmap image saved at "+image_save_path)
-        img.save(image_save_path, "PNG")
+        pil_image.save(image_save_path, "PNG")
+
+        open_cv_image = np.array(pil_image)
+        # Convert RGB to BGR
+        #cv2.cvtColor(open_cv_image, cv2.cv.CV_BGR2RGB)
+
+        bridge=CvBridge()
+        img_msg = bridge.cv2_to_imgmsg(open_cv_image, "rgb8")
+
+        # global map
+        
 
     def check_whether_moving_to_next_start(self):
         for i in range(len(self.draw_start_index)):
