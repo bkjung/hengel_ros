@@ -79,7 +79,7 @@ def imagePublisher():
         # print("current time:", current_time)
         # path = "/home/snuzero/"+current_time
         # os.mkdir(path) 
-        warp_pub = rospy.Publisher('around_img', Image, queue_size=1)
+        warp_pub = rospy.Publisher('/around_img', Image, queue_size=1)
         rospy.init_node('around_img_publisher', anonymous=True)
         print("node initialized")
         # rate=rospy.Rate(30)#10hz
