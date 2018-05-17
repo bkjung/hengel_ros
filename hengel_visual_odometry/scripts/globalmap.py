@@ -44,6 +44,8 @@ class HengelGlobalMap():
         # self.map_subscriber = rospy.Subscriber('/current_global_map', Image, callback_map)
         # self.position_subscriber = rospy.Subscriber('/current_position', Point, callback_position)
         # self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, callback_heading)
+        self.global_map_publisher = rospy.Publisher('/predict_global_map', Image, queue_size=10)
+        self.robot_view_publisher = rospy.Publisher('/predict_robot_view', Image, queue_size=10)
 
         ############## DEBUG ###########################
         # self.photo=PIL.ImageTk.PhotoImage(_map)
@@ -71,6 +73,7 @@ class HengelGlobalMap():
                     outline='red', fill='', width=3)
 
         self.c.pack()
+        self.c.postscript
         self.crop_image()
         self.root.mainloop()
 
