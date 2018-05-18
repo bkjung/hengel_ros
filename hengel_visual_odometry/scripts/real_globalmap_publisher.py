@@ -53,7 +53,9 @@ class RealGlobalMap():
 
     def handle_globalfeedback(self,req):
         letter_number = req.letter_number
-        #
+        
+        ######### ADD CODES ###############
+        
         return [delta_x, delta_y, delta_th]
 
 
