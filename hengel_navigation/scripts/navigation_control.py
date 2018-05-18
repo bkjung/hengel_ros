@@ -12,6 +12,8 @@ import sys
 from PIL import Image
 import time
 import os
+import cv2
+import cv_bridge
 
 #VALVE_OPEN = 1023
 #VALVE_OPEN = 870
@@ -67,7 +69,7 @@ class NavigationControl():
         self.current_waypoint = []
         self.cnt_letter = 0
 
-        self.cnt_path_points = 0
+        self.loop_cnt2 = 0
         self.path_points = []
 
         self.thres1=np.deg2rad(30)
@@ -79,7 +81,8 @@ class NavigationControl():
         self.ang_vel_3=0.06
         self.lin_vel=0.07
 
-        self.loop_cnt=0
+        self.loop_cnt1=0
+        self.loop_cnt2=0
         self.isGoodToGo=False
 
         #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
@@ -100,6 +103,8 @@ class NavigationControl():
 
         print("size of waypoints = ", len(self.waypoints))
 
+        loop
+
         while self.waypoint_index < self.waypoints_length:
             print("current waypoint index: "+str(self.waypoint_index))
             self.current_waypoint = [self.waypoints[self.waypoint_index][0], self.waypoints[self.waypoint_index][1]]
@@ -113,10 +118,10 @@ class NavigationControl():
                 try:
                     #wait for 2sec to initialize position and heading input
                     if self.isGoodToGo==False:
-                        if self.loop_cnt==100:
+                        if self.loop_cnt1==100:
                             self.isGoodToGo=True
                         else:
-                            self.loop_cnt=self.loop_cnt+1
+                            self.loop_cnt1=self.loop_cnt1+1
                     else:
                         self.check_whether_moving_to_next_start()
 
@@ -176,8 +181,12 @@ class NavigationControl():
 
                         self.cmd_vel.publish(self.move_cmd)
 
-                        self.cnt_path_points = self.cnt_path_points + 1
-                        self.path_points.append([self.point.x, self.point.y])
+                        self.loop_cnt2 = self.loop_cnt2 + 1
+
+                        if self.loop_cnt2==25:
+                            self.loop_cnt2 = 0
+                            self.path_points.append([self.point.x, self.point.y])
+                            self.generate_pathmap()
 
                         distance = sqrt(pow((self.current_waypoint[0] - self.point.x), 2) + pow((self.current_waypoint[1] - self.point.y), 2))
 
@@ -197,7 +206,7 @@ class NavigationControl():
         rospy.loginfo("Stopping the robot at the final destination")
         self.cmd_vel.publish(Twist())
 
-        self.generate_pathmap()
+        
 
     def callback_position(self, _data):
         self.point.x = _data.x
@@ -209,27 +218,43 @@ class NavigationControl():
     def generate_pathmap(self):
         scale = 10
         pixel_size = 100 #1m*1m canvas of 1cm accuracy points (including boundary points)
-        img = Image.new("RGB", ((100+pixel_size*self.cnt_letter)*scale, (100+pixel_size)*scale), (255, 255, 255))
+        # img = Image.new("RGB", ((100+pixel_size*self.cnt_letter)*scale, (100+pixel_size)*scale), (255, 255, 255))
+        pil_image = Image.new("RGB", ((pixel_size*self.cnt_letter)*scale, (pixel_size)*scale), (255, 255, 255))
 
-        print("cnt_path_points = ", self.cnt_path_points)
+        print("loop_cnt2 = ", self.loop_cnt2)
 
-        for i in range(self.cnt_path_points):
+        for i in range(self.loop_cnt2):
             # print(self.path_points[i][0], self.path_points[i][1])
+            if self.path_points[i][0]<0 or self.path_points[i][0]>1.0*self.cnt_letter:
+                continue
+            if (1.0-self.path_points[i][1])<0 or (1.0-self.path_points[i][1])>1.0:
+                continue
+
             x = 0.99 if self.path_points[i][0]==1.0 else self.path_points[i][0]
             y = 0.99 if (1.0-self.path_points[i][1])==1.0 else (1.0-self.path_points[i][1])
-            x = (int)(floor(x*100))
-            y = (int)(floor(y*100))
+            x = (int)(floor(x*pixel_size))
+            y = (int)(floor(y*pixel_size))
 
-            x=x+50
-            y=y+50
+            # x=x+50
+            # y=y+50
 
             for k in range(scale):
                 for t in range(scale):
-                    img.putpixel((x*scale + t, y*scale + k), (0, 0, 0))
+                    pil_image.putpixel((x*scale + t, y*scale + k), (0, 0, 0))
 
         image_save_path = package_base_path+"/hengel_path_manager/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png"
         print("Pathmap image saved at "+image_save_path)
-        img.save(image_save_path, "PNG")
+        pil_image.save(image_save_path, "PNG")
+
+        open_cv_image = np.array(pil_image)
+        # Convert RGB to BGR
+        #cv2.cvtColor(open_cv_image, cv2.cv.CV_BGR2RGB)
+
+        bridge=CvBridge()
+        img_msg = bridge.cv2_to_imgmsg(open_cv_image, "rgb8")
+
+        # global map
+        
 
     def check_whether_moving_to_next_start(self):
         for i in range(len(self.draw_start_index)):
