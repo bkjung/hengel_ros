@@ -56,21 +56,13 @@ class RealGlobalMap():
         offsetY = (diagonal - rows)/2
 
         background = np.zeros((diagonal, diagonal,3), np.uint8)
-        # background = [i*256 for i in background]
-
-        # background = [256,256,256]
-        # background= np.ndarray(background)
-        # background= [[background]*diagonal]*diagonal
-        # for i in range(rows):
-        #     for j in range(cols):
-        #         background[offsetX+i][offsetY+j]+=self.photo[i][j]
         for i in range(diagonal):
             for j in range(diagonal):
                 if i in range(offsetX,rows+offsetX) and j in range(offsetY,offsetY+cols):
                     background[i][j]+=self.photo[i-offsetX][j-offsetY]
                 else:
                     background[i][j] = [255,255,255]
-                    print("changed")
+                    
         R= cv2.getRotationMatrix2D((diagonal/2, diagonal/2), np.rad2deg(self.th)+180, 1)
 
         rot_photo = cv2.warpAffine(background, R, (diagonal, diagonal), borderValue=(256,256,256))
