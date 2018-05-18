@@ -21,34 +21,47 @@ scale_factor= 3 #[pixel/cm]
 
 class RealGlobalMap():
     def __init__(self):
+        rospy.init_node('real_globalmap', anonymous=True)
+
+        s = rospy.Service('/global_feedback', GlobalFeedback, handle_globalfeedback)
+
         self.root=Tk()
 
         self.photo=[]
         self.photo=np.ndarray(self.photo)
 
-        self.x=0
-        self.y=0
-        self.th=0
+        self.x=30
+        self.y=30
+        self.th=0.5
 
         self.c=Canvas(self.root, height=size_x, width=size_y, bg="white")
         self.root.title("global map")
         _str=str(size_x)+"x"+str(size_y)
         self.root.geometry(_str)
 
-        self.around_view_subscriber= rospy.Subscriber('/around_img', Image, self.callback_view)
-        self.position_subscriber=rospy.Subscriber('/current_position', Point, self.callback_position)
-        self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
+        # self.around_view_subscriber= rospy.Subscriber('/around_img', Image, self.callback_view)
+        # self.position_subscriber=rospy.Subscriber('/current_position', Point, self.callback_position)
+        # self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
 
         ############## DEBUG ###########################
         # self.photo=PIL.ImageTk.PhotoImage(_map)
         # self.c.create_image(0,0,anchor="nw", image=self.photo)
         self.image_debug()
         ################################################
+        
+        self.MapPublisher()
 
+    def handle_globalfeedback(self,req):
+        letter_number = req.letter_number
+        #
+        return [delta_x, delta_y, delta_th]
+
+
+    def MapPublisher(self):
         x_px= scale_factor*self.x
         y_px= scale_factor*self.y
 
-        #Rotate image
+        #Rotate image (size: diagonal * diagonal)
         rows, cols = self.photo.shape[:2]
         diagonal = (int)(sqrt(rows*rows+cols*cols))
 
@@ -70,10 +83,9 @@ class RealGlobalMap():
 
         cv2.waitKey(10000)
         new_Image=PIL.Image.new("RGB", (size_x, size_y), (256,256,256))
-        new_Image.paste(photo_PIL, (x_px, y_px))
+        new_Image.paste(photo_PIL, (x_px-diagonal/2, y_px-diagonal/2))
         new_Image.show()
 
-        rospy.init_node('real_globalmap', anonymous=True)
 
     ################## DEBUG #########################
     def image_debug(self):
@@ -96,7 +108,7 @@ class RealGlobalMap():
 
 
 if __name__ == "__main__":
-    try:        
+    try:
         RealGlobalMap()
     except Exception as e:
         print(e)

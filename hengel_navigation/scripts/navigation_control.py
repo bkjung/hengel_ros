@@ -87,6 +87,7 @@ class NavigationControl():
 
         self.loop_cnt1=0
         self.loop_cnt2=0
+        self.letter_number =0 #starting from 1
         self.isGoodToGo=False
         
         self.map_img=[]
@@ -131,12 +132,32 @@ class NavigationControl():
                         else:
                             self.loop_cnt1=self.loop_cnt1+1
                     else:
-                        self.check_whether_moving_to_next_start()
+                        is_moving_to_next_start = self.check_whether_moving_to_next_start()
 
                         self.valve_operation_mode_publisher.publish(self.valve_operation_mode)
                         self.valve_angle_input.goal_position = self.valve_status
                         self.valve_angle_publisher.publish(self.valve_angle_input)
 
+                        if is_moving_to_next_start:
+
+                            ############### ADD CODES ####################
+                            #move to viewing pnt
+                            #turn to view letters
+                            ##############################################
+
+                            rospy.wait_for_service('/global_feedback')
+                            try:
+                                globalFeedback = rospy.ServiceProxy('/global_feedback', GlobalFeedback)
+                                resp = globalFeedback(self.letter_number)
+                                offset_x, offset_y, offset_th = resp.delta_offset
+
+                            except rospy.ServiceException, e:
+                                print("Service call failed")
+
+                            ############### ADD CODES ####################
+                            #change the offset (offset_x, offset_y, offset_th)
+                            ##############################################
+                            
                         print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
                         alpha=angle_difference( atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x), self.heading.data )
@@ -185,6 +206,7 @@ class NavigationControl():
                                 else:
                                     self.move_cmd.linear.x=0
                                     self.move_cmd.angular.z=-self.ang_vel_3
+
 
 
                         self.cmd_vel.publish(self.move_cmd)
@@ -295,9 +317,9 @@ class NavigationControl():
         for i in range(len(self.draw_start_index)):
             #if self.waypoint_index < self.draw_start_index[i] and (self.waypoint_index + self.waypoint_increment) >= self.draw_start_index[i]:
             if self.waypoint_index == self.draw_start_index[i]:
+                self.letter_number += 1
                 self.valve_status = VALVE_CLOSE
                 return True
-
         self.valve_status = VALVE_OPEN
         return False
 
