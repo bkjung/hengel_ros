@@ -3,6 +3,7 @@
 import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
 from std_msgs.msg import Float32
+from sensor_msgs.msg import Image
 from hengel_navigation.msg import ValveInput, OperationMode
 import tf
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos
@@ -20,6 +21,9 @@ import cv_bridge
 VALVE_OPEN = 890
 #VALVE_OPEN=900
 VALVE_CLOSE = 512
+
+scale_factor = 3 #[pixel/cm]
+robot_size= 15 #[cm]; diameter
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
 os.system("mkdir -p "+package_base_path+"/hengel_path_manager/output_pathmap")
@@ -84,6 +88,9 @@ class NavigationControl():
         self.loop_cnt1=0
         self.loop_cnt2=0
         self.isGoodToGo=False
+        
+        self.map_img=[]
+        self.map_img=np.ndarray(self.map_img)
 
         #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
@@ -91,6 +98,7 @@ class NavigationControl():
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
         self.valve_angle_publisher = rospy.Publisher('/valve_input', ValveInput, queue_size=5)
         self.valve_operation_mode_publisher = rospy.Publisher('/operation_mode', OperationMode, queue_size=5)
+        self.crop_map_publisher = rospy.Publisher('/cropped_predict_map', Image, queue_size=5)
 
         self.position_subscriber = rospy.Subscriber('/current_position', Point, self.callback_position)
         self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
@@ -246,7 +254,8 @@ class NavigationControl():
         print("Pathmap image saved at "+image_save_path)
         pil_image.save(image_save_path, "PNG")
 
-        open_cv_image = np.array(pil_image)
+        self.map_img = np.array(pil_image)
+        self.crop_image()
         # Convert RGB to BGR
         #cv2.cvtColor(open_cv_image, cv2.cv.CV_BGR2RGB)
 
@@ -254,7 +263,33 @@ class NavigationControl():
         img_msg = bridge.cv2_to_imgmsg(open_cv_image, "rgb8")
 
         # global map
-        
+
+    def crop_image(self):
+        x_px= scale_factor*self.point.x
+        y_px= scale_factor*self.point.y
+        r_px= scale_factor*robot_size
+        th = self.heading.data
+
+        height, width = self.map_img.shape[:2]
+
+        mask = np.zeros((self.height, self.width), dtype=np.uint8)
+        pts=np.array([[[int(x_px-75.5*scale_factor*cos(th)), -int(-y_px+75.5*scale_factor*sin(th))],
+                    [int(x_px-58*scale_factor*cos(th)), -int(-y_px+58*sin(th))],
+                    [int(x_px-29*scale_factor*cos(th)+25*scale_factor*sin(th)), -int(-y_px+29*scale_factor*sin(th)+25*scale_factor*cos(th))],
+                    [int(x_px+29*scale_factor*cos(th)+25*scale_factor*sin(th)), -int(-y_px-29*scale_factor*sin(th)+25*scale_factor*cos(th))],
+                    [int(x_px+58*scale_factor*cos(th)), -int(-y_px-58*scale_factor*sin(th))],
+                    [int(x_px+75.5*scale_factor*cos(th)), -int(-y_px-75.5*scale_factor*sin(th))],
+                    [int(x_px+75.5*scale_factor*cos(th)+111*scale_factor*sin(th)), -int(-y_px-75.5*scale_factor*sin(th)+111*scale_factor*cos(th))],
+                    [int(x_px-75.5*scale_factor*cos(th)+111*scale_factor*sin(th)), -int(-y_px+75.5*scale_factor*sin(th)+111*scale_factor*cos(th))]]])
+        cv2.fillPoly(mask, pts, (255))
+        res= cv2.bitwise_and(self.map_img, self.map_img, mask=mask)
+
+        rect= cv2.boundingRect(pts)
+        cropped=res[rect[1]: rect[1] + rect[3], rect[0]: rect[0] + rect[2]]
+
+        bridge=CvBridge()
+        crop_msg = bridge.cv2_to_imgmsg(cropped, "rgb8")
+        self.crop_map_publisher.publish(crop_msg)
 
     def check_whether_moving_to_next_start(self):
         for i in range(len(self.draw_start_index)):
