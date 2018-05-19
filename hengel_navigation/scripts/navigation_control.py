@@ -3,6 +3,7 @@
 import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
 from std_msgs.msg import Float32
+from sensor_msgs.msg import Image
 from hengel_navigation.msg import ValveInput, OperationMode
 import tf
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos
@@ -14,12 +15,16 @@ import time
 import os
 import cv2
 import cv_bridge
+from GlobalFeedback.srv import *
 
 #VALVE_OPEN = 1023
 #VALVE_OPEN = 870
 VALVE_OPEN = 890
 #VALVE_OPEN=900
 VALVE_CLOSE = 512
+
+scale_factor = 3 #[pixel/cm]
+robot_size= 15 #[cm]; diameter
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
 os.system("mkdir -p "+package_base_path+"/hengel_path_manager/output_pathmap")
@@ -37,10 +42,15 @@ def angle_difference(angle1, angle2):
     return normalize_rad( normalize_rad(angle1) - normalize_rad(angle2) )
 
 class NavigationControl():
-    def __init__(self, _arr_path, _draw_start_index):
-        self.arr_path = _arr_path
-        self.draw_start_index  = _draw_start_index
+    # def __init__(self, _arr_path, _draw_start_index):
+    #     self.arr_path = _arr_path
+    #     self.draw_start_index  = _draw_start_index
 
+    #     self.initial_setting()
+    #     self.run()
+
+    def __init__(self, _arr_path):
+        self.arr_path= _arr_path
         self.initial_setting()
         self.run()
 
@@ -83,7 +93,11 @@ class NavigationControl():
 
         self.loop_cnt1=0
         self.loop_cnt2=0
+        self.letter_number =0 #starting from 1
         self.isGoodToGo=False
+        
+        self.map_img=[]
+        self.map_img=np.ndarray(self.map_img)
 
         #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
@@ -91,6 +105,7 @@ class NavigationControl():
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
         self.valve_angle_publisher = rospy.Publisher('/valve_input', ValveInput, queue_size=5)
         self.valve_operation_mode_publisher = rospy.Publisher('/operation_mode', OperationMode, queue_size=5)
+        self.crop_map_publisher = rospy.Publisher('/cropped_predict_map', Image, queue_size=5)
 
         self.position_subscriber = rospy.Subscriber('/current_position', Point, self.callback_position)
         self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
@@ -123,12 +138,32 @@ class NavigationControl():
                         else:
                             self.loop_cnt1=self.loop_cnt1+1
                     else:
-                        self.check_whether_moving_to_next_start()
+                        is_moving_to_next_start = self.check_whether_moving_to_next_start()
 
                         self.valve_operation_mode_publisher.publish(self.valve_operation_mode)
                         self.valve_angle_input.goal_position = self.valve_status
                         self.valve_angle_publisher.publish(self.valve_angle_input)
 
+                        if is_moving_to_next_start:
+
+                            ############### ADD CODES ####################
+                            #move to viewing pnt
+                            #turn to view letters
+                            ##############################################
+
+                            rospy.wait_for_service('/global_feedback')
+                            try:
+                                globalFeedback = rospy.ServiceProxy('/global_feedback', GlobalFeedback)
+                                resp = globalFeedback(self.letter_number)
+                                offset_x, offset_y, offset_th = resp.delta_offset
+
+                            except rospy.ServiceException, e:
+                                print("Service call failed")
+
+                            ############### ADD CODES ####################
+                            #change the offset (offset_x, offset_y, offset_th)
+                            ##############################################
+                            
                         print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
                         alpha=angle_difference( atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x), self.heading.data )
@@ -177,6 +212,7 @@ class NavigationControl():
                                 else:
                                     self.move_cmd.linear.x=0
                                     self.move_cmd.angular.z=-self.ang_vel_3
+
 
 
                         self.cmd_vel.publish(self.move_cmd)
@@ -246,7 +282,8 @@ class NavigationControl():
         print("Pathmap image saved at "+image_save_path)
         pil_image.save(image_save_path, "PNG")
 
-        open_cv_image = np.array(pil_image)
+        self.map_img = np.array(pil_image)
+        self.crop_image()
         # Convert RGB to BGR
         #cv2.cvtColor(open_cv_image, cv2.cv.CV_BGR2RGB)
 
@@ -254,15 +291,41 @@ class NavigationControl():
         img_msg = bridge.cv2_to_imgmsg(open_cv_image, "rgb8")
 
         # global map
-        
+
+    def crop_image(self):
+        x_px= scale_factor*self.point.x
+        y_px= scale_factor*self.point.y
+        r_px= scale_factor*robot_size
+        th = self.heading.data
+
+        height, width = self.map_img.shape[:2]
+
+        mask = np.zeros((self.height, self.width), dtype=np.uint8)
+        pts=np.array([[[int(x_px-75.5*scale_factor*cos(th)), -int(-y_px+75.5*scale_factor*sin(th))],
+                    [int(x_px-58*scale_factor*cos(th)), -int(-y_px+58*sin(th))],
+                    [int(x_px-29*scale_factor*cos(th)+25*scale_factor*sin(th)), -int(-y_px+29*scale_factor*sin(th)+25*scale_factor*cos(th))],
+                    [int(x_px+29*scale_factor*cos(th)+25*scale_factor*sin(th)), -int(-y_px-29*scale_factor*sin(th)+25*scale_factor*cos(th))],
+                    [int(x_px+58*scale_factor*cos(th)), -int(-y_px-58*scale_factor*sin(th))],
+                    [int(x_px+75.5*scale_factor*cos(th)), -int(-y_px-75.5*scale_factor*sin(th))],
+                    [int(x_px+75.5*scale_factor*cos(th)+111*scale_factor*sin(th)), -int(-y_px-75.5*scale_factor*sin(th)+111*scale_factor*cos(th))],
+                    [int(x_px-75.5*scale_factor*cos(th)+111*scale_factor*sin(th)), -int(-y_px+75.5*scale_factor*sin(th)+111*scale_factor*cos(th))]]])
+        cv2.fillPoly(mask, pts, (255))
+        res= cv2.bitwise_and(self.map_img, self.map_img, mask=mask)
+
+        rect= cv2.boundingRect(pts)
+        cropped=res[rect[1]: rect[1] + rect[3], rect[0]: rect[0] + rect[2]]
+
+        bridge=CvBridge()
+        crop_msg = bridge.cv2_to_imgmsg(cropped, "rgb8")
+        self.crop_map_publisher.publish(crop_msg)
 
     def check_whether_moving_to_next_start(self):
         for i in range(len(self.draw_start_index)):
             #if self.waypoint_index < self.draw_start_index[i] and (self.waypoint_index + self.waypoint_increment) >= self.draw_start_index[i]:
             if self.waypoint_index == self.draw_start_index[i]:
+                self.letter_number += 1
                 self.valve_status = VALVE_CLOSE
                 return True
-
         self.valve_status = VALVE_OPEN
         return False
 
