@@ -15,6 +15,7 @@ import time
 import os
 import cv2
 import cv_bridge
+from GlobalFeedback.srv import *
 
 #VALVE_OPEN = 1023
 #VALVE_OPEN = 870

@@ -59,7 +59,6 @@ add_message_files(
 # add_service_files(
 #   FILES
 #   Service1.srv
-#   Service2.srv
 # )
 
 ## Generate actions in the 'action' folder
@@ -189,8 +188,9 @@ include_directories(
 
 catkin_install_python(PROGRAMS
 scripts/raw_img_publisher.py
-scripts/visual_odometry.py
+# scripts/visual_odometry.py
 scripts/pi_floorcam.py
+scripts/real_globalmap_publisher.py
 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

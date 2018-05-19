@@ -14,6 +14,7 @@ from sensor_msgs.msg import Image
 from math import sqrt
 import numpy as np
 import cv2
+from hengel_navigation/GlobalFeedback.srv import *
 
 size_x=1000
 size_y=1000
@@ -30,9 +31,12 @@ class RealGlobalMap():
         self.photo=[]
         self.photo=np.ndarray(self.photo)
 
-        self.x=30
-        self.y=30
-        self.th=0.5
+        self.x=0
+        self.y=0
+        self.th=0
+
+        ############
+
 
         self.c=Canvas(self.root, height=size_x, width=size_y, bg="white")
         self.root.title("global map")
@@ -56,6 +60,8 @@ class RealGlobalMap():
         
         ######### ADD CODES ###############
         
+
+
         return [delta_x, delta_y, delta_th]
 
 
