@@ -21,7 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
-## modules and global scripts declared therein get installed
+## modules and global scripts declared therein get installed 
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
 catkin_python_setup()
 
@@ -59,7 +59,6 @@ add_message_files(
 # add_service_files(
 #   FILES
 #   Service1.srv
-#   Service2.srv
 # )
 
 ## Generate actions in the 'action' folder
@@ -118,7 +117,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
+  # include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -135,7 +134,13 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/hengel_visual_odometry_node.cpp)
+
+
+##################### MONO - ODOMETRY #################################################
+# add_executable(hengel_mono_odom src/hengel_mono_odom.cpp)
+# add_dependencies(hengel_mono_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(hengel_mono_odom ${catkin_LIBRARIES})
+#######################################################################################
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -189,7 +194,10 @@ include_directories(
 
 catkin_install_python(PROGRAMS
 scripts/raw_img_publisher.py
-scripts/visual_odometry.py
+# scripts/visual_odometry.py
+scripts/around_view.py
+scripts/pi_floorcam.py
+scripts/real_globalmap_publisher.py
 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
