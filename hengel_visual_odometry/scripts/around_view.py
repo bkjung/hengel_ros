@@ -13,8 +13,9 @@ NO IMAGE RECORDING
 
 # Node to obtain call camera data. Separate I/O pipeline
 rospy.loginfo('Init Cameras...')
-cam_front = cv2.VideoCapture(0)
-cam_left = cv2.VideoCapture(3)
+
+cam_front = cv2.VideoCapture(1)
+cam_left = cv2.VideoCapture(0)
 cam_right = cv2.VideoCapture(2)
 cam_front.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
 cam_front.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -29,7 +30,7 @@ cam_right.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
 # DEFINE HOMOGRAPHIES
 
 objPts=np.zeros((3,4,2), dtype=np.float32)
-objPts[0]=[[450,800],[950,800],[950,300],[450,300]] 
+objPts[0]=[[450,800],[950,800],[950,300],[450,300]]
 objPts[1]=[[950,800],[1180,800],[1180,300],[950,300]]      #left_1
 objPts[2]=[[220,800],[450,800],[450,300],[220,300]]
 
@@ -40,11 +41,11 @@ imgPts[2] =[[284.5,275],[402.8,354.2],[521.1,212],[425.1,183.6]]
 
 for i in range(3):
     for j in range(4):
-        objPts[i][j][0]+=700
-        objPts[i][j][1]+=200
+        objPts[i][j][0]+=200
+        objPts[i][j][1]-=100
     objPts[i]=np.array(objPts[i], np.float32)
     imgPts[i]=np.array(imgPts[i], np.float32)
-    
+
 homography_front=cv2.getPerspectiveTransform(imgPts[0], objPts[0])
 homography_left= cv2.getPerspectiveTransform(imgPts[1], objPts[1])
 homography_right=cv2.getPerspectiveTransform(imgPts[2], objPts[2])
@@ -59,7 +60,7 @@ homography_right=cv2.getPerspectiveTransform(imgPts[2], objPts[2])
 
 
 def warp_image(image, homography):
-    im_out = cv2.warpPerspective(image, homography, (2800,1900))
+    im_out = cv2.warpPerspective(image, homography, (1800,1300))
     return im_out
 
 # EFFICIENT TRUE/FALSE MASKING - NUMPY MASKING
@@ -78,8 +79,8 @@ def imagePublisher():
         current_time = str(time.time())
         # print("current time:", current_time)
         # path = "/home/snuzero/"+current_time
-        # os.mkdir(path) 
-        warp_pub = rospy.Publisher('/around_img', Image, queue_size=1)
+        # os.mkdir(path)
+        warp_pub = rospy.Publisher('around_img', Image, queue_size=1)
         rospy.init_node('around_img_publisher', anonymous=True)
         print("node initialized")
         # rate=rospy.Rate(30)#10hz
@@ -98,8 +99,8 @@ def imagePublisher():
                 h,w=front_img.shape[:2]
                 # optimalMat, roi = cv2.getOptimalNewCameraMatrix(intrin, dist, (w,h), 1, (w,h))
                 # undist_front = cv2.undistort(front_img, intrin, dist, None, intrin)
-                # undist_left= cv2.undistort(left_img,intrin, dist, None, intrin) 
-               
+                # undist_left= cv2.undistort(left_img,intrin, dist, None, intrin)
+
                 init_time = time.time()
                 im_front = warp_image(front_img, homography_front).astype('uint8')
                 im_left = warp_image(left_img, homography_left).astype('uint8')
@@ -108,12 +109,13 @@ def imagePublisher():
                 im_mask_inv, im_mask = find_mask(im_front)
                 front_masked = np.multiply(im_front, im_mask_inv).astype('uint8')
                 left_masked = np.multiply(im_left, im_mask).astype('uint8')
-                # right_masked = np.multiply(im_right, im_mask).astype('uint8')
+                right_masked = np.multiply(im_right, im_mask).astype('uint8')
                 summed_image = front_masked + left_masked+right_masked
-                summed_image=cv2.resize(summed_image, (1400,950), interpolation=cv2.INTER_AREA)
+                #summed_image=front_masked
+                summed_image=cv2.resize(summed_image, (900,650), interpolation=cv2.INTER_AREA)
 
                 cv2.imshow('warped', summed_image)
-                
+
                 # SEND IMAGE AS ROS imgmsg
                 summed_image = bridge.cv2_to_imgmsg(summed_image, "bgr8")
                 # rospy.loginfo("images sent")

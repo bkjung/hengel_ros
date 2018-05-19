@@ -3,6 +3,7 @@ import rospy
 import numpy as np
 import cv2, sys, time, math
 from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
 
 if __name__ == '__main__':
     cap=cv2.VideoCapture(0)
