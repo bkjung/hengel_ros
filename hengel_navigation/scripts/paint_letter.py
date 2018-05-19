@@ -53,11 +53,11 @@ class PaintLetter():
                         else:
                             pass
             self.arr_path.append(letter_path)
-            arr_path_file =cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_WRITE)
-            arr_path_file.write("arr_path", self.arr_path)
-            arr_path_file.release()
-            #count the number of letters including spacing
-            # cnt_letter = cnt_letter + 1
+        arr_path_file =cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_WRITE)
+        arr_path_file.write("arr_path", self.arr_path)
+        arr_path_file.release()
+        #count the number of letters including spacing
+        # cnt_letter = cnt_letter + 1
     
     def run(self):
         # NavigationControl(self.arr_path, self.draw_start_index)
