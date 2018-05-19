@@ -28,6 +28,11 @@ add_message_files(
     OperationMode.msg
     )
 
+add_service_files(
+  FILES
+  GlobalFeedback.srv
+)
+
 generate_messages(
     DEPENDENCIES
     std_msgs

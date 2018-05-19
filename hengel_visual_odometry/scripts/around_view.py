@@ -13,6 +13,7 @@ NO IMAGE RECORDING
 
 # Node to obtain call camera data. Separate I/O pipeline
 rospy.loginfo('Init Cameras...')
+
 cam_front = cv2.VideoCapture(1)
 cam_left = cv2.VideoCapture(0)
 cam_right = cv2.VideoCapture(2)

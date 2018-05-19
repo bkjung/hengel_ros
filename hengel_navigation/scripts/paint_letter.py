@@ -12,12 +12,13 @@ from PIL import Image
 import time
 import os
 from navigation_control import NavigationControl
+import cv2
 
 
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
 os.system("mkdir -p "+package_base_path+"/hengel_path_manager/output_pathmap")
-
+os.system("mkdir -p"+package_base_path+"/hengel_path_manager/waypnts")
 
 
 class PaintLetter():
@@ -33,28 +34,34 @@ class PaintLetter():
     def get_path(self):
         dir_1= package_base_path+"/hengel_path_manager/alphabet_path/path_"
         dir_2=".txt"
-        cnt_letter = 0
-        cnt_waypoint = 0
+        # cnt_letter = 0
+        # cnt_waypoint = 0
         for letter in self.word:
+            letter_path=[]
             if letter==' ':
                 pass
                 #if spacing is included
             else:
-                self.draw_start_index.append(cnt_waypoint)
+                # self.draw_start_index.append(cnt_waypoint)
                 with open(dir_1+letter.capitalize()+dir_2,"r") as file_path:
                     for idx, line in enumerate(file_path):
                         _str = line.split()
                         if not len(_str)==0:
-                            self.arr_path.append([(float)(_str[0])+(float)(cnt_letter)-(2*(float)(cnt_letter)-1)*250/1632, 1.0-(float)(_str[1])])
-                            cnt_waypoint = cnt_waypoint + 1
+                            # self.arr_path.append([(float)(_str[0])+(float)(cnt_letter)-(2*(float)(cnt_letter)-1)*250/1632, 1.0-(float)(_str[1])])
+                            # cnt_waypoint = cnt_waypoint + 1
+                            letter_path.append([(float)(_str[0])+(float)(cnt_letter)-(2*(float)(cnt_letter)-1)*250/1632, 1.0-(float)(_str[1])])
                         else:
                             pass
-
+            self.arr_path.append(letter_path)
+            arr_path_file =cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_WRITE)
+            arr_path_file.write("arr_path", self.arr_path)
+            arr_path_file.release()
             #count the number of letters including spacing
-            cnt_letter = cnt_letter + 1
+            # cnt_letter = cnt_letter + 1
     
     def run(self):
-        NavigationControl(self.arr_path, self.draw_start_index)
+        # NavigationControl(self.arr_path, self.draw_start_index)
+        NavigationControl(self.arr_path)
 
 
 if __name__ == '__main__':
