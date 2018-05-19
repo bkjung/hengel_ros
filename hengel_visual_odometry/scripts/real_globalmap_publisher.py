@@ -20,6 +20,8 @@ size_x=1000
 size_y=1000
 scale_factor= 3 #[pixel/cm]
 
+package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
+
 class RealGlobalMap():
     def __init__(self):
         rospy.init_node('real_globalmap', anonymous=True)
@@ -35,8 +37,9 @@ class RealGlobalMap():
         self.y=0
         self.th=0
 
-        ############
-
+        path_file=cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_READ)
+        self.waypnts_arr= path_file.getNode("arr_path")
+        path_file.release()
 
         self.c=Canvas(self.root, height=size_x, width=size_y, bg="white")
         self.root.title("global map")
@@ -59,7 +62,7 @@ class RealGlobalMap():
         letter_number = req.letter_number
         
         ######### ADD CODES ###############
-        
+
 
 
         return [delta_x, delta_y, delta_th]

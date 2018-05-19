@@ -1,0 +1,3 @@
+int64 letter_number
+---
+float32[3] delta_offset

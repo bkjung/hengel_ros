@@ -42,10 +42,15 @@ def angle_difference(angle1, angle2):
     return normalize_rad( normalize_rad(angle1) - normalize_rad(angle2) )
 
 class NavigationControl():
-    def __init__(self, _arr_path, _draw_start_index):
-        self.arr_path = _arr_path
-        self.draw_start_index  = _draw_start_index
+    # def __init__(self, _arr_path, _draw_start_index):
+    #     self.arr_path = _arr_path
+    #     self.draw_start_index  = _draw_start_index
 
+    #     self.initial_setting()
+    #     self.run()
+
+    def __init__(self, _arr_path):
+        self.arr_path= _arr_path
         self.initial_setting()
         self.run()
 
