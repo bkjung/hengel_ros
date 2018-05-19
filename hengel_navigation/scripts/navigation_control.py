@@ -37,7 +37,7 @@ def normalize_rad(input_angle):
         return input_angle+2*pi
     else:
         return input_angle
-
+    
 def angle_difference(angle1, angle2):
     return normalize_rad( normalize_rad(angle1) - normalize_rad(angle2) )
 
@@ -72,14 +72,16 @@ class NavigationControl():
         #If it's not 1, then self.check_whether_moving_to_next_start() should be modified
         self.waypoint_increment = 1
 
-        self.waypoints_length = 0
-        self.waypoint_index = 1  #starting from index No. 1 (c.f. No.0 is at the origin(0,0))
-        #self.waypoint_index = 0  # No.0 is at the origin(0,0)
+        self.letter_index = 0
+        self.waypoint_index_in_current_letter = 0
         self.waypoints=[]
         self.current_waypoint = []
-        self.cnt_letter = 0
+        self.cnt_letters = 0
+        self.cnt_total_waypoints=0
+        self.cnt_waypoints_in_current_letter = 0
 
-        self.loop_cnt2 = 0
+        self.is_moving_to_next_start = False
+
         self.path_points = []
 
         self.thres1=np.deg2rad(30)
@@ -93,7 +95,6 @@ class NavigationControl():
 
         self.loop_cnt1=0
         self.loop_cnt2=0
-        self.letter_number =0 #starting from 1
         self.isGoodToGo=False
         
         self.map_img=[]
@@ -112,128 +113,136 @@ class NavigationControl():
 
     def run(self):
         # go through path array
-        self.waypoints_length = len(self.arr_path)
-        for idx in range(self.waypoints_length):
-            self.waypoints.append([self.arr_path[idx][0]-self.arr_path[0][0], self.arr_path[idx][1]-self.arr_path[0][1]])
+        for idx_letter in range(len(self.arr_path)):
+            for idx_waypoint in range(len(self.arr_path[idx_letter])):
+            self.waypoints.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
+            self.cnt_total_waypoints=self.cnt_total_waypoints+1
 
-        print("size of waypoints = ", len(self.waypoints))
+        print("number of letters = " + str(len(self.arr_path)))
+        print("size of total waypoints = " + str(cnt_waypoints))
 
-        loop
 
-        while self.waypoint_index < self.waypoints_length:
-            print("current waypoint index: "+str(self.waypoint_index))
-            self.current_waypoint = [self.waypoints[self.waypoint_index][0], self.waypoints[self.waypoint_index][1]]
+        while self.letter_index < self.cnt_letter:
+            while self.waypoint_index_in_current_letter < self.cnt_waypoints_in_current_letter:
+                print("current waypoint index : "+str(self.waypoint_index_in_current_letter)+" in letter no. "+str(self.letter_index))
+                self.current_waypoint = [self.waypoints[self.letter_index][self.waypoint_index_in_current_letter][0], self.waypoints[self.letter_index][self.waypoint_index_in_current_letter][1]]
 
-            goal_distance = sqrt(pow(self.current_waypoint[0] - self.point.x, 2) + pow(self.current_waypoint[1] - self.point.y, 2))
-            distance = goal_distance
+                goal_distance = sqrt(pow(self.current_waypoint[0] - self.point.x, 2) + pow(self.current_waypoint[1] - self.point.y, 2))
+                distance = goal_distance
 
-            while distance > 0.03:
-                if rospy.is_shutdown():
-                    break
-                try:
-                    #wait for 2sec to initialize position and heading input
-                    if self.isGoodToGo==False:
-                        if self.loop_cnt1==100:
-                            self.isGoodToGo=True
-                        else:
-                            self.loop_cnt1=self.loop_cnt1+1
-                    else:
-                        is_moving_to_next_start = self.check_whether_moving_to_next_start()
-
-                        self.valve_operation_mode_publisher.publish(self.valve_operation_mode)
-                        self.valve_angle_input.goal_position = self.valve_status
-                        self.valve_angle_publisher.publish(self.valve_angle_input)
-
-                        if is_moving_to_next_start:
-
-                            ############### ADD CODES ####################
-                            #move to viewing pnt
-                            #turn to view letters
-                            ##############################################
-
-                            rospy.wait_for_service('/global_feedback')
-                            try:
-                                globalFeedback = rospy.ServiceProxy('/global_feedback', GlobalFeedback)
-                                resp = globalFeedback(self.letter_number)
-                                offset_x, offset_y, offset_th = resp.delta_offset
-
-                            except rospy.ServiceException, e:
-                                print("Service call failed")
-
-                            ############### ADD CODES ####################
-                            #change the offset (offset_x, offset_y, offset_th)
-                            ##############################################
-                            
-                        print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
-
-                        alpha=angle_difference( atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x), self.heading.data )
-
-                        print("heading error: %0.3f" % np.rad2deg(alpha))
-
-                        if abs(alpha)<=self.thres3:
-                            self.valve_status=VALVE_OPEN
-                            x=distance*sin(alpha)
-                            curv=2*x/pow(distance,2)
-
-                            if distance<0.08:
-                                lin_vel_scaled=self.lin_vel/2.0
+                while distance > 0.03:
+                    if rospy.is_shutdown():
+                        break
+                    try:
+                        #wait for 2sec to initialize position and heading input
+                        if self.isGoodToGo==False:
+                            if self.loop_cnt1==100:
+                                self.isGoodToGo=True
                             else:
-                                lin_vel_scaled=self.lin_vel
-
-                            self.move_cmd.linear.x=lin_vel_scaled
-                            self.move_cmd.angular.z=curv*lin_vel_scaled
-
+                                self.loop_cnt1=self.loop_cnt1+1
                         else:
-                            self.valve_status=VALVE_CLOSE
+                            self.valve_operation_mode_publisher.publish(self.valve_operation_mode)
+                            self.valve_angle_input.goal_position = self.valve_status
+                            self.valve_angle_publisher.publish(self.valve_angle_input)
 
-                            if abs(alpha)> self.thres1: #abs?
-                                # if alpha>0 or alpha<-pi:
-                                if alpha>0:
-                                    self.move_cmd.linear.x=0
-                                    self.move_cmd.angular.z=self.ang_vel_1
+                            if self.is_moving_to_next_start:
+
+                                ############### ADD CODES ####################
+                                #move to viewing pnt
+                                #turn to view letters
+                                ##############################################
+
+                                rospy.wait_for_service('/global_feedback')
+                                try:
+                                    globalFeedback = rospy.ServiceProxy('/global_feedback', GlobalFeedback)
+                                    resp = globalFeedback(self.letter_index)
+                                    offset_x, offset_y, offset_th = resp.delta_offset
+                                    self.is_moving_to_next_start = False
+                                    self.valve_status = VALVE_OPEN
+
+                                except rospy.ServiceException, e:
+                                    print("Service call failed")
+
+                                ############### ADD CODES ####################
+                                #change the offset (offset_x, offset_y, offset_th)
+                                ##############################################
+                                
+                            print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
+
+                            alpha=angle_difference( atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x), self.heading.data )
+
+                            print("heading error: %0.3f" % np.rad2deg(alpha))
+
+                            if abs(alpha)<=self.thres3:
+                                self.valve_status=VALVE_OPEN
+                                x=distance*sin(alpha)
+                                curv=2*x/pow(distance,2)
+
+                                if distance<0.08:
+                                    lin_vel_scaled=self.lin_vel/2.0
                                 else:
-                                    self.move_cmd.linear.x=0
-                                    self.move_cmd.angular.z=-self.ang_vel_1
+                                    lin_vel_scaled=self.lin_vel
 
-                            elif abs(alpha)>self.thres2:
-                                # if alpha>0 or alpha<-pi:
-                                if alpha>0:
-                                    self.move_cmd.linear.x=0
-                                    self.move_cmd.angular.z=self.ang_vel_2
-                                else:
-                                    self.move_cmd.linear.x=0
-                                    self.move_cmd.angular.z=-self.ang_vel_2
+                                self.move_cmd.linear.x=lin_vel_scaled
+                                self.move_cmd.angular.z=curv*lin_vel_scaled
 
-                            elif abs(alpha)>self.thres3:
-                                # if alpha>0 or alpha<-pi:
-                                if alpha>0:
-                                    self.move_cmd.linear.x=0
-                                    self.move_cmd.angular.z=self.ang_vel_3
-                                else:
-                                    self.move_cmd.linear.x=0
-                                    self.move_cmd.angular.z=-self.ang_vel_3
+                            else:
+                                self.valve_status=VALVE_CLOSE
+
+                                if abs(alpha)> self.thres1: #abs?
+                                    # if alpha>0 or alpha<-pi:
+                                    if alpha>0:
+                                        self.move_cmd.linear.x=0
+                                        self.move_cmd.angular.z=self.ang_vel_1
+                                    else:
+                                        self.move_cmd.linear.x=0
+                                        self.move_cmd.angular.z=-self.ang_vel_1
+
+                                elif abs(alpha)>self.thres2:
+                                    # if alpha>0 or alpha<-pi:
+                                    if alpha>0:
+                                        self.move_cmd.linear.x=0
+                                        self.move_cmd.angular.z=self.ang_vel_2
+                                    else:
+                                        self.move_cmd.linear.x=0
+                                        self.move_cmd.angular.z=-self.ang_vel_2
+
+                                elif abs(alpha)>self.thres3:
+                                    # if alpha>0 or alpha<-pi:
+                                    if alpha>0:
+                                        self.move_cmd.linear.x=0
+                                        self.move_cmd.angular.z=self.ang_vel_3
+                                    else:
+                                        self.move_cmd.linear.x=0
+                                        self.move_cmd.angular.z=-self.ang_vel_3
 
 
 
-                        self.cmd_vel.publish(self.move_cmd)
+                            self.cmd_vel.publish(self.move_cmd)
 
-                        self.loop_cnt2 = self.loop_cnt2 + 1
+                            self.loop_cnt2 = self.loop_cnt2 + 1
 
-                        if self.loop_cnt2==25:
-                            self.loop_cnt2 = 0
-                            self.path_points.append([self.point.x, self.point.y])
-                            self.generate_pathmap()
+                            if self.loop_cnt2==25:
+                                self.loop_cnt2 = 0
+                                self.path_points.append([self.point.x, self.point.y])
+                                self.generate_pathmap()
 
-                        distance = sqrt(pow((self.current_waypoint[0] - self.point.x), 2) + pow((self.current_waypoint[1] - self.point.y), 2))
+                            distance = sqrt(pow((self.current_waypoint[0] - self.point.x), 2) + pow((self.current_waypoint[1] - self.point.y), 2))
 
-                    self.r.sleep()
+                        self.r.sleep()
 
-                except KeyboardInterrupt:
-                    print("Got KeyboardInterrupt")
-                    rospy.signal_shutdown("KeyboardInterrupt")
-                    break
+                    except KeyboardInterrupt:
+                        print("Got KeyboardInterrupt")
+                        rospy.signal_shutdown("KeyboardInterrupt")
+                        break
 
-            self.waypoint_index = self.waypoint_index + self.waypoint_increment
+                self.waypoint_index_in_current_letter = self.waypoint_index_in_current_letter + self.waypoint_increment
+
+            #End of current letter.
+            #This is the point to global align.
+            self.letter_index = self.letter_index + 1
+            self.is_moving_to_next_start = True
+            self.valve_status = VALVE_CLOSE
 
         self.cmd_vel.publish(Twist())
         #Wait for 2 seconds to close valve
@@ -319,15 +328,6 @@ class NavigationControl():
         crop_msg = bridge.cv2_to_imgmsg(cropped, "rgb8")
         self.crop_map_publisher.publish(crop_msg)
 
-    def check_whether_moving_to_next_start(self):
-        for i in range(len(self.draw_start_index)):
-            #if self.waypoint_index < self.draw_start_index[i] and (self.waypoint_index + self.waypoint_increment) >= self.draw_start_index[i]:
-            if self.waypoint_index == self.draw_start_index[i]:
-                self.letter_number += 1
-                self.valve_status = VALVE_CLOSE
-                return True
-        self.valve_status = VALVE_OPEN
-        return False
 
 
     def quit_valve(self):
