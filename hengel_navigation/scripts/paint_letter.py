@@ -13,7 +13,7 @@ import time
 import os
 from navigation_control import NavigationControl
 import cv2
-import main_program as mp
+import main_program
 
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
@@ -23,7 +23,7 @@ os.system("mkdir -p "+package_base_path+"/hengel_path_manager/waypnts")
 
 class PaintLetter():
     def __init__(self):
-        print("Length of Canvas Side = "+str(mp.CANVAS_SIDE_LENGTH))
+        print("Length of Canvas Side = "+str(main_program.CANVAS_SIDE_LENGTH))
         self.arr_path=[]
         self.draw_start_index=[]
         self.word=raw_input("Type letters to draw:")
@@ -46,7 +46,7 @@ class PaintLetter():
                         _str = line.split()
                         if not len(_str)==0:
                             #letter_path.append([(float)(_str[0])+(float)(letter_index)-(2*(float)(letter_index)-1)*250/1632, 1.0-(float)(_str[1])])
-                            letter_path.append([((float)(_str[0])+(float)(letter_index))*mp.CANVAS_SIDE_LENGTH, (1.0-(float)(_str[1]))*mp.CANVAS_SIDE_LENGTH])
+                            letter_path.append([((float)(_str[0])+(float)(letter_index))*main_program.CANVAS_SIDE_LENGTH, (1.0-(float)(_str[1]))*main_program.CANVAS_SIDE_LENGTH])
                         else:
                             pass
             #count the number of letters including spacing
