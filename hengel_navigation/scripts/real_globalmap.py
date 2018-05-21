@@ -33,7 +33,7 @@ class RealGlobalMap():
         return self.handle_globalfeedback()
     
     def initialize(self):
-        rospy.init_node('real_globalmap', anonymous=True)
+        #rospy.init_node('real_globalmap', anonymous=True)
 
         self.root=Tk()
 
