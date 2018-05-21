@@ -14,7 +14,8 @@ from sensor_msgs.msg import Image
 from math import sqrt
 import numpy as np
 import cv2
-from hengel_navigation/GlobalFeedback.srv import *
+from hengel_navigation.srv import GlobalFeedback
+from matplotlib import pyplot as plt
 
 size_x=1000
 size_y=1000
@@ -24,49 +25,104 @@ package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.
 
 class RealGlobalMap():
     def __init__(self):
-        rospy.init_node('real_globalmap', anonymous=True)
+        self.initialize()
+        
+        #Load Waypoints
+        path_file=cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_READ)
+        self.waypnts_arr= path_file.getNode("arr_path")
+        path_file.release()
 
-        s = rospy.Service('/global_feedback', GlobalFeedback, handle_globalfeedback)
+        ############## DEBUG ###########################
+        self.image_debug()
+        ################################################
+        
+        self.MapPublisher()
+    
+    def initialize(self):
+        rospy.init_node('real_globalmap', anonymous=True)
+        s = rospy.Service('/global_feedback', GlobalFeedback, self.handle_globalfeedback)
 
         self.root=Tk()
 
         self.photo=[]
         self.photo=np.ndarray(self.photo)
 
+        self.last_letter_img=[]
+        self.last_letter_img=np.ndarray(self.last_letter_img)
+
+        self.last2_letter_img=[]
+        self.last2_letter_img=np.ndarray(self.last2_letter_img)
+
         self.x=0
         self.y=0
         self.th=0
 
-        path_file=cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_READ)
-        self.waypnts_arr= path_file.getNode("arr_path")
-        path_file.release()
+        ##############################################
+        self.around_view_subscriber= rospy.Subscriber('/around_img', Image, self.callback_view)
+        self.position_subscriber=rospy.Subscriber('/current_position', Point, self.callback_position)
+        self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
+        ##############################################
 
-        self.c=Canvas(self.root, height=size_x, width=size_y, bg="white")
-        self.root.title("global map")
-        _str=str(size_x)+"x"+str(size_y)
-        self.root.geometry(_str)
-
-        # self.around_view_subscriber= rospy.Subscriber('/around_img', Image, self.callback_view)
-        # self.position_subscriber=rospy.Subscriber('/current_position', Point, self.callback_position)
-        # self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
-
-        ############## DEBUG ###########################
-        # self.photo=PIL.ImageTk.PhotoImage(_map)
-        # self.c.create_image(0,0,anchor="nw", image=self.photo)
-        self.image_debug()
-        ################################################
-        
-        self.MapPublisher()
 
     def handle_globalfeedback(self,req):
         letter_number = req.letter_number
-        
-        ######### ADD CODES ###############
+        data=[0,0,0]
+        if letter_number >1 :
 
+            # 1. Crop second last letter
+            self.last2_letter_img = self.crop_letter(letter_number, 2)
 
+            # 2. Calculate the offset
+            sz= self.last2_letter_img.shape
+            warp_matrix= np.eye(3, 3, dtype=np.float32)
+            #########################
+            number_of_iterations = 5000
+            termination_eps = 1e-6
+            #########################
+            criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, number_of_iterations,  termination_eps)
+            (cc, warp_matrix) = cv2.findTransformECC (im1_gray,im2_gray,warp_matrix, warp_mode, criteria)
 
-        return [delta_x, delta_y, delta_th]
+            offset_th = math.atan(warp_matrix[0][0], -warp_matrix[0][1])
+            offset_x = warp_matrix[0][2]
+            offset_y = warp_matrix[1][2]
 
+            data=[offset_x, offset_y, offset_th]
+
+        # 3. Update last letter   
+        self.last_letter_img = self.crop_letter(letter_number, 1)                  
+        return data
+
+    def crop_letter(self, letter_number, ind):
+        ###################
+        x_padding= 10
+        y_padding = 10
+        ###################
+        last_letter_x = [i[0] for i in self.waypnts_arr[letter_number-ind]]
+        last_letter_y = [i[1] for i in self.waypnts_arr[letter_number-ind]]
+
+        x_min = min(last_letter_x)
+        x_max = max(last_letter_x)
+        y_min = min(last_letter_y)
+        y_max = max(last_letter_y)
+
+        crop_img= self.photo[y_min-y_padding, y_max+y_padding, x_min-x_padding: x_max+x_padding]
+    
+        ################ FOR DEBUGGING #####################
+        threshold_img1 = cv2.threshold(crop_img, 50, 255, cv2.THRESH_BINARY)
+        threshold_img2 = cv2.threshold(crop_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
+        threshold_img3 = cv2.threshold(crop_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11,2)
+
+        titles = ['Original Image', 'Global Thresholding(v=50)', 'Adaptive Mean Thresholding', 'Adaptive Gaussian Thresholding']
+        imgs=[crop_img, threshold_img1, threshold_img2, threshold_img3]
+
+        for i in xrange(4):
+            plt.subplot(2,2,i+1), plt.imshow(imgs[i], 'gray')
+            plt.title(titles[i])
+            plt.xticks([]), plt.yticks([])
+        plt.show()
+        #####################################################
+
+        return cv2.cvtColot(crop_img)
 
     def MapPublisher(self):
         x_px= scale_factor*self.x
@@ -100,14 +156,16 @@ class RealGlobalMap():
 
     ################## DEBUG #########################
     def image_debug(self):
-        self.photo=cv2.imread("./abc.jpg", cv2.IMREAD_COLOR)
-        self.photo=cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
+        self.photo=cv2.imread(package_base_path+"/hengel_visual_odometry/scripts/abc.jpg", cv2.IMREAD_COLOR)
+        # self.photo=cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
+        cv2.imshow("minion", self.photo)
         self.photo=cv2.resize(self.photo, (200,200))
     ##################################################
+
     def callback_view(self, _img):
         bridge=CvBridge()
         self.photo= bridge.imgmsg_to_cv2(_img, "rgb8")
-        self.photo=cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
+        # self.photo=cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
 
     def callback_position(self, _pnt):
         self.x=_pnt.x
