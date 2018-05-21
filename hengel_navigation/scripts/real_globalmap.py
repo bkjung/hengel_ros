@@ -147,11 +147,11 @@ class RealGlobalMap():
 
 
     ################## DEBUG #########################
-    def image_debug(self):
-        self.photo=cv2.imread(self.package_base_path+"/hengel_visual_odometry/scripts/abc.jpg", cv2.IMREAD_COLOR)
-        # self.photo=cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
-        cv2.imshow("minion", self.photo)
-        self.photo=cv2.resize(self.photo, (200,200))
+    # def image_debug(self):
+    #     self.photo=cv2.imread(self.package_base_path+"/hengel_visual_odometry/scripts/abc.jpg", cv2.IMREAD_COLOR)
+    #     # self.photo=cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
+    #     cv2.imshow("minion", self.photo)
+    #     self.photo=cv2.resize(self.photo, (200,200))
     ##################################################
 
     def callback_view(self, _img):
