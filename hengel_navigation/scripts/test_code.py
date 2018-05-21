@@ -6,13 +6,10 @@ from std_msgs.msg import Float32
 import tf
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos
 from tf.transformations import euler_from_quaternion
-import numpy as np
 import sys
-from PIL import Image
 import time
 import os
 from navigation_control import NavigationControl
-import cv2
 
 
 
@@ -23,6 +20,7 @@ os.system("mkdir -p "+package_base_path+"/hengel_path_manager/waypnts")
 
 class GoToPoint():
     def __init__(self):
+        self.path_to_point=[]
         self.arr_path=[]
         self.draw_start_index=[]
         print("Type point to go: ")
@@ -35,11 +33,11 @@ class GoToPoint():
 
         self.make_path()
         self.run(self.theta)
-        
+
     def make_path(self):
-        path_to_point.append([0.0, 0.0])
-        path_to_point.append([(float)(self.x), (float)(self.y)])
-        self.arr_path.append(path_to_point)
+        self.path_to_point.append([0.0, 0.0])
+        self.path_to_point.append([(float)(self.x), (float)(self.y)])
+        self.arr_path.append(self.path_to_point)
 
     def run(self, _theta):
         # NavigationControl(self.arr_path, self.draw_start_index)
