@@ -37,7 +37,7 @@ def normalize_rad(input_angle):
         return input_angle+2*pi
     else:
         return input_angle
-    
+
 def angle_difference(angle1, angle2):
     return normalize_rad( normalize_rad(angle1) - normalize_rad(angle2) )
 
@@ -96,7 +96,7 @@ class NavigationControl():
         self.loop_cnt1=0
         self.loop_cnt2=0
         self.isGoodToGo=False
-        
+
         self.map_img=[]
         self.map_img=np.ndarray(self.map_img)
 
@@ -166,7 +166,7 @@ class NavigationControl():
                                 ############### ADD CODES ####################
                                 #change the offset (offset_x, offset_y, offset_th)
                                 ##############################################
-                                
+
                             print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
                             alpha=angle_difference( atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x), self.heading.data )
@@ -251,7 +251,7 @@ class NavigationControl():
         rospy.loginfo("Stopping the robot at the final destination")
         self.cmd_vel.publish(Twist())
 
-        
+
 
     def callback_position(self, _data):
         self.point.x = _data.x
@@ -404,7 +404,7 @@ class NavigationControl(_theta):
         self.loop_cnt1=0
         self.loop_cnt2=0
         self.isGoodToGo=False
-        
+
         self.map_img=[]
         self.map_img=np.ndarray(self.map_img)
 
@@ -427,7 +427,6 @@ class NavigationControl(_theta):
                 self.cnt_total_waypoints=self.cnt_total_waypoints+1
 
         print("number of letters = " + str(len(self.arr_path)))
-        print("size of total waypoints = " + str(cnt_waypoints))
 
 
         while self.letter_index < self.cnt_letter:
@@ -474,7 +473,7 @@ class NavigationControl(_theta):
                                 ############### ADD CODES ####################
                                 #change the offset (offset_x, offset_y, offset_th)
                                 ##############################################
-                                
+
                             print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
                             alpha=angle_difference( atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x), self.heading.data )
@@ -576,7 +575,7 @@ class NavigationControl(_theta):
         rospy.loginfo("Stopping the robot at the final destination")
         self.cmd_vel.publish(Twist())
 
-        
+
 
     def callback_position(self, _data):
         self.point.x = _data.x

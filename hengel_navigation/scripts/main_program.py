@@ -7,6 +7,7 @@ from paint_drawing import PaintDrawing
 from paint_letter import PaintLetter
 from test_code import GoToPoint
 
+CANVAS_SIDE_LENGTH = 0.5
 
 OPTION_LETTERS = 1
 OPTION_DRAWING = 2
@@ -42,7 +43,6 @@ class HengelMain():
 
     def initialOptionSelect(self):
         word=raw_input("HENGEL ROBOT Made By NAVER LABS Robotics 5th Intern.\nThere are two options of painting.\n[1] Print Letters.\n[2] Print Drawing of Yours.\nType 1 or 2 :")
-        print("Input:"+word)
         self.runningOption = int(word)
 
 

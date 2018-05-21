@@ -18,7 +18,7 @@ import cv2
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
 os.system("mkdir -p "+package_base_path+"/hengel_path_manager/output_pathmap")
-os.system("mkdir -p"+package_base_path+"/hengel_path_manager/waypnts")
+os.system("mkdir -p "+package_base_path+"/hengel_path_manager/waypnts")
 
 
 class GoToPoint():
