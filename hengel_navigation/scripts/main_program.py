@@ -7,8 +7,6 @@ from paint_drawing import PaintDrawing
 from paint_letter import PaintLetter
 from test_code import GoToPoint
 
-CANVAS_SIDE_LENGTH = 0.5
-
 OPTION_LETTERS = 1
 OPTION_DRAWING = 2
 OPTION_TEST = 3
