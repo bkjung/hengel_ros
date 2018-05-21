@@ -15,7 +15,7 @@ import time
 import os
 import cv2
 import cv_bridge
-from GlobalFeedback.srv import *
+from hengel_navigation.srv import GlobalFeedback
 
 #VALVE_OPEN = 1023
 #VALVE_OPEN = 870
@@ -115,8 +115,8 @@ class NavigationControl():
         # go through path array
         for idx_letter in range(len(self.arr_path)):
             for idx_waypoint in range(len(self.arr_path[idx_letter])):
-            self.waypoints.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
-            self.cnt_total_waypoints=self.cnt_total_waypoints+1
+                self.waypoints.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
+                self.cnt_total_waypoints=self.cnt_total_waypoints+1
 
         print("number of letters = " + str(len(self.arr_path)))
         print("size of total waypoints = " + str(cnt_waypoints))
