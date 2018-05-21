@@ -50,6 +50,8 @@ class RealGlobalMap():
         self.size_y=1000
         self.scale_factor= 3 #[pixel/cm]
 
+        self.aroundview_subscriber=rospy.Subscriber('/around_img', Image, callback_view)
+
 
     def run(self, letter_index, _position):
 
@@ -98,18 +100,18 @@ class RealGlobalMap():
         crop_img= self.photo[y_min-y_padding, y_max+y_padding, x_min-x_padding: x_max+x_padding]
     
         ################ FOR DEBUGGING #####################
-        threshold_img1 = cv2.threshold(crop_img, 50, 255, cv2.THRESH_BINARY)
-        threshold_img2 = cv2.threshold(crop_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
-        threshold_img3 = cv2.threshold(crop_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11,2)
+        # threshold_img1 = cv2.threshold(crop_img, 50, 255, cv2.THRESH_BINARY)
+        # threshold_img2 = cv2.threshold(crop_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
+        # threshold_img3 = cv2.threshold(crop_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11,2)
 
-        titles = ['Original Image', 'Global Thresholding(v=50)', 'Adaptive Mean Thresholding', 'Adaptive Gaussian Thresholding']
-        imgs=[crop_img, threshold_img1, threshold_img2, threshold_img3]
+        # titles = ['Original Image', 'Global Thresholding(v=50)', 'Adaptive Mean Thresholding', 'Adaptive Gaussian Thresholding']
+        # imgs=[crop_img, threshold_img1, threshold_img2, threshold_img3]
 
-        for i in xrange(4):
-            plt.subplot(2,2,i+1), plt.imshow(imgs[i], 'gray')
-            plt.title(titles[i])
-            plt.xticks([]), plt.yticks([])
-        plt.show()
+        # for i in xrange(4):
+        #     plt.subplot(2,2,i+1), plt.imshow(imgs[i], 'gray')
+        #     plt.title(titles[i])
+        #     plt.xticks([]), plt.yticks([])
+        # plt.show()
         #####################################################
 
         return cv2.cvtColot(crop_img)
@@ -141,7 +143,7 @@ class RealGlobalMap():
         cv2.waitKey(10000)
         new_Image=PIL.Image.new("RGB", (self.size_x, self.size_y), (256,256,256))
         new_Image.paste(photo_PIL, (x_px-diagonal/2, y_px-diagonal/2))
-        new_Image.show()
+        # new_Image.show()
 
 
     ################## DEBUG #########################
@@ -157,12 +159,6 @@ class RealGlobalMap():
         self.photo= bridge.imgmsg_to_cv2(_img, "rgb8")
         # self.photo=cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
 
-    def callback_position(self, _pnt):
-        self.x=_pnt.x
-        self.y=_pnt.y
-    
-    def callback_heading(self, _heading):
-        self.th=_heading.data
 
 
 
