@@ -15,7 +15,7 @@ import time
 import os
 import cv2
 import cv_bridge
-from hengel_navigation.srv import GlobalFeedback
+from real_globalmap import RealGlobalMap
 
 #VALVE_OPEN = 1023
 #VALVE_OPEN = 870
@@ -111,6 +111,8 @@ class NavigationControl():
         self.position_subscriber = rospy.Subscriber('/current_position', Point, self.callback_position)
         self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
 
+        self.real_globalmap = RealGlobalMap(self.arr_path)
+
     def run(self):
         # go through path array
         for idx_letter in range(len(self.arr_path)):
@@ -151,13 +153,11 @@ class NavigationControl():
                                 #move to viewing pnt
                                 #turn to view letters
                                 ##############################################
-
-                                rospy.wait_for_service('/global_feedback')
+                                
                                 try:
-                                    globalFeedback = rospy.ServiceProxy('/global_feedback', GlobalFeedback)
                                     position = [self.point.x, self.point.y, self.heading.data]
-                                    resp = globalFeedback(self.letter_index, position)
-                                    offset_x, offset_y, offset_th = resp.delta_offset
+                                    offset = real_globalmap.run(self.letter_index, position)
+
                                     self.is_moving_to_next_start = False
                                     self.valve_status = VALVE_OPEN
 
@@ -420,6 +420,7 @@ class NavigationControl(_theta):
         self.position_subscriber = rospy.Subscriber('/current_position', Point, self.callback_position)
         self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
 
+
     def run(self):
         # go through path array
         for idx_letter in range(len(self.arr_path)):
@@ -460,7 +461,7 @@ class NavigationControl(_theta):
                                 #move to viewing pnt
                                 #turn to view letters
                                 ##############################################
-
+                                RealGlobalMap(path)
                                 rospy.wait_for_service('/global_feedback')
                                 try:
                                     globalFeedback = rospy.ServiceProxy('/global_feedback', GlobalFeedback)
