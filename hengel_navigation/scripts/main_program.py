@@ -5,10 +5,12 @@ import roslaunch
 import sys
 from paint_drawing import PaintDrawing
 from paint_letter import PaintLetter
+from test_code import GoToPoint
 
 
 OPTION_LETTERS = 1
 OPTION_DRAWING = 2
+OPTION_TEST = 3
 
 
 class HengelMain():
@@ -25,6 +27,9 @@ class HengelMain():
 
             elif self.runningOption == OPTION_DRAWING:
                 PaintDrawing()
+
+            elif self.runningOption == OPTION_TEST:
+                GoToPoint()
 
             else:
                 raise Exception("WRONG INPUT OPTION FOR PAINTING (Neither 1 nor 2)")
