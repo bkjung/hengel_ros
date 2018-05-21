@@ -1,4 +1,4 @@
 <launch>
   <node pkg="hengel_visual_odometry" type="around_view.py" name="around_img_publisher" output="screen" />
-  <!-- <node pkg="hengel_visual_odometry" type="visual_odometry.py" name="visual_odometry_node"  output="screen" args="microsoft_lifecam_studio" /> -->
+  <node pkg="hengel_visual_odometry" type="real_globalmap_publisher.py" name="real_globalmap"  output="screen" />
 </launch>
