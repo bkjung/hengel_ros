@@ -27,10 +27,6 @@ class RealGlobalMap():
     def __init__(self):
         self.initialize()
         
-        #Load Waypoints
-        path_file=cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_READ)
-        self.waypnts_arr= path_file.getNode("arr_path")
-        path_file.release()
 
         ############## DEBUG ###########################
         self.image_debug()
@@ -40,7 +36,6 @@ class RealGlobalMap():
     
     def initialize(self):
         rospy.init_node('real_globalmap', anonymous=True)
-        s = rospy.Service('/global_feedback', GlobalFeedback, self.handle_globalfeedback)
 
         self.root=Tk()
 
@@ -57,15 +52,26 @@ class RealGlobalMap():
         self.y=0
         self.th=0
 
+        #Load Waypoints
+        path_file=cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_READ)
+        self.waypnts_arr= path_file.getNode("arr_path")
+        path_file.release()
+
         ##############################################
-        self.around_view_subscriber= rospy.Subscriber('/around_img', Image, self.callback_view)
-        self.position_subscriber=rospy.Subscriber('/current_position', Point, self.callback_position)
-        self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
+        # self.around_view_subscriber= rospy.Subscriber('/around_img', Image, self.callback_view)
+        # self.position_subscriber=rospy.Subscriber('/current_position', Point, self.callback_position)
+        # self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
         ##############################################
+
+        s = rospy.Service('/global_feedback', GlobalFeedback, self.handle_globalfeedback)
 
 
     def handle_globalfeedback(self,req):
         letter_number = req.letter_number
+        self.x = req.position[0]
+        self.y = req.position[1]
+        self.th = req.position[2]
+        
         data=[0,0,0]
         if letter_number >1 :
 

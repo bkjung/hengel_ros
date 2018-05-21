@@ -155,7 +155,8 @@ class NavigationControl():
                                 rospy.wait_for_service('/global_feedback')
                                 try:
                                     globalFeedback = rospy.ServiceProxy('/global_feedback', GlobalFeedback)
-                                    resp = globalFeedback(self.letter_index)
+                                    position = [self.point.x, self.point.y, self.heading.data]
+                                    resp = globalFeedback(self.letter_index, position)
                                     offset_x, offset_y, offset_th = resp.delta_offset
                                     self.is_moving_to_next_start = False
                                     self.valve_status = VALVE_OPEN
@@ -463,13 +464,14 @@ class NavigationControl(_theta):
                                 rospy.wait_for_service('/global_feedback')
                                 try:
                                     globalFeedback = rospy.ServiceProxy('/global_feedback', GlobalFeedback)
-                                    resp = globalFeedback(self.letter_index)
+                                    position = [self.point.x, self.point.y, self.heading.data]
+                                    resp = globalFeedback(self.letter_index, position)
                                     offset_x, offset_y, offset_th = resp.delta_offset
                                     self.is_moving_to_next_start = False
                                     self.valve_status = VALVE_OPEN
 
                                 except rospy.ServiceException, e:
-                                    print("Service call failed")
+                                    print("Service call failed") 
 
                                 ############### ADD CODES ####################
                                 #change the offset (offset_x, offset_y, offset_th)
