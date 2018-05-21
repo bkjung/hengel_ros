@@ -17,22 +17,20 @@ import cv2
 from hengel_navigation.srv import GlobalFeedback
 from matplotlib import pyplot as plt
 
-size_x=1000
-size_y=1000
-scale_factor= 3 #[pixel/cm]
-
-package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
 
 class RealGlobalMap():
-    def __init__(self):
+    def __init__(self, _arr_path):
+        self.arr_path = _arr_path
         self.initialize()
         
-
+        self.package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))        
+        
         ############## DEBUG ###########################
-        self.image_debug()
+        # self.image_debug()
         ################################################
         
-        self.MapPublisher()
+        # self.MapPublisher()
+        return self.handle_globalfeedback()
     
     def initialize(self):
         rospy.init_node('real_globalmap', anonymous=True)
@@ -48,33 +46,19 @@ class RealGlobalMap():
         self.last2_letter_img=[]
         self.last2_letter_img=np.ndarray(self.last2_letter_img)
 
-        self.x=0
-        self.y=0
-        self.th=0
-
-        #Load Waypoints
-        path_file=cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_READ)
-        self.waypnts_arr= path_file.getNode("arr_path")
-        path_file.release()
-
-        ##############################################
-        # self.around_view_subscriber= rospy.Subscriber('/around_img', Image, self.callback_view)
-        # self.position_subscriber=rospy.Subscriber('/current_position', Point, self.callback_position)
-        # self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
-        ##############################################
-
-        s = rospy.Service('/global_feedback', GlobalFeedback, self.handle_globalfeedback)
+        self.size_x=1000
+        self.size_y=1000
+        self.scale_factor= 3 #[pixel/cm]
 
 
-    def handle_globalfeedback(self,req):
-        letter_number = req.letter_number
-        self.x = req.position[0]
-        self.y = req.position[1]
-        self.th = req.position[2]
-        
+    def run(self, letter_index, _position):
+
+        self.x = _pose[0]
+        self.y = _pose[1]
+        self.th = _pose[2]
+
         data=[0,0,0]
         if letter_number >1 :
-
             # 1. Crop second last letter
             self.last2_letter_img = self.crop_letter(letter_number, 2)
 
@@ -131,8 +115,8 @@ class RealGlobalMap():
         return cv2.cvtColot(crop_img)
 
     def MapPublisher(self):
-        x_px= scale_factor*self.x
-        y_px= scale_factor*self.y
+        x_px= self.scale_factor*self.x
+        y_px= self.scale_factor*self.y
 
         #Rotate image (size: diagonal * diagonal)
         rows, cols = self.photo.shape[:2]
@@ -155,14 +139,14 @@ class RealGlobalMap():
         photo_PIL=PIL.Image.fromarray(rot_photo)
 
         cv2.waitKey(10000)
-        new_Image=PIL.Image.new("RGB", (size_x, size_y), (256,256,256))
+        new_Image=PIL.Image.new("RGB", (self.size_x, self.size_y), (256,256,256))
         new_Image.paste(photo_PIL, (x_px-diagonal/2, y_px-diagonal/2))
         new_Image.show()
 
 
     ################## DEBUG #########################
     def image_debug(self):
-        self.photo=cv2.imread(package_base_path+"/hengel_visual_odometry/scripts/abc.jpg", cv2.IMREAD_COLOR)
+        self.photo=cv2.imread(self.package_base_path+"/hengel_visual_odometry/scripts/abc.jpg", cv2.IMREAD_COLOR)
         # self.photo=cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
         cv2.imshow("minion", self.photo)
         self.photo=cv2.resize(self.photo, (200,200))
@@ -182,10 +166,10 @@ class RealGlobalMap():
 
 
 
-if __name__ == "__main__":
-    try:
-        RealGlobalMap()
-    except Exception as e:
-        print(e)
-        rospy.loginfo("shutdown program")
+# if __name__ == "__main__":
+#     try:
+#         RealGlobalMap()
+#     except Exception as e:
+#         print(e)
+#         rospy.loginfo("shutdown program")
 
