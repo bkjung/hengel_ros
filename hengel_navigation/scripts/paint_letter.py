@@ -30,7 +30,7 @@ class PaintLetter():
 
         self.get_path()
         self.run()
-        
+
     def get_path(self):
         dir_1= package_base_path+"/hengel_path_manager/alphabet_path/path_"
         dir_2=".txt"
@@ -54,10 +54,10 @@ class PaintLetter():
 
             self.arr_path.append(letter_path)
 
-        arr_path_file =cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_WRITE)
-        arr_path_file.write("arr_path", self.arr_path)
-        arr_path_file.release()
-            
+#        arr_path_file =cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_WRITE)
+#        arr_path_file.write("arr_path", self.arr_path)
+#        arr_path_file.release()
+
     def run(self):
         # NavigationControl(self.arr_path, self.draw_start_index)
         NavigationControl(self.arr_path)
