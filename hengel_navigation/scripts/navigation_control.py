@@ -159,10 +159,10 @@ class NavigationControl():
                                 #move to viewing pnt
                                 #turn to view letters
                                 ##############################################
-                                
+
                                 try:
                                     position = [self.point.x, self.point.y, self.heading.data]
-                                    offset = real_globalmap.run(self.letter_index, position)
+                                    offset = self.real_globalmap.run(self.letter_index, position)
 
                                     self.is_moving_to_next_start = False
                                     self.valve_status = VALVE_OPEN
@@ -410,7 +410,7 @@ class NavigationControl():
 #         self.loop_cnt1=0
 #         self.loop_cnt2=0
 #         self.isGoodToGo=False
-        
+
 #         self.map_img=[]
 #         self.map_img=np.ndarray(self.map_img)
 
@@ -477,12 +477,12 @@ class NavigationControl():
 #                                     self.valve_status = VALVE_OPEN
 
 #                                 except rospy.ServiceException, e:
-#                                     print("Service call failed") 
+#                                     print("Service call failed")
 
 #                                 ############### ADD CODES ####################
 #                                 #change the offset (offset_x, offset_y, offset_th)
 #                                 ##############################################
-                                
+
 #                             print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
 #                             alpha=angle_difference( atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x), self.heading.data )
@@ -584,7 +584,7 @@ class NavigationControl():
 #         rospy.loginfo("Stopping the robot at the final destination")
 #         self.cmd_vel.publish(Twist())
 
-        
+
 
 #     def callback_position(self, _data):
 #         self.point.x = _data.x
