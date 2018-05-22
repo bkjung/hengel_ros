@@ -124,7 +124,8 @@ class NavigationControl():
             print("number of waypoints in letter no."+str(idx_letter)+" = "+str(len(self.arr_path[idx_letter])))
             waypoints_in_letter=[]
             for idx_waypoint in range(len(self.arr_path[idx_letter])):
-                waypoints_in_letter.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
+                # waypoints_in_letter.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
+                waypoints_in_letter.append([self.arr_path[idx_letter][idx_waypoint][0], self.arr_path[idx_letter][idx_waypoint][1]])
                 self.cnt_total_waypoints=self.cnt_total_waypoints+1
             self.waypoints.append(waypoints_in_letter)
 
