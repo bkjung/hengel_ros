@@ -137,7 +137,7 @@ class NavigationControl():
             self.cnt_waypoints_in_current_letter = len(self.arr_path[self.letter_index])
             while self.waypoint_index_in_current_letter < self.cnt_waypoints_in_current_letter:
                 print("")
-                print("current waypoint index : "+str(self.waypoint_index_in_current_letter)+" in letter no. "+str(self.letter_index))
+                print("waypoint index : "+str(self.waypoint_index_in_current_letter)+" in letter no. "+str(self.letter_index))
                 self.current_waypoint = [self.waypoints[self.letter_index][self.waypoint_index_in_current_letter][0], self.waypoints[self.letter_index][self.waypoint_index_in_current_letter][1]]
 
                 goal_distance = sqrt(pow(self.current_waypoint[0] - self.point.x, 2) + pow(self.current_waypoint[1] - self.point.y, 2))
@@ -252,8 +252,7 @@ class NavigationControl():
                         rospy.signal_shutdown("KeyboardInterrupt")
                         break
 
-                print("CURRENT: "+str(self.point.x)+", "+str(self.point.y))
-                print("WAYPOINT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
+                print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+" \t\t WAYPOINT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
                 self.waypoint_index_in_current_letter = self.waypoint_index_in_current_letter + self.waypoint_increment
 
