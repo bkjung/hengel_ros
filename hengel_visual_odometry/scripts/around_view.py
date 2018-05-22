@@ -14,9 +14,9 @@ NO IMAGE RECORDING
 # Node to obtain call camera data. Separate I/O pipeline
 rospy.loginfo('Init Cameras...')
 
-cam_front = cv2.VideoCapture(1)
-cam_left = cv2.VideoCapture(0)
-cam_right = cv2.VideoCapture(2)
+cam_front = cv2.VideoCapture(2)
+cam_left = cv2.VideoCapture(1)
+cam_right = cv2.VideoCapture(0)
 cam_front.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
 cam_front.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 cam_front.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))     # COLLECT IMAGE IN MJPG FORM, SOLVE USB HUB BANDWIDTH ISSUE
