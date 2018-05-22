@@ -108,8 +108,8 @@ class WheelOdometry():
                     self.heading.data = euler_from_quaternion(rot)[2]
 
                     if self.isFirst:
-                        # self.offset_x=self.pnt.x
-                        # self.offset_y=self.pnt.y
+                        self.offset_x=self.pnt.x
+                        self.offset_y=self.pnt.y
                         #self.offset_heading=self.heading.data-pi/2.0
                         self.offset_heading=self.heading.data
                         self.isFirst = False
