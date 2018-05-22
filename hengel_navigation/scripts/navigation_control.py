@@ -108,6 +108,9 @@ class NavigationControl():
         self.valve_angle_publisher = rospy.Publisher('/valve_input', ValveInput, queue_size=5)
         self.valve_operation_mode_publisher = rospy.Publisher('/operation_mode', OperationMode, queue_size=5)
         #self.crop_map_publisher = rospy.Publisher('/cropped_predict_map', PIL.Image, queue_size=5)
+        self.offset_change_x_publisher = rospy.Publisher('/offset_x', Float32, queue_size=5)
+        self.offset_change_y_publisher = rospy.Publisher('/offset_y', Float32, queue_size=5)
+        self.offset_change_theta_publisher = rospy.Publisher('/offset_theta', Float32, queue_size=5)
 
         self.position_subscriber = rospy.Subscriber('/current_position', Point, self.callback_position)
         self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
@@ -154,10 +157,24 @@ class NavigationControl():
                             self.valve_angle_publisher.publish(self.valve_angle_input)
 
                             if self.is_moving_to_next_start:
-
+                                print("is_moving_to_next_start")
                                 ############### ADD CODES ####################
                                 #move to viewing pnt
                                 #turn to view letters
+                                while(True):
+                                    alpha=angle_difference( pi, self.heading.data )
+                                    if abs(alpha)> self.thres3: #abs?
+                                        # if alpha>0 or alpha<-pi:
+                                        if alpha>0:
+                                            self.move_cmd.linear.x=0
+                                            self.move_cmd.angular.z=self.ang_vel_3
+                                        else:
+                                            self.move_cmd.linear.x=0
+                                            self.move_cmd.angular.z=-self.ang_vel_3
+                                    else:
+                                        break
+                                    self.cmd_vel.publish(self.move_cmd)
+                                    self.r.sleep()
                                 ##############################################
 
                                 try:
@@ -172,6 +189,14 @@ class NavigationControl():
 
                                 ############### ADD CODES ####################
                                 #change the offset (offset_x, offset_y, offset_th)
+                                self.offset_change_x_publisher.publish(offset[0])
+                                self.offset_change_y_publisher.publish(offset[1])
+                                self.offset_change_theta_publisher.publish(offset[2])
+
+                                print("OFFSET Changed")
+                                print("x : "+str(offset[0]))
+                                print("y : "+str(offset[1]))
+                                print("theta : "+str(offset[2]))
                                 ##############################################
 
                             print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
