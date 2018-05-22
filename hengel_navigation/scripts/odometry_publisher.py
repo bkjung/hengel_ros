@@ -133,12 +133,15 @@ class WheelOdometry():
 
     def callback_offset_change_x(self, _data):
         self.offset_x = self.offset_x - _data
+        print("OFFSET_X Changed by : "+str(_data))
 
     def callback_offset_change_y(self, _data):
         self.offset_y = self.offset_y - _data
+        print("OFFSET_Y Changed by : "+str(_data))
 
     def callback_offset_change_theta(self, _data):
         self.offset_theta = self.offset_theta - _data
+        print("OFFSET_THETA Changed by : "+str(_data))
 
 
 def initialOptionSelect():

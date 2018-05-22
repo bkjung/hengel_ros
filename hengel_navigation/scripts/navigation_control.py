@@ -193,18 +193,13 @@ class NavigationControl():
                                 self.offset_change_x_publisher.publish(offset[0])
                                 self.offset_change_y_publisher.publish(offset[1])
                                 self.offset_change_theta_publisher.publish(offset[2])
-
-                                print("OFFSET Changed")
-                                print("x : "+str(offset[0]))
-                                print("y : "+str(offset[1]))
-                                print("theta : "+str(offset[2]))
                                 ##############################################
 
-                            print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
                             alpha=angle_difference( atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x), self.heading.data )
 
-                            print("heading error: %0.3f" % np.rad2deg(alpha))
+                            #print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
+                            #print("heading error: %0.3f" % np.rad2deg(alpha))
 
                             if abs(alpha)<=self.thres3:
                                 self.valve_status=VALVE_OPEN
@@ -268,6 +263,9 @@ class NavigationControl():
                         print("Got KeyboardInterrupt")
                         rospy.signal_shutdown("KeyboardInterrupt")
                         break
+
+                print("CURRENT: "+str(self.point.x)+", "+str(self.point.y))
+                print("WAYPOINT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
                 self.waypoint_index_in_current_letter = self.waypoint_index_in_current_letter + self.waypoint_increment
 

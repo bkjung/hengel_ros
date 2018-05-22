@@ -114,7 +114,7 @@ def imagePublisher():
                 #summed_image=front_masked
                 summed_image=cv2.resize(summed_image, (900,650), interpolation=cv2.INTER_AREA)
 
-                cv2.imshow('warped', summed_image)
+                #cv2.imshow('warped', summed_image)
 
                 # SEND IMAGE AS ROS imgmsg
                 summed_image = bridge.cv2_to_imgmsg(summed_image, "bgr8")
