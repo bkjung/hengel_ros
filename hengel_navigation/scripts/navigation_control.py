@@ -163,20 +163,7 @@ class NavigationControl():
                                 ############### ADD CODES ####################
                                 #move to viewing pnt
                                 #turn to view letters
-                                while(True):
-                                    alpha=angle_difference( pi, self.heading.data )
-                                    if abs(alpha)> self.thres3: #abs?
-                                        # if alpha>0 or alpha<-pi:
-                                        if alpha>0:
-                                            self.move_cmd.linear.x=0
-                                            self.move_cmd.angular.z=self.ang_vel_3
-                                        else:
-                                            self.move_cmd.linear.x=0
-                                            self.move_cmd.angular.z=-self.ang_vel_3
-                                    else:
-                                        break
-                                    self.cmd_vel.publish(self.move_cmd)
-                                    self.r.sleep()
+                                self.look_oppsite_side()
                                 ##############################################
 
                                 try:
@@ -278,8 +265,10 @@ class NavigationControl():
             self.is_moving_to_next_start = True
             self.valve_status = VALVE_CLOSE
 
+        self.look_oppsite_side()
+
         self.cmd_vel.publish(Twist())
-        #Wait for 2 seconds to close valve
+        #Wait for 1 second to close valve
         self.quit_valve()
 
         rospy.loginfo("Stopping the robot at the final destination")
@@ -362,7 +351,7 @@ class NavigationControl():
         self.crop_map_publisher.publish(crop_msg)
 
     def quit_valve(self):
-        for ind_quit in range(100):
+        for ind_quit in range(50):
             self.valve_angle_input.goal_position = VALVE_CLOSE
             self.valve_angle_publisher.publish(self.valve_angle_input)
 
@@ -372,6 +361,22 @@ class NavigationControl():
     def shutdown(self):
         self.cmd_vel.publish(Twist())
         rospy.sleep(1)
+
+    def look_oppsite_side(self):
+        while(True):
+            alpha=angle_difference( pi, self.heading.data )
+            if abs(alpha)> self.thres3: #abs?
+                # if alpha>0 or alpha<-pi:
+                if alpha>0:
+                    self.move_cmd.linear.x=0
+                    self.move_cmd.angular.z=self.ang_vel_3
+                else:
+                    self.move_cmd.linear.x=0
+                    self.move_cmd.angular.z=-self.ang_vel_3
+            else:
+                break
+            self.cmd_vel.publish(self.move_cmd)
+            self.r.sleep()
 
 
 
