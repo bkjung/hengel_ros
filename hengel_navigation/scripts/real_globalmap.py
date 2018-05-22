@@ -14,7 +14,6 @@ from sensor_msgs.msg import Image
 from math import sqrt
 import numpy as np
 import cv2
-from hengel_navigation.srv import GlobalFeedback
 from matplotlib import pyplot as plt
 
 
@@ -22,16 +21,15 @@ class RealGlobalMap():
     def __init__(self, _arr_path):
         self.arr_path = _arr_path
         self.initialize()
-        
-        self.package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))        
-        
+
+        self.package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
+
         ############## DEBUG ###########################
         # self.image_debug()
         ################################################
-        
+
         # self.MapPublisher()
-        return self.handle_globalfeedback()
-    
+
     def initialize(self):
         #rospy.init_node('real_globalmap', anonymous=True)
 
@@ -50,7 +48,7 @@ class RealGlobalMap():
         self.size_y=1000
         self.scale_factor= 3 #[pixel/cm]
 
-        self.aroundview_subscriber=rospy.Subscriber('/around_img', Image, callback_view)
+        self.aroundview_subscriber=rospy.Subscriber('/around_img', Image, self.callback_view)
 
 
     def run(self, letter_index, _position):
@@ -80,8 +78,8 @@ class RealGlobalMap():
 
             data=[offset_x, offset_y, offset_th]
 
-        # 3. Update last letter   
-        self.last_letter_img = self.crop_letter(letter_number, 1)                  
+        # 3. Update last letter
+        self.last_letter_img = self.crop_letter(letter_number, 1)
         return data
 
     def crop_letter(self, letter_number, ind):
@@ -98,7 +96,7 @@ class RealGlobalMap():
         y_max = max(last_letter_y)
 
         crop_img= self.photo[y_min-y_padding, y_max+y_padding, x_min-x_padding: x_max+x_padding]
-    
+
         ################ FOR DEBUGGING #####################
         # threshold_img1 = cv2.threshold(crop_img, 50, 255, cv2.THRESH_BINARY)
         # threshold_img2 = cv2.threshold(crop_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
@@ -134,7 +132,7 @@ class RealGlobalMap():
                     background[i][j]+=self.photo[i-offsetX][j-offsetY]
                 else:
                     background[i][j] = [255,255,255]
-                    
+
         R= cv2.getRotationMatrix2D((diagonal/2, diagonal/2), np.rad2deg(self.th)+180, 1)
 
         rot_photo = cv2.warpAffine(background, R, (diagonal, diagonal), borderValue=(256,256,256))
