@@ -55,11 +55,12 @@ class PaintLetter():
                         else:
                             pass
             #count the number of letters including spacing
-            letter_index = letter_index + 1
 
             #Stop point for global view photo
             letter_path.append([CANVAS_SIDE_LENGTH + VIEWPOINT_DISTANCE + (float)(letter_index)*(CANVAS_SIDE_LENGTH+PADDING_LENGTH), (0.5)*CANVAS_SIDE_LENGTH])
             self.arr_path.append(letter_path)
+
+            letter_index = letter_index + 1
 
 #        arr_path_file =cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_WRITE)
 #        arr_path_file.write("arr_path", self.arr_path)
