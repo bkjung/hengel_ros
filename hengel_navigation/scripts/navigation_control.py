@@ -130,12 +130,13 @@ class NavigationControl():
             self.waypoints.append(waypoints_in_letter)
 
         self.cnt_letter = len(self.arr_path)
-        print()
+        print("")
 
 
         while self.letter_index < self.cnt_letter:
             self.cnt_waypoints_in_current_letter = len(self.arr_path[self.letter_index])
             while self.waypoint_index_in_current_letter < self.cnt_waypoints_in_current_letter:
+                print("")
                 print("current waypoint index : "+str(self.waypoint_index_in_current_letter)+" in letter no. "+str(self.letter_index))
                 self.current_waypoint = [self.waypoints[self.letter_index][self.waypoint_index_in_current_letter][0], self.waypoints[self.letter_index][self.waypoint_index_in_current_letter][1]]
 
