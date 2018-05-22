@@ -14,7 +14,8 @@ import os
 from navigation_control import NavigationControl
 import cv2
 
-CANVAS_SIDE_LENGTH = 0.5
+CANVAS_SIDE_LENGTH = 0.4
+PADDING_LENGTH = 0.15
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
 os.system("mkdir -p "+package_base_path+"/hengel_path_manager/output_pathmap")
@@ -24,6 +25,7 @@ os.system("mkdir -p "+package_base_path+"/hengel_path_manager/waypnts")
 class PaintLetter():
     def __init__(self):
         print("Length of Canvas Side = "+str(CANVAS_SIDE_LENGTH))
+        print("Length of Padding = "+str(PADDING_LENGTH))
         self.arr_path=[]
         self.draw_start_index=[]
         self.word=raw_input("Type letters to draw:")
@@ -52,6 +54,8 @@ class PaintLetter():
             #count the number of letters including spacing
             letter_index = letter_index + 1
 
+            #Stop point for global view photo
+            letter_path.append([(1.0+(float)(letter_index))*CANVAS_SIDE_LENGTH + PADDING_LENGTH, (0.5)*CANVAS_SIDE_LENGTH])
             self.arr_path.append(letter_path)
 
 #        arr_path_file =cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_WRITE)
