@@ -46,7 +46,7 @@ class RealGlobalMap():
 
         self.size_x=1000
         self.size_y=1000
-        self.scale_factor= 3 #[pixel/cm]
+        self.scale_factor= 5.5 #[pixel/cm]
 
         self.aroundview_subscriber=rospy.Subscriber('/around_img', Image, self.callback_view)
 
@@ -70,13 +70,20 @@ class RealGlobalMap():
             termination_eps = 1e-6
             #########################
             criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, number_of_iterations,  termination_eps)
-            (cc, warp_matrix) = cv2.findTransformECC (im1_gray,im2_gray,warp_matrix, warp_mode, criteria)
+            (cc, warp_matrix) = cv2.findTransformECC (self.,im2_gray,warp_matrix, warp_mode, criteria)
 
             offset_th = math.atan(warp_matrix[0][0], -warp_matrix[0][1])
-            offset_x = warp_matrix[0][2]
-            offset_y = warp_matrix[1][2]
 
-            data=[offset_x, offset_y, offset_th]
+            #Calculate x, y offset
+            xx = sz[0]/2-warp_matrix[0][2]
+            yy = sz[1]/2-warp_matrix[1][2]
+            x2= cos(offset_th)*xx - sin(offset_th)*yy
+            y2= sin(offset_th)*xx + cos(offset_th)*yy
+
+            offset_x = x2-sz[0]/2
+            offset_y = y2-sz[1]/2
+
+            data=[offset_x/self.scale_factor, offset_y/self.scale_factor, offset_th/self.scale_factor]
 
         # 3. Update last letter
         self.last_letter_img = self.crop_letter(letter_number, 1)
@@ -142,7 +149,6 @@ class RealGlobalMap():
         new_Image=PIL.Image.new("RGB", (self.size_x, self.size_y), (256,256,256))
         new_Image.paste(photo_PIL, (x_px-diagonal/2, y_px-diagonal/2))
         # new_Image.show()
-
 
     ################## DEBUG #########################
     # def image_debug(self):
