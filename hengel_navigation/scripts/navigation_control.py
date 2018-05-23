@@ -108,6 +108,9 @@ class NavigationControl():
         self.valve_angle_publisher = rospy.Publisher('/valve_input', ValveInput, queue_size=5)
         self.valve_operation_mode_publisher = rospy.Publisher('/operation_mode', OperationMode, queue_size=5)
         #self.crop_map_publisher = rospy.Publisher('/cropped_predict_map', PIL.Image, queue_size=5)
+        self.offset_change_x_publisher = rospy.Publisher('/offset_x', Float32, queue_size=5)
+        self.offset_change_y_publisher = rospy.Publisher('/offset_y', Float32, queue_size=5)
+        self.offset_change_theta_publisher = rospy.Publisher('/offset_theta', Float32, queue_size=5)
 
         self.position_subscriber = rospy.Subscriber('/current_position', Point, self.callback_position)
         self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
@@ -121,18 +124,20 @@ class NavigationControl():
             print("number of waypoints in letter no."+str(idx_letter)+" = "+str(len(self.arr_path[idx_letter])))
             waypoints_in_letter=[]
             for idx_waypoint in range(len(self.arr_path[idx_letter])):
-                waypoints_in_letter.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
+                # waypoints_in_letter.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
+                waypoints_in_letter.append([self.arr_path[idx_letter][idx_waypoint][0], self.arr_path[idx_letter][idx_waypoint][1]])
                 self.cnt_total_waypoints=self.cnt_total_waypoints+1
             self.waypoints.append(waypoints_in_letter)
 
         self.cnt_letter = len(self.arr_path)
-        print()
+        print("")
 
 
         while self.letter_index < self.cnt_letter:
             self.cnt_waypoints_in_current_letter = len(self.arr_path[self.letter_index])
             while self.waypoint_index_in_current_letter < self.cnt_waypoints_in_current_letter:
-                print("current waypoint index : "+str(self.waypoint_index_in_current_letter)+" in letter no. "+str(self.letter_index))
+                print("")
+                print("waypoint index : "+str(self.waypoint_index_in_current_letter)+" in letter no. "+str(self.letter_index))
                 self.current_waypoint = [self.waypoints[self.letter_index][self.waypoint_index_in_current_letter][0], self.waypoints[self.letter_index][self.waypoint_index_in_current_letter][1]]
 
                 goal_distance = sqrt(pow(self.current_waypoint[0] - self.point.x, 2) + pow(self.current_waypoint[1] - self.point.y, 2))
@@ -154,15 +159,16 @@ class NavigationControl():
                             self.valve_angle_publisher.publish(self.valve_angle_input)
 
                             if self.is_moving_to_next_start:
-
+                                print("is_moving_to_next_start")
                                 ############### ADD CODES ####################
                                 #move to viewing pnt
                                 #turn to view letters
+                                self.look_oppsite_side()
                                 ##############################################
-                                
+
                                 try:
                                     position = [self.point.x, self.point.y, self.heading.data]
-                                    offset = real_globalmap.run(self.letter_index, position)
+                                    offset = self.real_globalmap.run(self.letter_index, position)
 
                                     self.is_moving_to_next_start = False
                                     self.valve_status = VALVE_OPEN
@@ -172,13 +178,16 @@ class NavigationControl():
 
                                 ############### ADD CODES ####################
                                 #change the offset (offset_x, offset_y, offset_th)
+                                self.offset_change_x_publisher.publish(offset[0])
+                                self.offset_change_y_publisher.publish(offset[1])
+                                self.offset_change_theta_publisher.publish(offset[2])
                                 ##############################################
 
-                            print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
                             alpha=angle_difference( atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x), self.heading.data )
 
-                            print("heading error: %0.3f" % np.rad2deg(alpha))
+                            #print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
+                            #print("heading error: %0.3f" % np.rad2deg(alpha))
 
                             if abs(alpha)<=self.thres3:
                                 self.valve_status=VALVE_OPEN
@@ -243,6 +252,8 @@ class NavigationControl():
                         rospy.signal_shutdown("KeyboardInterrupt")
                         break
 
+                print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+" \t\t WAYPOINT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
+
                 self.waypoint_index_in_current_letter = self.waypoint_index_in_current_letter + self.waypoint_increment
 
             #End of current letter.
@@ -251,8 +262,10 @@ class NavigationControl():
             self.is_moving_to_next_start = True
             self.valve_status = VALVE_CLOSE
 
+        self.look_oppsite_side()
+
         self.cmd_vel.publish(Twist())
-        #Wait for 2 seconds to close valve
+        #Wait for 1 second to close valve
         self.quit_valve()
 
         rospy.loginfo("Stopping the robot at the final destination")
@@ -335,7 +348,7 @@ class NavigationControl():
         self.crop_map_publisher.publish(crop_msg)
 
     def quit_valve(self):
-        for ind_quit in range(100):
+        for ind_quit in range(50):
             self.valve_angle_input.goal_position = VALVE_CLOSE
             self.valve_angle_publisher.publish(self.valve_angle_input)
 
@@ -345,6 +358,22 @@ class NavigationControl():
     def shutdown(self):
         self.cmd_vel.publish(Twist())
         rospy.sleep(1)
+
+    def look_oppsite_side(self):
+        while(True):
+            alpha=angle_difference( pi, self.heading.data )
+            if abs(alpha)> self.thres3: #abs?
+                # if alpha>0 or alpha<-pi:
+                if alpha>0:
+                    self.move_cmd.linear.x=0
+                    self.move_cmd.angular.z=self.ang_vel_3
+                else:
+                    self.move_cmd.linear.x=0
+                    self.move_cmd.angular.z=-self.ang_vel_3
+            else:
+                break
+            self.cmd_vel.publish(self.move_cmd)
+            self.r.sleep()
 
 
 
@@ -410,7 +439,7 @@ class NavigationControl():
 #         self.loop_cnt1=0
 #         self.loop_cnt2=0
 #         self.isGoodToGo=False
-        
+
 #         self.map_img=[]
 #         self.map_img=np.ndarray(self.map_img)
 
@@ -477,12 +506,12 @@ class NavigationControl():
 #                                     self.valve_status = VALVE_OPEN
 
 #                                 except rospy.ServiceException, e:
-#                                     print("Service call failed") 
+#                                     print("Service call failed")
 
 #                                 ############### ADD CODES ####################
 #                                 #change the offset (offset_x, offset_y, offset_th)
 #                                 ##############################################
-                                
+
 #                             print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
 #                             alpha=angle_difference( atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x), self.heading.data )
@@ -584,7 +613,7 @@ class NavigationControl():
 #         rospy.loginfo("Stopping the robot at the final destination")
 #         self.cmd_vel.publish(Twist())
 
-        
+
 
 #     def callback_position(self, _data):
 #         self.point.x = _data.x

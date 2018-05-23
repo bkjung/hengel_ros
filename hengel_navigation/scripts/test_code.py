@@ -41,7 +41,8 @@ class GoToPoint():
 
     def run(self, _theta):
         # NavigationControl(self.arr_path, self.draw_start_index)
-        NavigationControl(self.arr_path, _theta)
+        # NavigationControl(self.arr_path, _theta)
+        NavigationControl(self.arr_path)
 
 if __name__ == '__main__':
     try:

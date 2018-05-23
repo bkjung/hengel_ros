@@ -14,7 +14,10 @@ import os
 from navigation_control import NavigationControl
 import cv2
 
-CANVAS_SIDE_LENGTH = 0.5
+CANVAS_SIDE_LENGTH = 0.4
+#CANVAS_SIDE_LENGTH = 1.0
+PADDING_LENGTH = 0.1
+VIEWPOINT_DISTANCE = 0.2
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
 os.system("mkdir -p "+package_base_path+"/hengel_path_manager/output_pathmap")
@@ -24,6 +27,8 @@ os.system("mkdir -p "+package_base_path+"/hengel_path_manager/waypnts")
 class PaintLetter():
     def __init__(self):
         print("Length of Canvas Side = "+str(CANVAS_SIDE_LENGTH))
+        print("Length of Padding = "+str(PADDING_LENGTH))
+        print("Distance of Viewpoint = "+str(VIEWPOINT_DISTANCE))
         self.arr_path=[]
         self.draw_start_index=[]
         self.word=raw_input("Type letters to draw:")
@@ -46,13 +51,16 @@ class PaintLetter():
                         _str = line.split()
                         if not len(_str)==0:
                             #letter_path.append([(float)(_str[0])+(float)(letter_index)-(2*(float)(letter_index)-1)*250/1632, 1.0-(float)(_str[1])])
-                            letter_path.append([((float)(_str[0])+(float)(letter_index))*CANVAS_SIDE_LENGTH, (1.0-(float)(_str[1]))*CANVAS_SIDE_LENGTH])
+                            letter_path.append([(float)(_str[0])*CANVAS_SIDE_LENGTH+(float)(letter_index)*(CANVAS_SIDE_LENGTH+PADDING_LENGTH), (1.0-(float)(_str[1]))*CANVAS_SIDE_LENGTH])
                         else:
                             pass
             #count the number of letters including spacing
-            letter_index = letter_index + 1
 
+            #Stop point for global view photo
+            letter_path.append([CANVAS_SIDE_LENGTH + VIEWPOINT_DISTANCE + (float)(letter_index)*(CANVAS_SIDE_LENGTH+PADDING_LENGTH), (0.5)*CANVAS_SIDE_LENGTH])
             self.arr_path.append(letter_path)
+
+            letter_index = letter_index + 1
 
 #        arr_path_file =cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_WRITE)
 #        arr_path_file.write("arr_path", self.arr_path)
