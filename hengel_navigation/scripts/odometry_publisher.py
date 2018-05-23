@@ -47,17 +47,16 @@ class LidarOdometry():
             print(e)
             sys.exit()
 
+    def callback_blam_position(self, _data):
+        pnt=Point()
+        pnt.x=_data.pose.position.x
+        pnt.y=_data.pose.position.y
 
-        def callback_blam_position(self, _data):
-            pnt=Point()
-            pnt.x=_data.pose.position.x
-            pnt.y=_data.pose.position.y
+        quat=[_data.pose.orientation.x, _data.pose.orientation.y, _data.pose.orientation.z, _data.pose.orientation.w]
+        rotation=euler_from_quaternion(quat)
 
-            quat=[_data.pose.orientation.x, _data.pose.orientation.y, _data.pose.orientation.z, _data.pose.orientation.w]
-            rotation=euler_from_quaternion(quat)
-
-            self.pnt = pnt
-            self.heading.data = normalize_rad(rotation[2])
+        self.pnt = pnt
+        self.heading.data = normalize_rad(rotation[2])
 
 
 class WheelOdometry():
@@ -65,6 +64,10 @@ class WheelOdometry():
         try:
             self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10)
             self.heading_publisher = rospy.Publisher('/current_heading', Float32, queue_size=10)
+
+            self.offset_change_x_subscriber = rospy.Subscriber('/offset_change_x', Float32, self.callback_offset_change_x)
+            self.offset_change_y_subscriber = rospy.Subscriber('/offset_change_y', Float32, self.callback_offset_change_y)
+            self.offset_change_theta_subscriber = rospy.Subscriber('/offset_change_theta', Float32, self.callback_offset_change_theta)
 
             self.offset_x=0
             self.offset_y=0
@@ -127,6 +130,18 @@ class WheelOdometry():
         except Exception as e:
             print(e)
             sys.exit()
+
+    def callback_offset_change_x(self, _data):
+        self.offset_x = self.offset_x - _data
+        print("OFFSET_X Changed by : "+str(_data))
+
+    def callback_offset_change_y(self, _data):
+        self.offset_y = self.offset_y - _data
+        print("OFFSET_Y Changed by : "+str(_data))
+
+    def callback_offset_change_theta(self, _data):
+        self.offset_theta = self.offset_theta - _data
+        print("OFFSET_THETA Changed by : "+str(_data))
 
 
 def initialOptionSelect():

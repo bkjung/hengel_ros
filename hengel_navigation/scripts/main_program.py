@@ -5,10 +5,11 @@ import roslaunch
 import sys
 from paint_drawing import PaintDrawing
 from paint_letter import PaintLetter
-
+from test_code import GoToPoint
 
 OPTION_LETTERS = 1
 OPTION_DRAWING = 2
+OPTION_TEST = 3
 
 
 class HengelMain():
@@ -26,6 +27,9 @@ class HengelMain():
             elif self.runningOption == OPTION_DRAWING:
                 PaintDrawing()
 
+            elif self.runningOption == OPTION_TEST:
+                GoToPoint()
+
             else:
                 raise Exception("WRONG INPUT OPTION FOR PAINTING (Neither 1 nor 2)")
 
@@ -37,7 +41,6 @@ class HengelMain():
 
     def initialOptionSelect(self):
         word=raw_input("HENGEL ROBOT Made By NAVER LABS Robotics 5th Intern.\nThere are two options of painting.\n[1] Print Letters.\n[2] Print Drawing of Yours.\nType 1 or 2 :")
-        print("Input:"+word)
         self.runningOption = int(word)
 
 

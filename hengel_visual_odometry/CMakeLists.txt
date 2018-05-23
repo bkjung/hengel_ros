@@ -21,7 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
-## modules and global scripts declared therein get installed 
+## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
 catkin_python_setup()
 
@@ -197,7 +197,7 @@ scripts/raw_img_publisher.py
 # scripts/visual_odometry.py
 scripts/around_view.py
 scripts/pi_floorcam.py
-scripts/real_globalmap_publisher.py
+#scripts/real_globalmap_publisher.py
 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
