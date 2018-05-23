@@ -81,8 +81,6 @@ class NavigationControl():
         self.cnt_total_waypoints=0
         self.cnt_waypoints_in_current_letter = 0
 
-        self.is_moving_to_next_start = False
-
         self.path_points = []
 
         self.thres1=np.deg2rad(30)
@@ -94,9 +92,9 @@ class NavigationControl():
         self.ang_vel_3=0.06
         self.lin_vel=0.07
 
-        self.loop_cnt1=0
-        self.loop_cnt2=0
-        self.isGoodToGo=False
+        self.is_moving_between_letters=False
+
+        self.loop_cnt_pathmap=0
 
         self.map_img=[]
         self.map_img=np.ndarray(self.map_img)
@@ -118,6 +116,7 @@ class NavigationControl():
         self.real_globalmap = RealGlobalMap(self.arr_path)
 
     def run(self):
+        self.wait_for_initialization_of_sensor()
         # go through path array
         print("number of letters = " + str(len(self.arr_path)))
         for idx_letter in range(len(self.arr_path)):
@@ -130,127 +129,102 @@ class NavigationControl():
             self.waypoints.append(waypoints_in_letter)
 
         self.cnt_letter = len(self.arr_path)
-        print("")
 
+        try:
+            position = [self.point.x, self.point.y, self.heading.data]
+            offset = self.real_globalmap.run(self.letter_index, position)
+
+        except rospy.ServiceException, e:
+            print("Service call failed")
 
         while self.letter_index < self.cnt_letter:
             self.cnt_waypoints_in_current_letter = len(self.arr_path[self.letter_index])
             while self.waypoint_index_in_current_letter < self.cnt_waypoints_in_current_letter:
-                print("")
-                print("waypoint index : "+str(self.waypoint_index_in_current_letter)+" in letter no. "+str(self.letter_index))
+                print("\n\nwaypoint index : "+str(self.waypoint_index_in_current_letter)+" in letter no. "+str(self.letter_index))
                 self.current_waypoint = [self.waypoints[self.letter_index][self.waypoint_index_in_current_letter][0], self.waypoints[self.letter_index][self.waypoint_index_in_current_letter][1]]
 
-                goal_distance = sqrt(pow(self.current_waypoint[0] - self.point.x, 2) + pow(self.current_waypoint[1] - self.point.y, 2))
-                distance = goal_distance
 
+                if self.waypoint_index_in_current_letter==0 or self.waypoint_index_in_current_letter==self.cnt_waypoints_in_current_letter-1:
+                    self.is_moving_between_letters = True
+                else:
+                    self.is_moving_between_letters = False
+
+
+                distance = sqrt(pow(self.current_waypoint[0] - self.point.x, 2) + pow(self.current_waypoint[1] - self.point.y, 2))
                 while distance > 0.03:
                     if rospy.is_shutdown():
                         break
                     try:
-                        #wait for 2sec to initialize position and heading input
-                        if self.isGoodToGo==False:
-                            if self.loop_cnt1==100:
-                                self.isGoodToGo=True
+                        distance = sqrt(pow(self.current_waypoint[0] - self.point.x, 2) + pow(self.current_waypoint[1] - self.point.y, 2))
+                        alpha=angle_difference( atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x), self.heading.data )
+
+                        #print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
+                        #print("heading error: %0.3f" % np.rad2deg(alpha))
+
+                        if abs(alpha)<=self.thres3:
+                            self.valve_status=VALVE_OPEN
+                            x=distance*sin(alpha)
+                            curv=2*x/pow(distance,2)
+
+                            if distance<0.02:
+                                lin_vel_scaled=self.lin_vel/5.0
+                            elif distance<0.04:
+                                lin_vel_scaled=self.lin_vel/4.0
+                            elif distance<0.06:
+                                lin_vel_scaled=self.lin_vel/3.0
+                            elif distance<0.08:
+                                lin_vel_scaled=self.lin_vel/2.0
                             else:
-                                self.loop_cnt1=self.loop_cnt1+1
+                                lin_vel_scaled=self.lin_vel
+
+                            self.move_cmd.linear.x=lin_vel_scaled
+                            self.move_cmd.angular.z=curv*lin_vel_scaled
+
                         else:
-                            self.valve_operation_mode_publisher.publish(self.valve_operation_mode)
-                            self.valve_angle_input.goal_position = self.valve_status
-                            self.valve_angle_publisher.publish(self.valve_angle_input)
+                            self.valve_status=VALVE_CLOSE
 
-                            if self.is_moving_to_next_start:
-                                print("is_moving_to_next_start")
-                                ############### ADD CODES ####################
-                                #move to viewing pnt
-                                #turn to view letters
-                                self.look_oppsite_side()
-                                ##############################################
-
-                                try:
-                                    position = [self.point.x, self.point.y, self.heading.data]
-                                    offset = self.real_globalmap.run(self.letter_index, position)
-
-                                    self.is_moving_to_next_start = False
-                                    self.valve_status = VALVE_OPEN
-
-                                except rospy.ServiceException, e:
-                                    print("Service call failed")
-
-                                ############### ADD CODES ####################
-                                #change the offset (offset_x, offset_y, offset_th)
-                                self.offset_change_x_publisher.publish(offset[0])
-                                self.offset_change_y_publisher.publish(offset[1])
-                                self.offset_change_theta_publisher.publish(offset[2])
-                                ##############################################
-
-
-                            alpha=angle_difference( atan2(self.current_waypoint[1]-self.point.y, self.current_waypoint[0]-self.point.x), self.heading.data )
-
-                            #print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
-                            #print("heading error: %0.3f" % np.rad2deg(alpha))
-
-                            if abs(alpha)<=self.thres3:
-                                self.valve_status=VALVE_OPEN
-                                x=distance*sin(alpha)
-                                curv=2*x/pow(distance,2)
-
-                                if distance<0.02:
-                                    lin_vel_scaled=self.lin_vel/5.0
-                                elif distance<0.04:
-                                    lin_vel_scaled=self.lin_vel/4.0
-                                elif distance<0.06:
-                                    lin_vel_scaled=self.lin_vel/3.0
-                                elif distance<0.08:
-                                    lin_vel_scaled=self.lin_vel/2.0
+                            if abs(alpha)> self.thres1: #abs?
+                                # if alpha>0 or alpha<-pi:
+                                if alpha>0:
+                                    self.move_cmd.linear.x=0
+                                    self.move_cmd.angular.z=self.ang_vel_1
                                 else:
-                                    lin_vel_scaled=self.lin_vel
+                                    self.move_cmd.linear.x=0
+                                    self.move_cmd.angular.z=-self.ang_vel_1
 
-                                self.move_cmd.linear.x=lin_vel_scaled
-                                self.move_cmd.angular.z=curv*lin_vel_scaled
+                            elif abs(alpha)>self.thres2:
+                                # if alpha>0 or alpha<-pi:
+                                if alpha>0:
+                                    self.move_cmd.linear.x=0
+                                    self.move_cmd.angular.z=self.ang_vel_2
+                                else:
+                                    self.move_cmd.linear.x=0
+                                    self.move_cmd.angular.z=-self.ang_vel_2
 
-                            else:
-                                self.valve_status=VALVE_CLOSE
-
-                                if abs(alpha)> self.thres1: #abs?
-                                    # if alpha>0 or alpha<-pi:
-                                    if alpha>0:
-                                        self.move_cmd.linear.x=0
-                                        self.move_cmd.angular.z=self.ang_vel_1
-                                    else:
-                                        self.move_cmd.linear.x=0
-                                        self.move_cmd.angular.z=-self.ang_vel_1
-
-                                elif abs(alpha)>self.thres2:
-                                    # if alpha>0 or alpha<-pi:
-                                    if alpha>0:
-                                        self.move_cmd.linear.x=0
-                                        self.move_cmd.angular.z=self.ang_vel_2
-                                    else:
-                                        self.move_cmd.linear.x=0
-                                        self.move_cmd.angular.z=-self.ang_vel_2
-
-                                elif abs(alpha)>self.thres3:
-                                    # if alpha>0 or alpha<-pi:
-                                    if alpha>0:
-                                        self.move_cmd.linear.x=0
-                                        self.move_cmd.angular.z=self.ang_vel_3
-                                    else:
-                                        self.move_cmd.linear.x=0
-                                        self.move_cmd.angular.z=-self.ang_vel_3
+                            elif abs(alpha)>self.thres3:
+                                # if alpha>0 or alpha<-pi:
+                                if alpha>0:
+                                    self.move_cmd.linear.x=0
+                                    self.move_cmd.angular.z=self.ang_vel_3
+                                else:
+                                    self.move_cmd.linear.x=0
+                                    self.move_cmd.angular.z=-self.ang_vel_3
 
 
+                        if self.is_moving_between_letters:
+                            self.valve_status=VALVE_CLOSE
+                        self.valve_operation_mode_publisher.publish(self.valve_operation_mode)
+                        self.valve_angle_input.goal_position = self.valve_status
+                        self.valve_angle_publisher.publish(self.valve_angle_input)
 
-                            self.cmd_vel.publish(self.move_cmd)
+                        self.cmd_vel.publish(self.move_cmd)
 
-                            self.loop_cnt2 = self.loop_cnt2 + 1
-
-#                            if self.loop_cnt2==25:
-#                                self.loop_cnt2 = 0
+#                        self.loop_cnt_pathmap = self.loop_cnt_pathmap + 1
+#                            if self.loop_cnt_pathmap==25:
+#                                self.loop_cnt_pathmap = 0
 #                                self.path_points.append([self.point.x, self.point.y])
 #                                self.generate_pathmap()
 #
-                            distance = sqrt(pow((self.current_waypoint[0] - self.point.x), 2) + pow((self.current_waypoint[1] - self.point.y), 2))
-
                         self.r.sleep()
 
                     except KeyboardInterrupt:
@@ -263,18 +237,32 @@ class NavigationControl():
                 self.waypoint_index_in_current_letter = self.waypoint_index_in_current_letter + self.waypoint_increment
 
             #End of current letter.
-            #This is the point to global align.
+            #This is global map view point
+            print("At the global map view point")
+            #turn to view letters
+            self.look_opposite_side()
+            try:
+                position = [self.point.x, self.point.y, self.heading.data]
+                offset = self.real_globalmap.run(self.letter_index, position)
+
+            except rospy.ServiceException, e:
+                print("Service call failed")
+
+            #realign the frame position, according to calculated offset from global map
+            self.offset_change_x_publisher.publish(offset[0])
+            self.offset_change_y_publisher.publish(offset[1])
+            self.offset_change_theta_publisher.publish(offset[2])
+
+            #it's time for next letter
             self.letter_index = self.letter_index + 1
-            self.is_moving_to_next_start = True
-            self.valve_status = VALVE_CLOSE
-
-        self.look_oppsite_side()
-
-        self.cmd_vel.publish(Twist())
-        #Wait for 1 second to close valve
-        self.quit_valve()
+            self.waypoint_index_in_current_letter = 0
 
         rospy.loginfo("Stopping the robot at the final destination")
+        #Wait for 1 second to close valve
+        self.quit_valve()
+        #turn to view letters at the final global map view point
+        self.look_opposite_side()
+        #stop the robot
         self.cmd_vel.publish(Twist())
 
 
@@ -292,9 +280,9 @@ class NavigationControl():
         # img = PIL.Image.new("RGB", ((100+pixel_size*self.cnt_letter)*scale, (100+pixel_size)*scale), (255, 255, 255))
         pil_image = PIL.Image.new("RGB", ((pixel_size*self.cnt_letter)*scale, (pixel_size)*scale), (255, 255, 255))
 
-        print("loop_cnt2 = ", self.loop_cnt2)
+        print("loop_cnt_pathmap = ", self.loop_cnt_pathmap)
 
-        for i in range(self.loop_cnt2):
+        for i in range(self.loop_cnt_pathmap):
             # print(self.path_points[i][0], self.path_points[i][1])
             if self.path_points[i][0]<0 or self.path_points[i][0]>1.0*self.cnt_letter:
                 continue
@@ -365,7 +353,7 @@ class NavigationControl():
         self.cmd_vel.publish(Twist())
         rospy.sleep(1)
 
-    def look_oppsite_side(self):
+    def look_opposite_side(self):
         while(True):
             alpha=angle_difference( pi, self.heading.data )
             if abs(alpha)> self.thres3: #abs?
@@ -381,6 +369,14 @@ class NavigationControl():
             self.cmd_vel.publish(self.move_cmd)
             self.r.sleep()
 
+    #wait for 2 seconds
+    def wait_for_initialization_of_sensor(self):
+        loop_cnt = 0
+        if loop_cnt==100:
+            return
+        else:
+            loop_cnt=loop_cnt+1
+            self.r.sleep()
 
 
 
@@ -443,7 +439,7 @@ class NavigationControl():
 #         self.lin_vel=0.07
 
 #         self.loop_cnt1=0
-#         self.loop_cnt2=0
+#         self.loop_cnt_pathmap=0
 #         self.isGoodToGo=False
 
 #         self.map_img=[]
@@ -571,10 +567,10 @@ class NavigationControl():
 
 #                             self.cmd_vel.publish(self.move_cmd)
 
-#                             self.loop_cnt2 = self.loop_cnt2 + 1
+#                             self.loop_cnt_pathmap = self.loop_cnt_pathmap + 1
 
-#                             if self.loop_cnt2==25:
-#                                 self.loop_cnt2 = 0
+#                             if self.loop_cnt_pathmap==25:
+#                                 self.loop_cnt_pathmap = 0
 #                                 self.path_points.append([self.point.x, self.point.y])
 #                                 self.generate_pathmap()
 
@@ -634,9 +630,9 @@ class NavigationControl():
 #         # img = Image.new("RGB", ((100+pixel_size*self.cnt_letter)*scale, (100+pixel_size)*scale), (255, 255, 255))
 #         pil_image = Image.new("RGB", ((pixel_size*self.cnt_letter)*scale, (pixel_size)*scale), (255, 255, 255))
 
-#         print("loop_cnt2 = ", self.loop_cnt2)
+#         print("loop_cnt_pathmap = ", self.loop_cnt_pathmap)
 
-#         for i in range(self.loop_cnt2):
+#         for i in range(self.loop_cnt_pathmap):
 #             # print(self.path_points[i][0], self.path_points[i][1])
 #             if self.path_points[i][0]<0 or self.path_points[i][0]>1.0*self.cnt_letter:
 #                 continue

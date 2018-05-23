@@ -14,11 +14,13 @@ from sensor_msgs.msg import Image
 from math import sqrt
 import numpy as np
 import cv2
+from cv_bridge import CvBridge
 from matplotlib import pyplot as plt
 
 
 class RealGlobalMap():
     def __init__(self, _arr_path):
+        self.around_subscribed = False
         self.arr_path = _arr_path
         self.initialize()
 
@@ -48,14 +50,15 @@ class RealGlobalMap():
         self.size_y=1000
         self.scale_factor= 5.5 #[pixel/cm]
 
+        self.r=rospy.Rate(50)
+
         self.aroundview_subscriber=rospy.Subscriber('/around_img', Image, self.callback_view)
+        print("initialized")
 
-
-    def run(self, letter_index, _position):
-
-        self.x = _pose[0]
-        self.y = _pose[1]
-        self.th = _pose[2]
+    def run(self, letter_number, _position):
+        self.x = _position[0]
+        self.y = _position[1]
+        self.th = _position[2]
 
         data=[0,0,0]
         if letter_number >1 :
@@ -70,7 +73,11 @@ class RealGlobalMap():
             termination_eps = 1e-6
             #########################
             criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, number_of_iterations,  termination_eps)
-            (cc, warp_matrix) = cv2.findTransformECC (self.,im2_gray,warp_matrix, warp_mode, criteria)
+            try:
+                (cc, warp_matrix) = cv2.findTransformECC (self.im2_gray,warp_matrix, warp_mode, criteria)
+            except:
+                print("ECC transform error")
+                return [0,0,0]
 
             offset_th = math.atan(warp_matrix[0][0], -warp_matrix[0][1])
 
@@ -86,6 +93,8 @@ class RealGlobalMap():
             data=[offset_x/self.scale_factor, offset_y/self.scale_factor, offset_th/self.scale_factor]
 
         # 3. Update last letter
+        while not self.around_subscribed:
+            self.wait_for_initialization_of_sensor()
         self.last_letter_img = self.crop_letter(letter_number, 1)
         return data
 
@@ -94,15 +103,15 @@ class RealGlobalMap():
         x_padding= 10
         y_padding = 10
         ###################
-        last_letter_x = [i[0] for i in self.waypnts_arr[letter_number-ind]]
-        last_letter_y = [i[1] for i in self.waypnts_arr[letter_number-ind]]
+        last_letter_x = [i[0] for i in self.arr_path[letter_number-ind]]
+        last_letter_y = [i[1] for i in self.arr_path[letter_number-ind]]
 
         x_min = min(last_letter_x)
         x_max = max(last_letter_x)
         y_min = min(last_letter_y)
         y_max = max(last_letter_y)
 
-        crop_img= self.photo[y_min-y_padding, y_max+y_padding, x_min-x_padding: x_max+x_padding]
+        crop_img= self.photo[int(max(y_min-y_padding,0)):int((y_max+y_padding)),int( max(x_min-x_padding,0)): int((x_max+x_padding))]
 
         ################ FOR DEBUGGING #####################
         # threshold_img1 = cv2.threshold(crop_img, 50, 255, cv2.THRESH_BINARY)
@@ -119,7 +128,7 @@ class RealGlobalMap():
         # plt.show()
         #####################################################
 
-        return cv2.cvtColot(crop_img)
+        return cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
 
     def MapPublisher(self):
         x_px= self.scale_factor*self.x
@@ -129,8 +138,8 @@ class RealGlobalMap():
         rows, cols = self.photo.shape[:2]
         diagonal = (int)(sqrt(rows*rows+cols*cols))
 
-        offsetX = (diagonal - cols)/2
-        offsetY = (diagonal - rows)/2
+        offsetX = int((diagonal - cols)/2)
+        offsetY = int((diagonal - rows)/2)
 
         background = np.zeros((diagonal, diagonal,3), np.uint8)
         for i in range(diagonal):
@@ -159,10 +168,17 @@ class RealGlobalMap():
     ##################################################
 
     def callback_view(self, _img):
+        self.around_subscribed=True
         bridge=CvBridge()
         self.photo= bridge.imgmsg_to_cv2(_img, "rgb8")
         # self.photo=cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
-
+    def wait_for_initialization_of_sensor(self):
+        loop_cnt = 0
+        if loop_cnt==500:
+            return
+        else:
+            loop_cnt=loop_cnt+1
+            self.r.sleep()
 
 
 
