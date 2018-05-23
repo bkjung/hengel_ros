@@ -194,7 +194,13 @@ class NavigationControl():
                                 x=distance*sin(alpha)
                                 curv=2*x/pow(distance,2)
 
-                                if distance<0.08:
+                                if distance<0.02:
+                                    lin_vel_scaled=self.lin_vel/5.0
+                                elif distance<0.04:
+                                    lin_vel_scaled=self.lin_vel/4.0
+                                elif distance<0.06:
+                                    lin_vel_scaled=self.lin_vel/3.0
+                                elif distance<0.08:
                                     lin_vel_scaled=self.lin_vel/2.0
                                 else:
                                     lin_vel_scaled=self.lin_vel
