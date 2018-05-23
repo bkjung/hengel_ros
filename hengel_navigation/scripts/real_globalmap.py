@@ -70,7 +70,7 @@ class RealGlobalMap():
             termination_eps = 1e-6
             #########################
             criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, number_of_iterations,  termination_eps)
-            (cc, warp_matrix) = cv2.findTransformECC (self.,im2_gray,warp_matrix, warp_mode, criteria)
+            (cc, warp_matrix) = cv2.findTransformECC (self.last2_letter_img, self.last_letter_img, warp_matrix, cv2.MOTION_EUCLIDEAN, criteria)
 
             offset_th = math.atan(warp_matrix[0][0], -warp_matrix[0][1])
 
@@ -83,7 +83,8 @@ class RealGlobalMap():
             offset_x = x2-sz[0]/2
             offset_y = y2-sz[1]/2
 
-            data=[offset_x/self.scale_factor, offset_y/self.scale_factor, offset_th/self.scale_factor]
+            #Change to the world coordinate
+            data=[ offset_y/self.scale_factor, offset_x/self.scale_factor, offset_th/self.scale_factor]
 
         # 3. Update last letter
         self.last_letter_img = self.crop_letter(letter_number, 1)
