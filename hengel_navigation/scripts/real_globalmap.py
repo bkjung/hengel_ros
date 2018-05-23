@@ -97,6 +97,7 @@ class RealGlobalMap():
         while not self.around_subscribed:
             self.wait_for_initialization_of_sensor()
         self.last_letter_img = self.crop_letter(letter_number, 1)
+        print(data)
         return data
 
     def crop_letter(self, letter_number, ind):
