@@ -90,7 +90,8 @@ class RealGlobalMap():
             offset_x = x2-sz[0]/2
             offset_y = y2-sz[1]/2
 
-            data=[offset_x/self.scale_factor, offset_y/self.scale_factor, offset_th/self.scale_factor]
+            #Change to the world coordinate
+            data=[ offset_y/self.scale_factor, offset_x/self.scale_factor, offset_th/self.scale_factor]
 
         # 3. Update last letter
         while not self.around_subscribed:
