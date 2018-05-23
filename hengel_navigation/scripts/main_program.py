@@ -48,6 +48,7 @@ if __name__ == '__main__':
     try:
         HengelMain()
         print("End of Main Function")
+        sys.exit()
 
     except Exception as e:
         rospy.loginfo("shutdown program by following exception")

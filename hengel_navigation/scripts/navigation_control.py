@@ -137,7 +137,7 @@ class NavigationControl():
             self.cnt_waypoints_in_current_letter = len(self.arr_path[self.letter_index])
             while self.waypoint_index_in_current_letter < self.cnt_waypoints_in_current_letter:
                 print("")
-                print("current waypoint index : "+str(self.waypoint_index_in_current_letter)+" in letter no. "+str(self.letter_index))
+                print("waypoint index : "+str(self.waypoint_index_in_current_letter)+" in letter no. "+str(self.letter_index))
                 self.current_waypoint = [self.waypoints[self.letter_index][self.waypoint_index_in_current_letter][0], self.waypoints[self.letter_index][self.waypoint_index_in_current_letter][1]]
 
                 goal_distance = sqrt(pow(self.current_waypoint[0] - self.point.x, 2) + pow(self.current_waypoint[1] - self.point.y, 2))
@@ -163,20 +163,7 @@ class NavigationControl():
                                 ############### ADD CODES ####################
                                 #move to viewing pnt
                                 #turn to view letters
-                                while(True):
-                                    alpha=angle_difference( pi, self.heading.data )
-                                    if abs(alpha)> self.thres3: #abs?
-                                        # if alpha>0 or alpha<-pi:
-                                        if alpha>0:
-                                            self.move_cmd.linear.x=0
-                                            self.move_cmd.angular.z=self.ang_vel_3
-                                        else:
-                                            self.move_cmd.linear.x=0
-                                            self.move_cmd.angular.z=-self.ang_vel_3
-                                    else:
-                                        break
-                                    self.cmd_vel.publish(self.move_cmd)
-                                    self.r.sleep()
+                                self.look_oppsite_side()
                                 ##############################################
 
                                 try:
@@ -207,7 +194,13 @@ class NavigationControl():
                                 x=distance*sin(alpha)
                                 curv=2*x/pow(distance,2)
 
-                                if distance<0.08:
+                                if distance<0.02:
+                                    lin_vel_scaled=self.lin_vel/5.0
+                                elif distance<0.04:
+                                    lin_vel_scaled=self.lin_vel/4.0
+                                elif distance<0.06:
+                                    lin_vel_scaled=self.lin_vel/3.0
+                                elif distance<0.08:
                                     lin_vel_scaled=self.lin_vel/2.0
                                 else:
                                     lin_vel_scaled=self.lin_vel
@@ -265,8 +258,7 @@ class NavigationControl():
                         rospy.signal_shutdown("KeyboardInterrupt")
                         break
 
-                print("CURRENT: "+str(self.point.x)+", "+str(self.point.y))
-                print("WAYPOINT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
+                print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+" \t\t WAYPOINT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
                 self.waypoint_index_in_current_letter = self.waypoint_index_in_current_letter + self.waypoint_increment
 
@@ -276,8 +268,10 @@ class NavigationControl():
             self.is_moving_to_next_start = True
             self.valve_status = VALVE_CLOSE
 
+        self.look_oppsite_side()
+
         self.cmd_vel.publish(Twist())
-        #Wait for 2 seconds to close valve
+        #Wait for 1 second to close valve
         self.quit_valve()
 
         rospy.loginfo("Stopping the robot at the final destination")
@@ -360,7 +354,7 @@ class NavigationControl():
         self.crop_map_publisher.publish(crop_msg)
 
     def quit_valve(self):
-        for ind_quit in range(100):
+        for ind_quit in range(50):
             self.valve_angle_input.goal_position = VALVE_CLOSE
             self.valve_angle_publisher.publish(self.valve_angle_input)
 
@@ -370,6 +364,22 @@ class NavigationControl():
     def shutdown(self):
         self.cmd_vel.publish(Twist())
         rospy.sleep(1)
+
+    def look_oppsite_side(self):
+        while(True):
+            alpha=angle_difference( pi, self.heading.data )
+            if abs(alpha)> self.thres3: #abs?
+                # if alpha>0 or alpha<-pi:
+                if alpha>0:
+                    self.move_cmd.linear.x=0
+                    self.move_cmd.angular.z=self.ang_vel_3
+                else:
+                    self.move_cmd.linear.x=0
+                    self.move_cmd.angular.z=-self.ang_vel_3
+            else:
+                break
+            self.cmd_vel.publish(self.move_cmd)
+            self.r.sleep()
 
 
 
