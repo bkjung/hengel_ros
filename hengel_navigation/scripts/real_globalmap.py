@@ -16,6 +16,7 @@ import numpy as np
 import cv2
 from cv_bridge import CvBridge
 from matplotlib import pyplot as plt
+from around_view import AroundImage
 
 
 class RealGlobalMap():
@@ -52,10 +53,14 @@ class RealGlobalMap():
 
         self.r=rospy.Rate(50)
 
-        self.aroundview_subscriber=rospy.Subscriber('/around_img', Image, self.callback_view)
-        print("initialized")
+        self.cam_initialize()
+        # self.aroundview_subscriber=rospy.Subscriber('/around_img', Image, self.callback_view)
+        # print("initialized")
+        self.aroundImage = AroundImage()
 
     def run(self, letter_number, _position):
+        self.photo = self.aroundImage.takeAroundImage()
+
         self.x = _position[0]
         self.y = _position[1]
         self.th = _position[2]
@@ -77,7 +82,7 @@ class RealGlobalMap():
                 (cc, warp_matrix) = cv2.findTransformECC (self.im2_gray,warp_matrix, warp_mode, criteria)
             except:
                 print("ECC transform error")
-                return [0,0,0]
+                return data
 
             offset_th = math.atan(warp_matrix[0][0], -warp_matrix[0][1])
 
@@ -95,7 +100,7 @@ class RealGlobalMap():
 
         # 3. Update last letter
         while not self.around_subscribed:
-            self.wait_for_initialization_of_sensor()
+            self.wait_for_aroundimg()
         self.last_letter_img = self.crop_letter(letter_number, 1)
         print(data)
         return data
@@ -174,16 +179,14 @@ class RealGlobalMap():
         bridge=CvBridge()
         self.photo= bridge.imgmsg_to_cv2(_img, "rgb8")
         # self.photo=cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
-    def wait_for_initialization_of_sensor(self):
+    def wait_for_aroundimg(self):
         loop_cnt = 0
         if loop_cnt==500:
             return
         else:
             loop_cnt=loop_cnt+1
             self.r.sleep()
-
-
-
+      
 # if __name__ == "__main__":
 #     try:
 #         RealGlobalMap()
