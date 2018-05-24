@@ -24,15 +24,15 @@ class AroundImage:
         self.cam_front = cv2.VideoCapture(2)
         self.cam_left = cv2.VideoCapture(1)
         self.cam_right = cv2.VideoCapture(0)
-        self.cam_front.set(cv2.CV_CAP_PROP_BUFFERSIZE, 1)
+        # self.cam_front.set(cv2.CV_CAP_PROP_BUFFERSIZE, 1)
         self.cam_front.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
         self.cam_front.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.cam_front.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))     # COLLECT IMAGE IN MJPG FORM, SOLVE USB HUB BANDWIDTH ISSUE
-        self.cam_left.set(cv2.CV_CAP_PROP_BUFFERSIZE, 1)
+        # self.cam_left.set(cv2.CV_CAP_PROP_BUFFERSIZE, 1)
         self.cam_left.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
         self.cam_left.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.cam_left.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
-        self.cam_right.set(cv2.CV_CAP_PROP_BUFFERSIZE, 1)
+        # self.cam_right.set(cv2.CV_CAP_PROP_BUFFERSIZE, 1)
         self.cam_right.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
         self.cam_right.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.cam_right.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
@@ -85,12 +85,10 @@ class AroundImage:
             print("take image func started")
             print("time:" + time.strftime("%y%m%d_%H%M%S"))
             bridge = CvBridge()
-            front_img = []
-            left_img = []
-            right_img = []
-            front_img = np.ndarray(front_img)
-            left_img = np.ndarray(left_img)
-            right_img = np.ndarray(right_img)
+            for i in xrange(4):
+                self.cam_front.grab()
+                self.cam_left.grab()
+                self.cam_right.grab()
             _, front_img = self.cam_front.read()
             _, left_img = self.cam_left.read()
             _, right_img = self.cam_right.read()
