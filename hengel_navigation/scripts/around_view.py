@@ -96,12 +96,12 @@ class AroundImage:
             right_masked = np.multiply(im_right, im_mask).astype('uint8')
             summed_image = front_masked + left_masked+right_masked
             summed_image=cv2.resize(summed_image, (900,650), interpolation=cv2.INTER_AREA)
-
+            return summed_image
             #cv2.imshow('warped', summed_image)
 
             # SEND IMAGE AS ROS imgmsg
-            summed_image_msg = bridge.cv2_to_imgmsg(summed_image, "bgr8")
-            warp_pub.publish(summed_image_msg)
+            # summed_image_msg = bridge.cv2_to_imgmsg(summed_image, "bgr8")
+            # warp_pub.publish(summed_image_msg)
 
             # RETURN IMAGE
             # return summed_image
