@@ -11,7 +11,8 @@ from homography import *
 
 import pdb
 
-def ransac(points_list, iters = 50 , error = 10, good_model_num = 5):
+
+def ransac(points_list, iters=50, error=10, good_model_num=5):
     '''
         This function uses RANSAC algorithm to estimate the
         shift and rotation between the two given images
@@ -60,14 +61,13 @@ def ransac(points_list, iters = 50 , error = 10, good_model_num = 5):
             x1, y1 = p[0]
             x2, y2 = p[1]
 
-            A = array([x1, y1, 1]).reshape(3,1)
-            B = array([x2, y2, 1]).reshape(3,1)
+            A = array([x1, y1, 1]).reshape(3, 1)
+            B = array([x2, y2, 1]).reshape(3, 1)
 
             out = B - dot(H, A)
             dist_err = hypot(out[0][0], out[1][0])
             if dist_err < error:
                 consensus_set.append(p)
-
 
         # Check how well is our speculated model
         if len(consensus_set) >= good_model_num:
@@ -76,8 +76,8 @@ def ransac(points_list, iters = 50 , error = 10, good_model_num = 5):
                 x0, y0 = p[0]
                 x1, y1 = p[1]
 
-                A = array([x0, y0, 1]).reshape(3,1)
-                B = array([x1, y1, 1]).reshape(3,1)
+                A = array([x0, y0, 1]).reshape(3, 1)
+                B = array([x1, y1, 1]).reshape(3, 1)
 
                 out = B - dot(H, A)
                 dist_err = hypot(out[0][0], out[1][0])
