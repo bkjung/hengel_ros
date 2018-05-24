@@ -130,12 +130,7 @@ class NavigationControl():
 
         self.cnt_letter = len(self.arr_path)
 
-        try:
-            position = [self.point.x, self.point.y, self.heading.data]
-            offset = self.real_globalmap.run(self.letter_index, position)
-
-        except rospy.ServiceException, e:
-            print("Service call failed")
+        #self.real_globalmap_run()
 
         while self.letter_index < self.cnt_letter:
             self.cnt_waypoints_in_current_letter = len(self.arr_path[self.letter_index])
@@ -241,17 +236,8 @@ class NavigationControl():
             print("At the global map view point")
             #turn to view letters
             self.look_opposite_side()
-            try:
-                position = [self.point.x, self.point.y, self.heading.data]
-                offset = self.real_globalmap.run(self.letter_index, position)
 
-            except rospy.ServiceException, e:
-                print("Service call failed")
-
-            #realign the frame position, according to calculated offset from global map
-            self.offset_change_x_publisher.publish(offset[0])
-            self.offset_change_y_publisher.publish(offset[1])
-            self.offset_change_theta_publisher.publish(offset[2])
+            #self.real_global_map()
 
             #it's time for next letter
             self.letter_index = self.letter_index + 1
@@ -355,7 +341,8 @@ class NavigationControl():
 
     def look_opposite_side(self):
         while(True):
-            alpha=angle_difference( pi, self.heading.data )
+            #alpha=angle_difference( pi, self.heading.data )
+            alpha=angle_difference( 0.0, self.heading.data )
             if abs(alpha)> self.thres3: #abs?
                 # if alpha>0 or alpha<-pi:
                 if alpha>0:
@@ -378,7 +365,19 @@ class NavigationControl():
             loop_cnt=loop_cnt+1
             self.r.sleep()
 
+    def real_globalmap_run(self):
+        try:
+            position = [self.point.x, self.point.y, self.heading.data]
+            offset = self.real_globalmap.run(self.letter_index, position)
 
+            #realign the frame position, according to calculated offset from global map
+            self.offset_change_x_publisher.publish(offset[0])
+            self.offset_change_y_publisher.publish(offset[1])
+            self.offset_change_theta_publisher.publish(offset[2])
+
+
+        except rospy.ServiceException, e:
+            print("Service call failed")
 
 
 ##################################################
