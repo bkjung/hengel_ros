@@ -6,7 +6,7 @@ from sensor_msgs.msg import Image
 
 
 
-class CrosspiontDocking():
+class CrosspiontRotation():
     def __init__(self):
         self.photo=[]
         self.photo=np.ndarray(self.photo)
@@ -21,8 +21,8 @@ class CrosspiontDocking():
 
 if __name__ == "__main__":
     try:        
-        rospy.init_node('hengel_crosspoint_docking')
-        CrosspiontDocking()
+        rospy.init_node('hengel_crosspoint_rotation')
+        CrosspiontRotation()
     except Exception as e:
         print(e)
         rospy.loginfo("shutdown program")
