@@ -237,7 +237,8 @@ class NavigationControl():
                 #stop the robot
                 self.cmd_vel.publish(Twist())
                 #take picam floor photo
-                self.pi_cam_manager.save(self.program_start_time+"-picam-letter-"+str(letter_index)+"-wayopint-"+str(waypoint_index_in_current_letter))
+                self.pi_cam_manager.save(self.program_start_time+"-picam-letter-"+str(self.letter_index)+"-wayopint-"+str(self.waypoint_index_in_current_letter))
+                print("Pi Cam Saved")
                 #wait for 1 sec
                 self.wait_for_seconds(1)
 
