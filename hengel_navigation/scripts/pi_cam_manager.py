@@ -9,17 +9,16 @@ import os
 
 package_base_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../.."))
-os.system("mkdir -p " + package_base_path +
-          "/hengel_path_manager/pi_cam_keypoint_capture")
 
 
 class PiCamManager():
-    def __init__(self):
+    def __init__(self, _starttime):
         self.picam_subscriber = rospy.Subscriber(
             '/pi_floorcam/image_raw/compressed', CompressedImage,
             self.callback_picam)
         self.bridge = CvBridge()
         self.save_mode = False
+        self.starttime = _starttime
         self.filename = ""
 
     def save(self, _filename):
@@ -28,11 +27,14 @@ class PiCamManager():
 
     def callback_picam(self, _img):
         if self.save_mode:
-            self.picam_photo = self.bridge.imgmsg_to_cv2(_img, "rgb8")
+            np_arr = np.fromstring(_img.data, np.uint8)
+            image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
+            #self.picam_photo = self.bridge.imgmsg_to_cv2(_img, "rgb8")
             cv2.imwrite(
                 package_base_path +
-                "/hengel_path_manager/pi_cam_keypoint_capture/" + self.filename
-                + ".jpg", cv2.imencode('jpg', picam_photo))
+                "/hengel_path_manager/pi_cam_keypoint_capture/" + self.starttime + str("/") + self.filename
+                + ".jpg", image_np)
             self.save_mode = False
             self.filename = ""
         else:
