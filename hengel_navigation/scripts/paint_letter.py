@@ -34,7 +34,7 @@ class PaintLetter():
         print("Length of Padding = "+str(PADDING_LENGTH))
         print("Distance of Viewpoint = "+str(VIEWPOINT_DISTANCE))
         self.arr_path=[]
-        self.draw_start_index=[]
+        # self.arr_keypoint=[]
         self.word=raw_input("Type letters to draw:")
 
         self.get_path()
@@ -64,14 +64,14 @@ class PaintLetter():
             letter_path.append([CANVAS_SIDE_LENGTH + VIEWPOINT_DISTANCE + (float)(letter_index)*(CANVAS_SIDE_LENGTH+PADDING_LENGTH), (0.5)*CANVAS_SIDE_LENGTH])
             self.arr_path.append(letter_path)
 
+            #Keypoint Calculation
+            # cnt_waypoints_in_lettter = len(letter_path)
+            # for i in range(cnt_waypoints_in_letter):
+            #     letter_path[i]...
+
             letter_index = letter_index + 1
 
-#        arr_path_file =cv2.FileStorage(package_base_path+"/hengel_path_manager/waypnts/Path.xml", cv2.FILE_STORAGE_WRITE)
-#        arr_path_file.write("arr_path", self.arr_path)
-#        arr_path_file.release()
-
     def run(self):
-        # NavigationControl(self.arr_path, self.draw_start_index)
         NavigationControl(self.arr_path)
 
 
