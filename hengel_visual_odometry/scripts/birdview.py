@@ -8,6 +8,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from matplotlib import pyplot as plt
 
+
 # if __name__ == '__main__':
 #     cap = cv2.VideoCapture(0)
 #     ret, image=cap.read()
@@ -19,20 +20,19 @@ def birdview_transform(image_arr):
         #Create publisher
         # publisher=rospy.Publisher("img_topic", Image, queue_size=10 )
 
-        board_w=4 # number of horizontal corners
-        board_h=4 # number of vertical corners
-        n_board=1
-        board_n = board_w*board_h
+        board_w = 4  # number of horizontal corners
+        board_h = 4  # number of vertical corners
+        n_board = 1
+        board_n = board_w * board_h
         board_sz = (board_w, board_h)
 
         #creation of memory storage
-        obj_pnts=[]
-        image_pnts=[]
+        obj_pnts = []
+        image_pnts = []
 
-        i=0
-        z=0 #to print number of frames
+        i = 0
+        z = 0  #to print number of frames
         # cap = cv2.VideoCapture(1)
-
 
         ##############New Calibration###################################
         # ret, mtx, dist, rvecs, tves=image_calibrate.calibration(_image, board_w, board_h, n_board)
@@ -45,15 +45,13 @@ def birdview_transform(image_arr):
         # cv_file_dist.release()
         ################################################################
 
-
         ##############New Homography####################################
         # H= find_homography(_image, mtx, dist, board_w, board_h, board_sz)
         ##############Load Homography####################################
-        cv_file_homo=cv2.FileStorage("H.xml", cv2.FILE_STORAGE_READ)
-        H=cv_file_homo.getNode("H").mat()
+        cv_file_homo = cv2.FileStorage("H.xml", cv2.FILE_STORAGE_READ)
+        H = cv_file_homo.getNode("H").mat()
         cv_file_homo.release()
         #################################################################
-
 
         #Let the user adjust the z height of the view
         # Z=10
@@ -68,13 +66,13 @@ def birdview_transform(image_arr):
         #     plt.subplot(121),plt.imshow(image),plt.title('image')
         #     plt.subplot(122),plt.imshow(bird_image),plt.title('Perspective')
         #     plt.show()
-            # key=cv2.waitKey(0)
-            # if(key == 24):
-            #     Z+=0.5
-            #     print(key)
-            # if(key == 25):
-            #     Z-=0.5
-            #     print(key)
+        # key=cv2.waitKey(0)
+        # if(key == 24):
+        #     Z+=0.5
+        #     print(key)
+        # if(key == 25):
+        #     Z-=0.5
+        #     print(key)
 
         #msg = Image()
         #msg.header.stamp = rospy.Time.now()
@@ -93,9 +91,9 @@ def birdview_transform(image_arr):
         #     except KeyboardInterrupt:
         #         breaknd
         # image=Image.fromarray(image_arr, 'RGB')
-        bird_img=cv2.warpPerspective(image_arr, H, (1000,1000))
+        bird_img = cv2.warpPerspective(image_arr, H, (1000, 1000))
         # cv2.imshow("bird view", bird_img)
-        # return bird_img        
+        # return bird_img
     except Exception as e:
         print(e)
         rospy.signal_shutdown("error in birdview")

@@ -15,7 +15,8 @@ OPTION_TEST = 3
 class HengelMain():
     def __init__(self):
         try:
-            rospy.init_node('hengel_main_program', anonymous=False, disable_signals=True)
+            rospy.init_node(
+                'hengel_main_program', anonymous=False, disable_signals=True)
             r = rospy.Rate(50)
             self.runningOption = 0
 
@@ -31,16 +32,17 @@ class HengelMain():
                 GoToPoint()
 
             else:
-                raise Exception("WRONG INPUT OPTION FOR PAINTING (Neither 1 nor 2)")
-
+                raise Exception(
+                    "WRONG INPUT OPTION FOR PAINTING (Neither 1 nor 2)")
 
         except Exception as e:
             print(e)
             sys.exit()
 
-
     def initialOptionSelect(self):
-        word=raw_input("HENGEL ROBOT Made By NAVER LABS Robotics 5th Intern.\nThere are two options of painting.\n[1] Print Letters.\n[2] Print Drawing of Yours.\nType 1 or 2 :")
+        word = raw_input(
+            "HENGEL ROBOT Made By NAVER LABS Robotics 5th Intern.\nThere are two options of painting.\n[1] Print Letters.\n[2] Print Drawing of Yours.\nType 1 or 2 :"
+        )
         self.runningOption = int(word)
 
 

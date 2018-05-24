@@ -196,7 +196,7 @@ catkin_install_python(PROGRAMS
 scripts/raw_img_publisher.py
 # scripts/visual_odometry.py
 scripts/around_view.py
-scripts/pi_floorcam.py
+scripts/pi_floorcam_publisher.py
 #scripts/real_globalmap_publisher.py
 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
