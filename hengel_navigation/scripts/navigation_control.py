@@ -17,6 +17,7 @@ import os
 import cv2
 import cv_bridge
 from real_globalmap import RealGlobalMap
+from pi_cam_manager import PiCamManager
 
 #VALVE_OPEN = 1023
 #VALVE_OPEN = 870
@@ -57,6 +58,8 @@ class NavigationControl():
 
 
     def initial_setting(self):
+        self.program_start_time = time.strftime("%y%m%d_%H%M%S")
+
         self.point = Point()
         self.heading = Float32()
         self.move_cmd = Twist()
@@ -71,7 +74,7 @@ class NavigationControl():
 
         #It SHOULD BE 1 for current code.
         #If it's not 1, then self.check_whether_moving_to_next_start() should be modified
-        self.waypoint_increment = 1
+        #self.waypoint_increment = 1
 
         self.letter_index = 0
         self.waypoint_index_in_current_letter = 0
@@ -114,9 +117,10 @@ class NavigationControl():
         self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, self.callback_heading)
 
         self.real_globalmap = RealGlobalMap(self.arr_path)
+        self.pi_cam_manager = PiCamManager()
 
     def run(self):
-        self.wait_for_initialization_of_sensor()
+        self.wait_for_seconds(2)
         # go through path array
         print("number of letters = " + str(len(self.arr_path)))
         for idx_letter in range(len(self.arr_path)):
@@ -227,9 +231,17 @@ class NavigationControl():
                         rospy.signal_shutdown("KeyboardInterrupt")
                         break
 
+                #Arrived at the waypoint
                 print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+" \t\t WAYPOINT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
 
-                self.waypoint_index_in_current_letter = self.waypoint_index_in_current_letter + self.waypoint_increment
+                #stop the robot
+                self.cmd_vel.publish(Twist())
+                #take picam floor photo
+                self.pi_cam_manager.save(self.program_start_time+"-picam-letter-"+str(letter_index)+"-wayopint-"+str(waypoint_index_in_current_letter))
+                #wait for 1 sec
+                self.wait_for_seconds(1)
+
+                self.waypoint_index_in_current_letter = self.waypoint_index_in_current_letter + 1
 
             #End of current letter.
             #This is global map view point
@@ -291,7 +303,7 @@ class NavigationControl():
                 for t in range(scale):
                     pil_image.putpixel((x*scale + t, y*scale + k), (0, 0, 0))
 
-        image_save_path = package_base_path+"/hengel_path_manager/output_pathmap/"+time.strftime("%y%m%d_%H%M%S")+".png"
+        image_save_path = package_base_path+"/hengel_path_manager/output_pathmap/"+self.program_start_time+".png"
         print("Pathmap image saved at "+image_save_path)
         pil_image.save(image_save_path, "PNG")
         self.map_img = np.ndarray(pil_image)
@@ -366,13 +378,10 @@ class NavigationControl():
             self.cmd_vel.publish(self.move_cmd)
             self.r.sleep()
 
-    #wait for 2 seconds
-    def wait_for_initialization_of_sensor(self):
-        loop_cnt = 0
-        if loop_cnt==100:
-            return
-        else:
-            loop_cnt=loop_cnt+1
+    def wait_for_seconds(self, _input):
+        cnt_loop = (int)(_input*50.0)
+        for i in range(cnt_loop):
+            self.cmd_vel.publish(Twist())
             self.r.sleep()
 
     def real_globalmap_run(self):
