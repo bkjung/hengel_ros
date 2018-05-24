@@ -5,6 +5,7 @@ import cv2, sys, time, math
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
+import os
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
 os.system("mkdir -p "+package_base_path+"/hengel_path_manager/pi_cam_keypoint_capture")
@@ -15,7 +16,7 @@ class PiCamManager():
         self.bridge=CvBridge()
         self.save_mode = False
         self.filename = ""
-    
+
     def save(self, _filename):
         self.save_mode = True
         self.filename = _filename
@@ -35,4 +36,4 @@ class PiCamManager():
 
 
 
-    
+
