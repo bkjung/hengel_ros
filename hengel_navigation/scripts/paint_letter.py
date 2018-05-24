@@ -21,7 +21,7 @@ CANVAS_SIDE_LENGTH = 0.5*0.58
 #CANVAS_SIDE_LENGTH = 1.0
 #PADDING_LENGTH = 0.1
 PADDING_LENGTH = 0.0
-VIEWPOINT_DISTANCE = 0.2*0.58
+VIEWPOINT_DISTANCE = 0.3*0.58
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
 os.system("mkdir -p "+package_base_path+"/hengel_path_manager/output_pathmap")
