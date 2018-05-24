@@ -73,7 +73,14 @@ class AroundImage:
     def takeAroundImage(self):
         try:
             print("take image func started")
+            print("time:"+time.strftime("%y%m%d_%H%M%S"))
             bridge = CvBridge()
+            front_img=[]
+            left_img =[]
+            right_img =[]
+            front_img= np.ndarray(front_img)
+            left_img = np.ndarray(left_img)
+            right_img= np.ndarray(right_img)
             _, front_img = self.cam_front.read()
             _, left_img = self.cam_left.read()
             _, right_img = self.cam_right.read()

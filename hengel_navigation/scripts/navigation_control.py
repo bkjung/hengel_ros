@@ -251,7 +251,7 @@ class NavigationControl():
         #Wait for 1 second to close valve
         self.quit_valve()
         #turn to view letters at the final global map view point
-        self.look_opposite_side()
+        #self.look_opposite_side()
         #stop the robot
         self.cmd_vel.publish(Twist())
 
@@ -347,7 +347,7 @@ class NavigationControl():
         while(True):
             #alpha=angle_difference( pi, self.heading.data )
             alpha=angle_difference( self.heading.data, pi )
-            print("global point turning, angle = " + str(alpha))
+            #print("global point turning, angle = " + str(alpha))
             #if abs(alpha)> self.thres3: #abs?
             if abs(alpha) < 3.13: #abs?
                 # if alpha>0 or alpha<-pi:

@@ -58,14 +58,16 @@ class RealGlobalMap():
         self.aroundImage = AroundImage()
 
     def run(self, letter_number, _position):
+        print("run start")
         self.photo = self.aroundImage.takeAroundImage()
-
+        print("photo saved")
         self.x = _position[0]
         self.y = _position[1]
         self.th = _position[2]
 
         data=[0,0,0]
         if letter_number >1 :
+            print("in if-loop")
             # 1. Crop second last letter
             self.last2_letter_img = self.crop_letter(letter_number, 2)
 
@@ -96,12 +98,12 @@ class RealGlobalMap():
 
             #Change to the world coordinate
             data=[ offset_y/self.scale_factor, offset_x/self.scale_factor, offset_th/self.scale_factor]
+            print("calculated offset:", data)
 
         # 3. Update last letter
-        while not self.around_subscribed:
-            self.wait_for_aroundimg()
+        #while not self.around_subscribed:
+        #    self.wait_for_aroundimg()
         self.last_letter_img = self.crop_letter(letter_number, 1)
-        print(data)
         return data
 
     def crop_letter(self, letter_number, ind):

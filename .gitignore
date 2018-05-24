@@ -50,3 +50,5 @@ hengel_path_manager/output_pathmap/
 hengel_path_manager/path_made/
 
 hegnel_visual_odometry/output_path
+
+hengel_navigation/viewpoint_img/
