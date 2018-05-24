@@ -22,10 +22,11 @@ class PaintDrawing():
 
     def run(self):
         if self.PathUI.isFinishedCorrectly == True:
-            NavigationControl(self.PathUI.path_drawing, self.PathUI.draw_start_index)
+            NavigationControl(self.PathUI.path_drawing,
+                              self.PathUI.draw_start_index)
         else:
             raise Exception("Path Drawing UI did not finish correctly")
-        
+
 
 if __name__ == '__main__':
     try:
