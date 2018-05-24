@@ -75,7 +75,7 @@ class RealGlobalMap():
             warp_matrix= np.eye(3, 3, dtype=np.float32)
             #########################
             number_of_iterations = 5000
-            termination_eps = 1e-6
+            termination_eps = 1e-6 
             #########################
             criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, number_of_iterations,  termination_eps)
             try:
