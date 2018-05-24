@@ -17,11 +17,11 @@ import cv2
 #CANVAS_SIDE_LENGTH = 0.4
 #CANVAS_SIDE_LENGTH = 0.3
 #CANVAS_SIDE_LENGTH = 1.0
-CANVAS_SIDE_LENGTH = 0.5
+CANVAS_SIDE_LENGTH = 0.5*0.58
 #CANVAS_SIDE_LENGTH = 1.0
 #PADDING_LENGTH = 0.1
 PADDING_LENGTH = 0.0
-VIEWPOINT_DISTANCE = 0.2
+VIEWPOINT_DISTANCE = 0.2*0.58
 
 package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
 os.system("mkdir -p "+package_base_path+"/hengel_path_manager/output_pathmap")
