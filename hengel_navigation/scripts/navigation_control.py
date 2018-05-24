@@ -146,7 +146,7 @@ class NavigationControl():
 
 
                 distance = sqrt(pow(self.current_waypoint[0] - self.point.x, 2) + pow(self.current_waypoint[1] - self.point.y, 2))
-                while distance > 0.03:
+                while distance > 0.03*0.58:
                     if rospy.is_shutdown():
                         break
                     try:
@@ -237,7 +237,11 @@ class NavigationControl():
             #turn to view letters
             self.look_opposite_side()
 
-            #self.real_global_map()
+            print("real globalmap run!!")
+            self.real_globalmap_run()
+
+            print("wait for 5 sec")
+            time.sleep(5)
 
             #it's time for next letter
             self.letter_index = self.letter_index + 1
@@ -342,8 +346,10 @@ class NavigationControl():
     def look_opposite_side(self):
         while(True):
             #alpha=angle_difference( pi, self.heading.data )
-            alpha=angle_difference( 0.0, self.heading.data )
-            if abs(alpha)> self.thres3: #abs?
+            alpha=angle_difference( self.heading.data, pi )
+            print("global point turning, angle = " + str(alpha))
+            #if abs(alpha)> self.thres3: #abs?
+            if abs(alpha) < 3.13: #abs?
                 # if alpha>0 or alpha<-pi:
                 if alpha>0:
                     self.move_cmd.linear.x=0
@@ -352,6 +358,10 @@ class NavigationControl():
                     self.move_cmd.linear.x=0
                     self.move_cmd.angular.z=-self.ang_vel_3
             else:
+                self.move_cmd.linear.x=0
+                self.move_cmd.angular.z=0
+                self.cmd_vel.publish(self.move_cmd)
+                self.r.sleep()
                 break
             self.cmd_vel.publish(self.move_cmd)
             self.r.sleep()
@@ -368,6 +378,7 @@ class NavigationControl():
     def real_globalmap_run(self):
         try:
             position = [self.point.x, self.point.y, self.heading.data]
+            #print("input for real_globmap_run = " + str(position))
             offset = self.real_globalmap.run(self.letter_index, position)
 
             #realign the frame position, according to calculated offset from global map
