@@ -62,6 +62,8 @@ class NavigationControl():
 
     def initial_setting(self):
         self.program_start_time = time.strftime("%y%m%d_%H%M%S")
+        os.system("mkdir -p " + package_base_path +
+                "/hengel_path_manager/pi_cam_keypoint_capture/"+self.program_start_time)
 
         self.point = Point()
         self.heading = Float32()
@@ -127,7 +129,7 @@ class NavigationControl():
                                                    self.callback_heading)
 
         self.real_globalmap = RealGlobalMap(self.arr_path)
-        self.pi_cam_manager = PiCamManager()
+        self.pi_cam_manager = PiCamManager(self.program_start_time)
 
     def run(self):
         self.wait_for_seconds(2)
@@ -151,9 +153,13 @@ class NavigationControl():
         #self.real_globalmap_run()
 
         while self.letter_index < self.cnt_letter:
+            if rospy.is_shutdown():
+                break
             self.cnt_waypoints_in_current_letter = len(
                 self.arr_path[self.letter_index])
             while self.waypoint_index_in_current_letter < self.cnt_waypoints_in_current_letter:
+                if rospy.is_shutdown():
+                    break
                 print("\n\nwaypoint index : " +
                       str(self.waypoint_index_in_current_letter) +
                       " in letter no. " + str(self.letter_index))
@@ -267,14 +273,12 @@ class NavigationControl():
 
                 #stop the robot
                 self.cmd_vel.publish(Twist())
+                self.wait_for_seconds(0.5)
                 #take picam floor photo
-                self.pi_cam_manager.save(
-                    self.program_start_time + "-picam-letter-" +
-                    str(self.letter_index) + "-wayopint-" +
+                self.pi_cam_manager.save("picam_letter-" +
+                    str(self.letter_index) + "_wayopint-" +
                     str(self.waypoint_index_in_current_letter))
                 print("Pi Cam Saved")
-                #wait for 1 sec
-                self.wait_for_seconds(1)
 
                 self.waypoint_index_in_current_letter = self.waypoint_index_in_current_letter + 1
 
