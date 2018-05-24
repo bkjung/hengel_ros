@@ -53,7 +53,6 @@ class RealGlobalMap():
 
         self.r=rospy.Rate(50)
 
-        self.cam_initialize()
         # self.aroundview_subscriber=rospy.Subscriber('/around_img', Image, self.callback_view)
         # print("initialized")
         self.aroundImage = AroundImage()
@@ -186,7 +185,7 @@ class RealGlobalMap():
         else:
             loop_cnt=loop_cnt+1
             self.r.sleep()
-      
+
 # if __name__ == "__main__":
 #     try:
 #         RealGlobalMap()
