@@ -11,14 +11,17 @@ CAMERA NODE RUNNING AT FULL SPEED
 NO IMAGE RECORDING
 '''
 
+package_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
+os.system("mkdir -p "+package_base_path+"/hengel_navigation/viewpoint_img")
+
 class AroundImage:
     def __init__(self):
         self.Initialize()
-    
+
     def Initialize(self):
-        self.cam_front = cv2.VideoCapture(2)
-        self.cam_left = cv2.VideoCapture(1)
-        self.cam_right = cv2.VideoCapture(0)
+        self.cam_front = cv2.VideoCapture(0)
+        self.cam_left = cv2.VideoCapture(2)
+        self.cam_right = cv2.VideoCapture(1)
         self.cam_front.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
         self.cam_front.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.cam_front.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))     # COLLECT IMAGE IN MJPG FORM, SOLVE USB HUB BANDWIDTH ISSUE
@@ -69,6 +72,7 @@ class AroundImage:
 
     def takeAroundImage(self):
         try:
+            print("take image func started")
             bridge = CvBridge()
             _, front_img = self.cam_front.read()
             _, left_img = self.cam_left.read()
@@ -88,7 +92,8 @@ class AroundImage:
             im_front = self.warp_image(front_img, self.homography_front).astype('uint8')
             im_left = self.warp_image(left_img, self.homography_left).astype('uint8')
             im_right = self.warp_image(right_img, self.homography_right).astype('uint8')
-            
+            print("image warped")
+
             # MULTIPLY WARPED IMAGE, THEN ADD TO BLANK IMAGE
             im_mask_inv, im_mask = self.find_mask(im_front)
             front_masked = np.multiply(im_front, im_mask_inv).astype('uint8')
@@ -96,8 +101,9 @@ class AroundImage:
             right_masked = np.multiply(im_right, im_mask).astype('uint8')
             summed_image = front_masked + left_masked+right_masked
             summed_image=cv2.resize(summed_image, (900,650), interpolation=cv2.INTER_AREA)
+            print("summed image made")
+            cv2.imwrite(package_base_path+"/hengel_navigation/viewpoint_img/warped_image_"+time.strftime("%y%m%d_%H%M%S")+'.jpg', summed_image)
             return summed_image
-            #cv2.imshow('warped', summed_image)
 
             # SEND IMAGE AS ROS imgmsg
             # summed_image_msg = bridge.cv2_to_imgmsg(summed_image, "bgr8")
