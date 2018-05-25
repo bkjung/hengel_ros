@@ -89,7 +89,6 @@ def find_homography(_image, mtx, dist, board_w, board_h, board_sz ):
 
     #Find the Homography
     H=cv2.getPerspectiveTransform(imgPts,objPts)
-
     cv_file=cv2.FileStorage("H.xml", cv2.FILE_STORAGE_WRITE)
     cv_file.write("H", H)
     cv_file.release()

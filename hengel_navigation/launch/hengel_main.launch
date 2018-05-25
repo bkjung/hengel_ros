@@ -1,5 +1,4 @@
 <launch>
-  <include file="$(find hengel_navigation)/launch/hengel_navigation_control.launch"/>
-  <node pkg="hengel_navigation" type="main_program.py" name="hengel_main_program"  output="screen">
-  </node>
+  <include file="$(find hengel_bringup)/launch/hengel_core.launch"/>
+  <node pkg="hengel_navigation" type="timed_roslaunch.sh" args="15 hengel_navigation hengel_navigation.launch" name="timed_roslaunch" output="screen" />
 </launch>

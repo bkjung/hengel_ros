@@ -12,13 +12,14 @@ int main(int argc, char **argv)
   sandbot_valve_control::ValveInput msg;
 
   bool isOpen= true;
+  //Example of open and close alternatively
   while(ros::ok()){
     if(isOpen==true){
-      msg.goal_position=512;
+      msg.goal_position=512;  //command to close
       isOpen=false;
     }
     else{
-      msg.goal_position=1023;
+      msg.goal_position=1023; //command to open
       isOpen=true;
     }
     pub.publish(msg);

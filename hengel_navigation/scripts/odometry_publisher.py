@@ -8,143 +8,188 @@ from tf.transformations import euler_from_quaternion
 from time import sleep
 from math import pi
 import sys
+from navigation_control import normalize_rad, angle_difference
 
-odometry_method = 0
-ODOMETRY_WHEEL = 1
-ODOMETRY_LIDAR = 2
 
 class LidarOdometry():
     def __init__(self):
         try:
-            rospy.init_node('hengel_odometry_publisher', anonymous=False, disable_signals=True)
-            self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10) 
-            self.heading_publisher = rospy.Publisher('/current_heading', Float32, queue_size=10)
-            self.blam_position_estimate = rospy.Subscriber('/blam/blam_slam/localization_integrated_estimate', PoseStamped, self.callback_blam_position)
+            self.position_publisher = rospy.Publisher(
+                '/current_position', Point, queue_size=10)
+            self.heading_publisher = rospy.Publisher(
+                '/current_heading', Float32, queue_size=10)
+            self.blam_position_estimate = rospy.Subscriber(
+                '/blam/blam_slam/localization_integrated_estimate',
+                PoseStamped, self.callback_blam_position)
 
-            self.offset_x=0
-            self.offset_y=0
-            self.offset_rot=0
+            self.offset_x = 0
+            self.offset_y = 0
+            self.offset_heading = 0
 
             self.pnt = Point()
-            self.rotation = 0
+            self.heading = Float32()
 
             self.isFirst = True
 
-            while(True):
+            while (True):
                 if self.isFirst:
-                    self.offset_x=self.pnt.x
-                    self.offset_y=self.pnt.y
-                    self.offset_rot=self.rotation-pi/2.0
+                    self.offset_x = self.pnt.x
+                    self.offset_y = self.pnt.y
+                    self.offset_heading = angle_difference(
+                        self.heading, pi / 2.0)
                     self.isFirst = False
 
-                self.pnt.x=self.pnt.x-self.offset_x
-                self.pnt.y=self.pnt.y-self.offset_y
-                #self.rotation = normalize_rad( normalize_rad(self.rotation)-self.offset_rot )
-                self.rotation = self.rotation
+                self.pnt.x = self.pnt.x - self.offset_x
+                self.pnt.y = self.pnt.y - self.offset_y
+                self.heading.data = angle_difference(self.heading.data,
+                                                     self.offset_heading)
 
-                heading=Float32()                
-                heading.data=self.rotation
                 self.position_publisher.publish(self.pnt)
-                self.heading_publisher.publish(heading)
+                self.heading_publisher.publish(self.heading)
 
                 sleep(0.01)
 
-        except Exceptoin as e:
+        except Exception as e:
             print(e)
             sys.exit()
 
+    def callback_blam_position(self, _data):
+        pnt = Point()
+        pnt.x = _data.pose.position.x
+        pnt.y = _data.pose.position.y
 
-        def callback_blam_position(self, data):
-            pnt=Point()
-            pnt.x=data.pose.position.x
-            pnt.y=data.pose.position.y
+        quat = [
+            _data.pose.orientation.x, _data.pose.orientation.y,
+            _data.pose.orientation.z, _data.pose.orientation.w
+        ]
+        rotation = euler_from_quaternion(quat)
 
-            quat=[data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w]
-            rotation=euler_from_quaternion(quat)
-
-            self.pnt = pnt
-            self.rotation = normalize_rad(rotation[2])
+        self.pnt = pnt
+        self.heading.data = normalize_rad(rotation[2])
 
 
 class WheelOdometry():
     def __init__(self):
         try:
-            rospy.init_node('hengel_odometry_publisher', anonymous=False, disable_signals=True)
-            self.position_publisher = rospy.Publisher('/current_position', Point, queue_size=10) 
-            self.heading_publisher = rospy.Publisher('/current_heading', Float32, queue_size=10)
+            self.position_publisher = rospy.Publisher(
+                '/current_position', Point, queue_size=10)
+            self.heading_publisher = rospy.Publisher(
+                '/current_heading', Float32, queue_size=10)
 
-            self.offset_x=0
-            self.offset_y=0
-            self.offset_rot=0
+            self.offset_change_x_subscriber = rospy.Subscriber(
+                '/offset_change_x', Float32, self.callback_offset_change_x)
+            self.offset_change_y_subscriber = rospy.Subscriber(
+                '/offset_change_y', Float32, self.callback_offset_change_y)
+            self.offset_change_theta_subscriber = rospy.Subscriber(
+                '/offset_change_theta', Float32,
+                self.callback_offset_change_theta)
+
+            self.offset_x = 0
+            self.offset_y = 0
+            self.offset_rot = 0
 
             self.pnt = Point()
-            self.rotation = 0
+            self.heading = Float32()
 
             self.isFirst = True
+
+            self.loop_cnt = 0
+            self.isGoodToGo = False
 
             self.tf_listener = tf.TransformListener()
             self.odom_frame = '/odom'
 
             try:
-                self.tf_listener.waitForTransform(self.odom_frame, '/base_footprint', rospy.Time(), rospy.Duration(1.0))
+                self.tf_listener.waitForTransform(self.odom_frame,
+                                                  '/base_footprint',
+                                                  rospy.Time(),
+                                                  rospy.Duration(1.0))
                 self.base_frame = '/base_footprint'
-                print("base_footprint")
-            except (tf.Exception, tf.ConnectivityException, tf.LookupException):
+            except (tf.Exception, tf.ConnectivityException,
+                    tf.LookupException):
                 try:
-                    self.tf_listener.waitForTransform(self.odom_frame, '/base_link', rospy.Time(), rospy.Duration(1.0))
+                    self.tf_listener.waitForTransform(
+                        self.odom_frame, '/base_link', rospy.Time(),
+                        rospy.Duration(1.0))
                     self.base_frame = '/base_link'
-                    print("base_link")
-                except (tf.Exception, tf.ConnectivityException, tf.LookupException):
-                    rospy.loginfo("Cannot find transform between /odom and /base_link or /base_footprint")
+                except (tf.Exception, tf.ConnectivityException,
+                        tf.LookupException):
+                    rospy.loginfo(
+                        "Cannot find transform between /odom and /base_link or /base_footprint"
+                    )
                     rospy.signal_shutdown("tf Exception")
 
-            while(True):
-                (trans, rot) = self.tf_listener.lookupTransform(self.odom_frame, self.base_frame, rospy.Time(0))
-                self.pnt=Point(*trans)
-                self.rotation = euler_from_quaternion(rot)[2]
+            while (True):
+                #wait for 2 sec after booting to set poistion&heading
+                if self.isGoodToGo == False:
+                    if self.loop_cnt == 200:
+                        self.isGoodToGo = True
+                    else:
+                        self.loop_cnt = self.loop_cnt + 1
+                else:
+                    (trans, rot) = self.tf_listener.lookupTransform(
+                        self.odom_frame, self.base_frame, rospy.Time(0))
+                    self.pnt = Point(*trans)
+                    self.heading.data = euler_from_quaternion(rot)[2]
 
-                if self.isFirst:
-                    self.offset_x=self.pnt.x
-                    self.offset_y=self.pnt.y
-                    self.offset_rot=self.rotation-pi/2.0
-                    self.isFirst = False
+                    if self.isFirst:
+                        self.offset_x = self.pnt.x
+                        self.offset_y = self.pnt.y
+                        #self.offset_heading=self.heading.data-pi/2.0
+                        self.offset_heading = self.heading.data
+                        self.isFirst = False
 
-                self.pnt.x=self.pnt.x-self.offset_x
-                self.pnt.y=self.pnt.y-self.offset_y
-                #self.rotation = normalize_rad( normalize_rad(self.rotation)-self.offset_rot )
-                self.rotation = self.rotation
+                    self.pnt.x = self.pnt.x - self.offset_x
+                    self.pnt.y = self.pnt.y - self.offset_y
+                    self.heading.data = normalize_rad(self.heading.data -
+                                                      self.offset_heading)
 
-                heading=Float32()                
-                heading.data=self.rotation
-                self.position_publisher.publish(self.pnt)
-                self.heading_publisher.publish(heading)
+                    self.position_publisher.publish(self.pnt)
+                    self.heading_publisher.publish(self.heading)
 
                 sleep(0.01)
 
         except (tf.Exception, tf.ConnectivityException, tf.LookupException):
-            rospy.loginfo("TF Exception at wheel_odometry.py)
+            rospy.loginfo("TF Exception at wheel_odometry.py")
             sys.exit()
-        
-        except Exceptoin as e:
+
+        except Exception as e:
             print(e)
             sys.exit()
 
+    def callback_offset_change_x(self, _data):
+        self.offset_x = self.offset_x - _data
+        print("OFFSET_X Changed by : " + str(_data))
+
+    def callback_offset_change_y(self, _data):
+        self.offset_y = self.offset_y - _data
+        print("OFFSET_Y Changed by : " + str(_data))
+
+    def callback_offset_change_theta(self, _data):
+        self.offset_theta = self.offset_theta - _data
+        print("OFFSET_THETA Changed by : " + str(_data))
+
+
 def initialOptionSelect():
-    global odometry_method
-    word=raw_input("There are two options of odometry.\n[1] Wheel Odometry.\n[2] Lidar (Velodyne) Odometry.\nType 1 or 2 :")
-    print("Input:"+word)
-    odometry_method = int(word)
+    if sys.argv[1] == 'wheel':
+        WheelOdometry()
+        print("Wheel odometry method selected")
+    elif sys.argv[1] == 'lidar':
+        LidarOdometry()
+        print("Lidar odometry method selected")
+    else:
+        print(
+            "!!!!!WRONG launch_file input of argv choosing odometry method. Wheel odometry selected as default."
+        )
+        raise Exception(
+            "WRONG INPUT OPTION FOR ODOMETRY (Neither wheel nor lidar)")
 
 
 if __name__ == '__main__':
     try:
+        rospy.init_node(
+            'hengel_odometry_publisher', anonymous=False, disable_signals=True)
         initialOptionSelect()
-        if odometry_method == 1:
-            WheelOdometry()
-        elif odometry_method == 2:
-            LidarOdometry()
-        else:
-            raise Exception("WRONG INPUT OPTION FOR ODOMETRY (Neither 1 nor 2)")
 
         print("End of Main Function")
 

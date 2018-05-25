@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(hengel_odometry)
+project(hengel_visual_odometry)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -59,7 +59,6 @@ add_message_files(
 # add_service_files(
 #   FILES
 #   Service1.srv
-#   Service2.srv
 # )
 
 ## Generate actions in the 'action' folder
@@ -105,10 +104,10 @@ add_message_files(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include
- LIBRARIES hengel_odometry
+ INCLUDE_DIRS scripts
+ LIBRARIES hengel_visual_odometry
  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime sensor_msgs geometry_msgs
- #DEPENDS system_lib
+ DEPENDS system_lib
 )
 
 ###########
@@ -118,13 +117,13 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  # include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/hengel_odometry.cpp
+#   src/${PROJECT_NAME}/hengel_visual_odometry.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -135,7 +134,13 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/hengel_odometry_node.cpp)
+
+
+##################### MONO - ODOMETRY #################################################
+# add_executable(hengel_mono_odom src/hengel_mono_odom.cpp)
+# add_dependencies(hengel_mono_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(hengel_mono_odom ${catkin_LIBRARIES})
+#######################################################################################
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -187,12 +192,22 @@ include_directories(
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 
+catkin_install_python(PROGRAMS
+scripts/raw_img_publisher.py
+# scripts/visual_odometry.py
+scripts/around_view.py
+scripts/pi_floorcam_publisher.py
+#scripts/real_globalmap_publisher.py
+DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
 #############
 ## Testing ##
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_hengel_odometry.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_hengel_visual_odometry.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

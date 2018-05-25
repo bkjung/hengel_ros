@@ -48,6 +48,7 @@
 #define DXL_MAXIMUM_VELOCITY            380
 #define CONTINUOUS_MODE                 0
 #define DISCRETE_MODE                   1
+
 #define VALVE_OPEN                      2571
 int GOAL_POSITION = 2048;
 int MODE;
@@ -104,7 +105,7 @@ int main(int argc, char **argv)
 
   sandbot_valve_control::MotorInput msg2;
 
-  ros::Rate loop_rate(1);
+  ros::Rate loop_rate(50);
 
   // Initialize PortHandler instance
   // Set the port path
