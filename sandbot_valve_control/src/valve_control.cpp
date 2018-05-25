@@ -49,9 +49,9 @@
 #define CONTINUOUS_MODE                 0
 #define DISCRETE_MODE                   1
 
-#define VALVE_OPEN                      2571
+#define VALVE_OPEN                      2550
 int GOAL_POSITION = 2048;
-int MODE;
+int MODE = 1;
 int SHUTDOWN = 0;
 
 #define ESC_ASCII_VALUE                 0x1b
@@ -83,12 +83,13 @@ void changeValveInput(int goal_position)
 // subscribe msgCallback
 void msgCallback(const sandbot_valve_control::ValveInput::ConstPtr& msg1)
 {
-  // ROS_INFO("recieve msg1 = %d", msg1->goal_position);
+  ROS_INFO("recieved msg1 = %d", msg1->goal_position);
   changeValveInput(msg1->goal_position);
 }
 
 void msgCallback_mode(const sandbot_valve_control::OperationMode::ConstPtr& msg_mode)
 {
+  ROS_INFO("recieved msg_mode = %d", msg_mode->mode);
   MODE = msg_mode->mode;
 }
 
@@ -258,8 +259,8 @@ int main(int argc, char **argv)
         //   printf("%s\n", packetHandler->getRxPacketError(dxl_error));
         // }
 
-        // printf("continuous mode\n");
-        // printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, valve_open, dxl_present_position);
+        printf("continuous mode\n");
+        printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, valve_open, dxl_present_position);
 
       }while((abs(valve_open - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD));
     }
@@ -288,8 +289,8 @@ int main(int argc, char **argv)
         //   printf("%s\n", packetHandler->getRxPacketError(dxl_error));
         // }
 
-        // printf("discrete mode\n");
-        // printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
+        printf("discrete mode\n");
+        printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
 
       }while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD));
     }

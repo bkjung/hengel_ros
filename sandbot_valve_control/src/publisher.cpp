@@ -7,7 +7,7 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
 
   ros::Publisher pub=nh.advertise<sandbot_valve_control::ValveInput>("valve_input", 10);
-  ros::Rate loop_rate(1);
+  ros::Rate loop_rate(50);
 
   sandbot_valve_control::ValveInput msg;
 
@@ -15,11 +15,11 @@ int main(int argc, char **argv)
   //Example of open and close alternatively
   while(ros::ok()){
     if(isOpen==true){
-      msg.goal_position=512;  //command to close
+      msg.goal_position=2048;  //command to close
       isOpen=false;
     }
     else{
-      msg.goal_position=1023; //command to open
+      msg.goal_position=2550; //command to open
       isOpen=true;
     }
     pub.publish(msg);
