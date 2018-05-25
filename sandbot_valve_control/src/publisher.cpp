@@ -15,11 +15,11 @@ int main(int argc, char **argv)
   //Example of open and close alternatively
   while(ros::ok()){
     if(isOpen==true){
-      msg.goal_position=2048;  //command to close
+      msg.goal_position=2020;  //command to close
       isOpen=false;
     }
     else{
-      msg.goal_position=2550; //command to open
+      msg.goal_position=2500; //command to open
       isOpen=true;
     }
     pub.publish(msg);

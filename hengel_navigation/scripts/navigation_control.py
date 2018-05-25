@@ -22,10 +22,10 @@ from pi_cam_manager import PiCamManager
 #MARKER_DOWN = 1023
 #MARKER_DOWN = 870
 # MARKER_DOWN = 890
-MARKER_DOWN = 2550
+MARKER_DOWN = 2480
 #MARKER_DOWN=900
 #MARKER_UP = 512
-MARKER_UP = 2048
+MARKER_UP = 2000
 
 scale_factor = 3  #[pixel/cm]
 robot_size = 15  #[cm]; diameter
@@ -75,7 +75,7 @@ class NavigationControl():
         self.valve_operation_mode.mode = 1
         self.valve_angle_input = ValveInput()
 
-        self.valve_status = MARKER_DOWN
+        self.valve_status = MARKER_UP
 
         self.r = rospy.Rate(50)  #50hz
 
