@@ -95,7 +95,7 @@ def imagePublisher():
                 _, left_img = cam_left.read()
                 _, right_img = cam_right.read()
 
-                # cv2.imshow("front", front_img)
+                #cv2.imshow("front", front_img)
                 # cv2.imshow("left", left_img)
                 # cv2.imshow("right", right_img)
 

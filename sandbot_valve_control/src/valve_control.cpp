@@ -49,8 +49,8 @@
 #define CONTINUOUS_MODE                 0
 #define DISCRETE_MODE                   1
 
-#define VALVE_OPEN                      2550
-int GOAL_POSITION = 2048;
+#define VALVE_OPEN                      2480
+int GOAL_POSITION = 2000;
 int MODE = 1;
 int SHUTDOWN = 0;
 
@@ -210,7 +210,7 @@ int main(int argc, char **argv)
     if (SHUTDOWN != 0)
     {
       // Close valve
-      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 2048, &dxl_error);
+      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 2000, &dxl_error);
       do
       {
         dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
@@ -305,7 +305,7 @@ int main(int argc, char **argv)
   }
 
   // Close valve
-  dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 2048, &dxl_error);
+  dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 2000, &dxl_error);
   do
   {
     dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
