@@ -8,23 +8,10 @@ project(hengel_navigation)
 # Packages
 ################################################################################
 find_package(catkin REQUIRED COMPONENTS
+  message_generation
   rospy
   geometry_msgs
   std_msgs
-)
-
-SET(PY_PROJECT_NAME hengel_path_manager)
-SET(PY_PACKAGE_DIR src/hengel_path_manager)
-
-# The first argument is the name of the project. This is the library name
-# that you have specified in module.cpp (with lib prepended), and
-# in your __init__.py file. In this example, ${PROJECT_NAME} is
-# rocket_python, so the resulting library will be called librocket_python
-#
-# The second argument tells CMake where to find the __init__.py file so
-# that it can be installed
-add_python_export_library(${PY_PROJECT_NAME} ${PY_PACKAGE_DIR}
-  scripts/pathmaker_ui.py
 )
 
 ################################################################################
@@ -35,7 +22,21 @@ catkin_python_setup()
 ################################################################################
 # Declare ROS messages, services and actions
 ################################################################################
+add_message_files(
+    FILES
+    ValveInput.msg
+    OperationMode.msg
+    )
 
+add_service_files(
+  FILES
+  GlobalFeedback.srv
+)
+
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+    )
 ################################################################################
 # Declare ROS dynamic reconfigure parameters
 ################################################################################
@@ -44,8 +45,8 @@ catkin_python_setup()
 # Catkin specific configuration
 ################################################################################
 catkin_package(
-  CATKIN_DEPENDS rospy geometry_msgs std_msgs
-)
+  CATKIN_DEPENDS message_runtime rospy geometry_msgs std_msgs
+  )
 
 ################################################################################
 # Build
@@ -54,11 +55,14 @@ catkin_package(
 ################################################################################
 # Install
 ################################################################################
-catkin_install_python(PROGRAMS 
-  scripts/start_program.py
+catkin_install_python(PROGRAMS
+  scripts/main_program.py
+  scripts/motor_input_calculate.py
   scripts/navigation_control.py
-  scripts/printer_drawing.py
-  scripts/printer_letter.py
+  scripts/odometry_publisher.py
+  scripts/paint_drawing.py
+  scripts/paint_letter.py
+  
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
