@@ -7,11 +7,11 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
 
   ros::Publisher pub=nh.advertise<sandbot_valve_control::OperationMode>("operation_mode", 10);
-  ros::Rate loop_rate(1);
+  ros::Rate loop_rate(50);
 
   sandbot_valve_control::OperationMode msg_mode;
 
-  bool isContinuous= false;
+  bool isContinuous= true;
   while(ros::ok()){
     if(isContinuous==true){
       msg_mode.mode=0;
