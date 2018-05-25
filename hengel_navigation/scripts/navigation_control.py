@@ -19,11 +19,13 @@ import cv_bridge
 from real_globalmap import RealGlobalMap
 from pi_cam_manager import PiCamManager
 
-#VALVE_OPEN = 1023
-#VALVE_OPEN = 870
-VALVE_OPEN = 890
-#VALVE_OPEN=900
-VALVE_CLOSE = 512
+#MARKER_DOWN = 1023
+#MARKER_DOWN = 870
+# MARKER_DOWN = 890
+MARKER_DOWN = 2550
+#MARKER_DOWN=900
+#MARKER_UP = 512
+MARKER_UP = 2048
 
 scale_factor = 3  #[pixel/cm]
 robot_size = 15  #[cm]; diameter
@@ -73,7 +75,7 @@ class NavigationControl():
         self.valve_operation_mode.mode = 1
         self.valve_angle_input = ValveInput()
 
-        self.valve_status = VALVE_OPEN
+        self.valve_status = MARKER_DOWN
 
         self.r = rospy.Rate(50)  #50hz
 
@@ -194,7 +196,7 @@ class NavigationControl():
                         #print("heading error: %0.3f" % np.rad2deg(alpha))
 
                         if abs(alpha) <= self.thres3:
-                            self.valve_status = VALVE_OPEN
+                            self.valve_status = MARKER_DOWN
                             x = distance * sin(alpha)
                             curv = 2 * x / pow(distance, 2)
 
@@ -213,7 +215,7 @@ class NavigationControl():
                             self.move_cmd.angular.z = curv * lin_vel_scaled
 
                         else:
-                            self.valve_status = VALVE_CLOSE
+                            self.valve_status = MARKER_UP
 
                             if abs(alpha) > self.thres1:  #abs?
                                 # if alpha>0 or alpha<-pi:
@@ -243,7 +245,7 @@ class NavigationControl():
                                     self.move_cmd.angular.z = -self.ang_vel_3
 
                         if self.is_moving_between_letters:
-                            self.valve_status = VALVE_CLOSE
+                            self.valve_status = MARKER_UP
                         self.valve_operation_mode_publisher.publish(
                             self.valve_operation_mode)
                         self.valve_angle_input.goal_position = self.valve_status
@@ -412,7 +414,7 @@ class NavigationControl():
 
     def quit_valve(self):
         for ind_quit in range(50):
-            self.valve_angle_input.goal_position = VALVE_CLOSE
+            self.valve_angle_input.goal_position = MARKER_UP
             self.valve_angle_publisher.publish(self.valve_angle_input)
 
             ind_quit = ind_quit + 1
@@ -493,7 +495,7 @@ class NavigationControl():
 #         self.valve_operation_mode.mode=1
 #         self.valve_angle_input = ValveInput()
 
-#         self.valve_status = VALVE_OPEN
+#         self.valve_status = MARKER_DOWN
 
 #         self.r = rospy.Rate(50) #50hz
 
@@ -587,7 +589,7 @@ class NavigationControl():
 #                                     resp = globalFeedback(self.letter_index, position)
 #                                     offset_x, offset_y, offset_th = resp.delta_offset
 #                                     self.is_moving_to_next_start = False
-#                                     self.valve_status = VALVE_OPEN
+#                                     self.valve_status = MARKER_DOWN
 
 #                                 except rospy.ServiceException, e:
 #                                     print("Service call failed")
@@ -603,7 +605,7 @@ class NavigationControl():
 #                             print("heading error: %0.3f" % np.rad2deg(alpha))
 
 #                             if abs(alpha)<=self.thres3:
-#                                 self.valve_status=VALVE_OPEN
+#                                 self.valve_status=MARKER_DOWN
 #                                 x=distance*sin(alpha)
 #                                 curv=2*x/pow(distance,2)
 
@@ -616,7 +618,7 @@ class NavigationControl():
 #                                 self.move_cmd.angular.z=curv*lin_vel_scaled
 
 #                             else:
-#                                 self.valve_status=VALVE_CLOSE
+#                                 self.valve_status=MARKER_UP
 
 #                                 if abs(alpha)> self.thres1: #abs?
 #                                     # if alpha>0 or alpha<-pi:
@@ -669,7 +671,7 @@ class NavigationControl():
 #             #This is the point to global align.
 #             self.letter_index = self.letter_index + 1
 #             #self.is_moving_to_next_start = True
-#             self.valve_status = VALVE_CLOSE
+#             self.valve_status = MARKER_UP
 
 #         while(True):
 #             alpha=angle_difference( pi, self.heading.data )
@@ -770,7 +772,7 @@ class NavigationControl():
 
 #     def quit_valve(self):
 #         for ind_quit in range(100):
-#             self.valve_angle_input.goal_position = VALVE_CLOSE
+#             self.valve_angle_input.goal_position = MARKER_UP
 #             self.valve_angle_publisher.publish(self.valve_angle_input)
 
 #             ind_quit = ind_quit+1
