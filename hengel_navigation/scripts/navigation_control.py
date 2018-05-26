@@ -19,12 +19,10 @@ import cv_bridge
 from real_globalmap import RealGlobalMap
 from pi_cam_manager import PiCamManager
 
-#MARKER_DOWN = 1023
-#MARKER_DOWN = 870
-# MARKER_DOWN = 890
-MARKER_DOWN = 2480
-#MARKER_DOWN=900
-#MARKER_UP = 512
+
+#2480 is too large, so that it hits the ground and the valve_control while loop does not end.
+#MARKER_DOWN = 2480
+MARKER_DOWN = 2460
 MARKER_UP = 2000
 
 scale_factor = 3  #[pixel/cm]
@@ -113,10 +111,17 @@ class NavigationControl():
         rospy.on_shutdown(self.shutdown)
 
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
+
         self.valve_angle_publisher = rospy.Publisher(
             '/valve_input', ValveInput, queue_size=5)
         self.valve_operation_mode_publisher = rospy.Publisher(
             '/operation_mode', OperationMode, queue_size=5)
+        self.valve_operation_mode_publisher.publish(
+            self.valve_operation_mode)
+        self.valve_angle_input.goal_position = self.valve_status
+        self.valve_angle_publisher.publish(
+            self.valve_angle_input)
+
         #self.crop_map_publisher = rospy.Publisher('/cropped_predict_map', PIL.Image, queue_size=5)
         self.offset_change_x_publisher = rospy.Publisher(
             '/offset_x', Float32, queue_size=5)
@@ -172,7 +177,11 @@ class NavigationControl():
                         self.waypoint_index_in_current_letter][1]
                 ]
 
-                if self.waypoint_index_in_current_letter == 0 or self.waypoint_index_in_current_letter == self.cnt_waypoints_in_current_letter - 1:
+                if self.waypoint_index_in_current_letter == 0:
+                    print("moving to FIRST waypoint")
+                    self.is_moving_between_letters = True
+                elif self.waypoint_index_in_current_letter == self.cnt_waypoints_in_current_letter - 1:
+                    print("moving to GLOBAL VIEW POINT")
                     self.is_moving_between_letters = True
                 else:
                     self.is_moving_between_letters = False
@@ -246,8 +255,8 @@ class NavigationControl():
 
                         if self.is_moving_between_letters:
                             self.valve_status = MARKER_UP
-                        self.valve_operation_mode_publisher.publish(
-                            self.valve_operation_mode)
+                        else:
+                            pass
                         self.valve_angle_input.goal_position = self.valve_status
                         self.valve_angle_publisher.publish(
                             self.valve_angle_input)

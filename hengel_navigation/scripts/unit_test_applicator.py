@@ -46,6 +46,8 @@ class UnitTestApplicator():
             '/valve_input', ValveInput, queue_size=5)
         self.valve_operation_mode_publisher = rospy.Publisher(
             '/operation_mode', OperationMode, queue_size=5)
+        self.valve_operation_mode_publisher.publish(
+            self.valve_operation_mode)
 
         self.loop_cnt = 0
 
@@ -61,8 +63,6 @@ class UnitTestApplicator():
                     self.loop_cnt=0
                     self.valve_status = MARKER_UP if self.valve_status==MARKER_DOWN else MARKER_DOWN
                     print("valve_status = "+("MARKER_UP" if self.valve_status==MARKER_UP else "MARKER_DOWN"))
-                self.valve_operation_mode_publisher.publish(
-                    self.valve_operation_mode)
                 self.valve_angle_input.goal_position = self.valve_status
                 self.valve_angle_publisher.publish(
                     self.valve_angle_input)
