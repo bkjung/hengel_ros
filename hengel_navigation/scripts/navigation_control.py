@@ -56,9 +56,13 @@ class NavigationControl():
     #     self.initial_setting()
     #     self.run()
 
-    def __init__(self, _arr_path, _pi_cam_save_option):
+    def __init__(self, _arr_path):
+        word = raw_input(
+            "There are two options for pi cam save.\n[1] Save Pi Cam - Floor Image.\n[2] Do not Save. \nType 1 or 2 :"
+        )
+        self.pi_cam_save_option = int(word)
+
         self.arr_path = _arr_path
-        self.pi_cam_save_option = _pi_cam_save_option
         self.initial_setting()
         self.run()
 
