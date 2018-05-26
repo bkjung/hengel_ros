@@ -43,7 +43,10 @@
 #define TORQUE_DISABLE                  0                   // Value for disabling the torque
 // #define DXL_MINIMUM_POSITION_VALUE      512            // Dynamixel will rotate between this value
 // #define DXL_MAXIMUM_POSITION_VALUE      1023              // and this value (note that the Dynamixel would not move when the position value is out of movable range. Check e-manual about the range of the Dynamixel you use.)
-#define DXL_MOVING_STATUS_THRESHOLD     10                  // Dynamixel moving status threshold
+
+//#define DXL_MOVING_STATUS_THRESHOLD     10                  // Dynamixel moving status threshold
+#define DXL_MOVING_STATUS_THRESHOLD     20                  // Dynamixel moving status threshold
+
 #define VELOCITY_CONTROL_MODE           1
 #define DXL_MAXIMUM_VELOCITY            380
 #define CONTINUOUS_MODE                 0
@@ -53,6 +56,7 @@
 int GOAL_POSITION = 2000;
 int MODE = 1;
 int SHUTDOWN = 0;
+bool RECEIVED_MSG = false;
 
 #define ESC_ASCII_VALUE                 0x1b
 
@@ -85,6 +89,7 @@ void msgCallback(const sandbot_valve_control::ValveInput::ConstPtr& msg1)
 {
   ROS_INFO("recieved msg1 = %d", msg1->goal_position);
   changeValveInput(msg1->goal_position);
+  RECEIVED_MSG = true;
 }
 
 void msgCallback_mode(const sandbot_valve_control::OperationMode::ConstPtr& msg_mode)
@@ -215,7 +220,13 @@ int main(int argc, char **argv)
       {
         dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
         printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
-      } while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD));
+
+        //if (RECEIVED_MSG == true)
+        //{
+        //    RECEIVED_MSG = false;
+        //    break;
+        //}
+      } while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD) && ros::ok());
 
       // Disable torque
       dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, DXL_ID_254, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
