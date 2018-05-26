@@ -21,9 +21,9 @@ class AroundImage:
         self.Initialize()
 
     def Initialize(self):
-        self.cam_front = cv2.VideoCapture(0)
-        self.cam_left = cv2.VideoCapture(2)
-        self.cam_right = cv2.VideoCapture(1)
+        self.cam_front = cv2.VideoCapture(1)
+        self.cam_left = cv2.VideoCapture(0)
+        self.cam_right = cv2.VideoCapture(2)
         # self.cam_front.set(cv2.CV_CAP_PROP_BUFFERSIZE, 1)
         self.cam_front.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
         self.cam_front.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
