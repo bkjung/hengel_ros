@@ -15,7 +15,9 @@ from navigation_control import NavigationControl
 import cv2
 
 CANVAS_SIDE_LENGTH = 0.7 * 0.58
-PADDING_LENGTH = 0.0
+#CANVAS_SIDE_LENGTH = 0.5 * 0.58
+#PADDING_LENGTH = 0.0
+PADDING_LENGTH = -0.1 * 0.58
 VIEWPOINT_DISTANCE = 0.3 * 0.58
 
 package_base_path = os.path.abspath(
@@ -27,6 +29,12 @@ os.system("mkdir -p " + package_base_path + "/hengel_path_manager/waypnts")
 
 class PaintLetter():
     def __init__(self):
+        word = raw_input(
+            "There are two options for pi cam save.\n[1] Save Pi Cam - Floor Image.\n[2] Do not Save. \nType 1 or 2 :"
+        )
+        self.piCamSaveOption = int(word)
+
+
         print("Length of Canvas Side = " + str(CANVAS_SIDE_LENGTH))
         print("Length of Padding = " + str(PADDING_LENGTH))
         print("Distance of Viewpoint = " + str(VIEWPOINT_DISTANCE))
@@ -79,7 +87,7 @@ class PaintLetter():
             letter_index = letter_index + 1
 
     def run(self):
-        NavigationControl(self.arr_path)
+        NavigationControl(self.arr_path, self.piCamSaveOption)
 
 
 if __name__ == '__main__':

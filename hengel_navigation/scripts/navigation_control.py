@@ -22,7 +22,8 @@ from pi_cam_manager import PiCamManager
 
 #2480 is too large, so that it hits the ground and the valve_control while loop does not end.
 #MARKER_DOWN = 2480
-MARKER_DOWN = 2460
+#MARKER_DOWN = 2460
+MARKER_DOWN = 2420
 MARKER_UP = 2000
 
 scale_factor = 3  #[pixel/cm]
@@ -55,8 +56,9 @@ class NavigationControl():
     #     self.initial_setting()
     #     self.run()
 
-    def __init__(self, _arr_path):
+    def __init__(self, _arr_path, _pi_cam_save_option):
         self.arr_path = _arr_path
+        self.pi_cam_save_option = _pi_cam_save_option
         self.initial_setting()
         self.run()
 
@@ -224,7 +226,8 @@ class NavigationControl():
                             self.move_cmd.angular.z = curv * lin_vel_scaled
 
                         else:
-                            self.valve_status = MARKER_UP
+                            #rotate to align in threshold
+                            #self.valve_status = MARKER_UP
 
                             if abs(alpha) > self.thres1:  #abs?
                                 # if alpha>0 or alpha<-pi:
@@ -284,12 +287,16 @@ class NavigationControl():
 
                 #stop the robot
                 self.cmd_vel.publish(Twist())
-                self.wait_for_seconds(0.5)
-                #take picam floor photo
-                self.pi_cam_manager.save("picam_letter-" +
-                    str(self.letter_index) + "_wayopint-" +
-                    str(self.waypoint_index_in_current_letter))
-                print("Pi Cam Saved")
+
+                if self.pi_cam_save_option==1:
+                    #take picam floor photo
+                    self.wait_for_seconds(0.5)
+                    self.pi_cam_manager.save("picam_letter-" +
+                        str(self.letter_index) + "_wayopint-" +
+                        str(self.waypoint_index_in_current_letter))
+                    print("Pi Cam Saved")
+                else:
+                    pass
 
                 self.waypoint_index_in_current_letter = self.waypoint_index_in_current_letter + 1
 
