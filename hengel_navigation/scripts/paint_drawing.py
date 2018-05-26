@@ -27,6 +27,7 @@ class PaintDrawing():
             (0.5) * CANVAS_SIDE_LENGTH
         ])
 
+        self.path_return = []
         self.path_return.append(self.path_scaled)
 
         self.run()
