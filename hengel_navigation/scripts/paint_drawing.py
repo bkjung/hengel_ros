@@ -14,16 +14,26 @@ import os
 from pathmaker_ui import PathMaker
 from navigation_control import NavigationControl
 
+CANVAS_SIDE_LENGTH = 0.7 * 0.58
+VIEWPOINT_DISTANCE = 0.3 * 0.58
 
 class PaintDrawing():
     def __init__(self):
         self.PathUI = PathMaker()
+
+        self.path_scaled = [[i[0]*CANVAS_SIDE_LENGTH, i[1]*CANVAS_SIDE_LENGTH] for i in self.PathUI.path_drawing]
+        self.path_scaled.append([
+            CANVAS_SIDE_LENGTH + VIEWPOINT_DISTANCE,
+            (0.5) * CANVAS_SIDE_LENGTH
+        ])
+
+        self.path_return.append(self.path_scaled)
+
         self.run()
 
     def run(self):
         if self.PathUI.isFinishedCorrectly == True:
-            NavigationControl(self.PathUI.path_drawing,
-                              self.PathUI.draw_start_index)
+            NavigationControl(self.path_return)
         else:
             raise Exception("Path Drawing UI did not finish correctly")
 
