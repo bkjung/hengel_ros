@@ -11,13 +11,14 @@ class CrosspiontRotation():
         self.photo = np.ndarray(self.photo)
 
         self.count_callback = 0
-        self.floorcam_subscriber = rospy.Subscriber('/pi_floorcam/image_raw',
-                                                    Image, callback_floorcam)
+        self.floorcam_subscriber = rospy.Subscriber('/pi_floorcam/image_raw/compressed',
+                                                    CompressedImage, callback_floorcam)
 
     def callback_floorcam(self, _photo):
-        bridge = CvBridge()
-        self.photo = bridge.imgmsg_to_cv2(_map, "rgb8")
-        self.photo = cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
+        np_arr = np.fromstring(_img.data, np.uint8)
+        image_cv = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        image_cv = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
+
 
 
 if __name__ == "__main__":

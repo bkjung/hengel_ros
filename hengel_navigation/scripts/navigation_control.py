@@ -68,8 +68,6 @@ class NavigationControl():
 
     def initial_setting(self):
         self.program_start_time = time.strftime("%y%m%d_%H%M%S")
-        os.system("mkdir -p " + package_base_path +
-                "/hengel_path_manager/pi_cam_keypoint_capture/"+self.program_start_time)
 
         self.point = Point()
         self.heading = Float32()

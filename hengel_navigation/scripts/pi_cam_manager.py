@@ -19,6 +19,8 @@ class PiCamManager():
         self.bridge = CvBridge()
         self.save_mode = False
         self.starttime = _starttime
+        os.system("mkdir -p " + package_base_path +
+                "/hengel_path_manager/pi_cam_keypoint_capture/"+self.starttime)
         self.filename = ""
 
     def save(self, _filename):
@@ -39,3 +41,12 @@ class PiCamManager():
             self.filename = ""
         else:
             pass
+
+
+if __name__=="__main__":
+    try:
+        rospy.init_node('pi_cam_manager')
+        PiCamManager()
+    except Exception as e:
+        print(e)
+        rospy.loginfo("shutdown program")
