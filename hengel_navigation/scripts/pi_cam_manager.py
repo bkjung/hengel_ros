@@ -6,6 +6,7 @@ from sensor_msgs.msg import Image
 from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
 import os
+import time
 
 package_base_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../.."))
@@ -46,7 +47,16 @@ class PiCamManager():
 if __name__=="__main__":
     try:
         rospy.init_node('pi_cam_manager')
-        PiCamManager()
+        app = PiCamManager(time.strftime("%y%m%d_%H%M%S"))
+        
+        cnt = 0
+        while(True):
+            try:
+                app.save(str(cnt))
+                cnt = cnt+1
+                time.sleep(1)
+            except KeyboardInterrupt:
+                break
     except Exception as e:
         print(e)
         rospy.loginfo("shutdown program")
