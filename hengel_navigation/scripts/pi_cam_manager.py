@@ -6,6 +6,7 @@ from sensor_msgs.msg import Image
 from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
 import os
+import time
 
 package_base_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../.."))
@@ -19,6 +20,8 @@ class PiCamManager():
         self.bridge = CvBridge()
         self.save_mode = False
         self.starttime = _starttime
+        os.system("mkdir -p " + package_base_path +
+                "/hengel_path_manager/pi_cam_keypoint_capture/"+self.starttime)
         self.filename = ""
 
     def save(self, _filename):
@@ -39,3 +42,21 @@ class PiCamManager():
             self.filename = ""
         else:
             pass
+
+
+if __name__=="__main__":
+    try:
+        rospy.init_node('pi_cam_manager')
+        app = PiCamManager(time.strftime("%y%m%d_%H%M%S"))
+        
+        cnt = 0
+        while(True):
+            try:
+                app.save(str(cnt))
+                cnt = cnt+1
+                time.sleep(0.02)
+            except KeyboardInterrupt:
+                break
+    except Exception as e:
+        print(e)
+        rospy.loginfo("shutdown program")
