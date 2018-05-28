@@ -9,19 +9,23 @@ import time
 
 
 class CrosspiontDocking():
-    def __init__(self):
+    def __init__(self, _starttime):
         self.floorcam_subscriber = rospy.Subscriber('/pi_floorcam/image_raw/compressed',
                                                     CompressedImage, self.callback_floorcam)
-        
+        self.pub_box = rospy.Publisher(
+        '/pi_floorcam_box/image_raw/compressed', CompressedImage, queue_size=3)
+
         #initialize
         self.np_arr = np.empty(0)
         self.image_cv = np.zeros((0,0,3), np.uint8)
-
+        self.image_cv_box = np.zeros((0,0,3), np.uint8)
+        self.image_cv_gray = np.zeros((0,0,1), np.uint8)
+        self.msg_box = CompressedImage()
+        self.msg_box.format = "jpeg"
         self.imageReceived = False
-
-        self.r = rospy.Rate(100) #100Hz
-
-        self.save_mode = False
+        self.r = rospy.Rate(10) #10Hz
+        # self.save_mode = False
+        self.isStarted = False
 
     def callback_floorcam(self, _img):
         try:
@@ -29,54 +33,60 @@ class CrosspiontDocking():
 
             self.np_arr = np.fromstring(_img.data, np.uint8)
             self.image_cv = cv2.imdecode(self.np_arr, cv2.IMREAD_COLOR)
-            self.image_cv = cv2.cvtColor(self.image_cv, cv2.COLOR_BGR2GRAY)
-            
-            if self.save_mode:
-                cv2.imwrite(
-                    "~/Dropbox/intern_share/experiment_data/rosbag_analysis/" + self.filename
-                    + ".jpg", self.image_nv)
-                self.save_mode = False
-                self.filename = ""
-            
+            self.image_cv_box = self.image_cv
+            self.image_cv_gray = cv2.cvtColor(self.image_cv, cv2.COLOR_BGR2GRAY)
+
+            # if self.save_mode:
+            #     cv2.imwrite(
+            #         "~/Dropbox/intern_share/experiment_data/rosbag_analysis/" + self.filename
+            #         + ".jpg", self.image_cv_gray)
+            #     self.save_mode = False
+            #     self.filename = ""
+
+            print("Box Average: " + str(self.analysis()))
+            rospy.loginfo("Box Average: " + str(self.analysis()))
+
         except Exception as e:
             print(e)
             sys.exit(1)
 
-        # a, b = self.image_cv.shape
-        # print(a, b)
-        # print(self.image_cv[479, 639])
-
     def analysis(self):
-        if self.imageReceived:
-            return self.image_cv[199:299, 169:329].mean()
-            # if :
-            #     return "white"
-            # elif ...:
-            #     return "black"
-            # else ...:
-            #     return "unknown"
+        if self.imageReceived and self.isStarted:
+            for i in range(169, 330):
+                self.image_cv_box[i][199] = [255, 0, 0]
+                self.image_cv_box[i][300] = [255, 0, 0]
+            for j in range(199, 300):
+                self.image_cv_box[169][j] = [255, 0, 0]
+                self.image_cv_box[330][j] = [255, 0, 0]
+
+            self.msg_box.data = np.array(cv2.imencode('.jpg', self.image_cv_box)[1]).tostring()
+            self.pub_box.publish(self.msg_box)
+
+            return self.image_cv[169:330, 199:300].mean()
 
     def save(self, _filename):
-        self.save_mode = True
+        # self.save_mode = True
         self.filename = _filename
 
     def run(self):
-        cnt = 0
         while True:
             if rospy.is_shutdown():
                 break
 
             if self.imageReceived:
-                # self.save(str(cnt))
-                cnt=cnt+1
-                print(self.analysis())
+                self.analysis()
+
             self.r.sleep()
+
+    def start(self):
+        self.isStarted = True
 
 
 if __name__ == "__main__":
     try:
         rospy.init_node('hengel_crosspoint_docking')
-        app = CrosspiontDocking()
+        app = CrosspiontDocking("")
+        app.start()
         app.run()
 
     except KeyboardInterrupt:

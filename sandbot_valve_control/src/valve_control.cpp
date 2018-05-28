@@ -52,7 +52,7 @@
 #define CONTINUOUS_MODE                 0
 #define DISCRETE_MODE                   1
 
-#define VALVE_OPEN                      2480
+#define VALVE_OPEN                      2430
 int GOAL_POSITION = 2000;
 int MODE = 1;
 int SHUTDOWN = 0;

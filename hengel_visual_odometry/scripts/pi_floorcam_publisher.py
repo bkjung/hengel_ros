@@ -7,10 +7,10 @@ from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
 
 if __name__ == '__main__':
+    rospy.init_node('pi_floorcam_node', anonymous=True)
     cap = cv2.VideoCapture(0)
     pub = rospy.Publisher(
         '/pi_floorcam/image_raw/compressed', CompressedImage, queue_size=3)
-    rospy.init_node('pi_floorcam_node', anonymous=True)
     rate = rospy.Rate(10)
 
     bridge = CvBridge()
@@ -22,6 +22,7 @@ if __name__ == '__main__':
         #publish new image
         pub.publish(msg)
         #pub.publish(bridge.cv2_to_imgmsg(frame, "bgr8"))
-        cv2.waitKey(100)
+
+        cv2.waitKey(100)    #wait for input(ms)
 
     cap.release()
