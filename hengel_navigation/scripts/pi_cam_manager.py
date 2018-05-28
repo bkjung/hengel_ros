@@ -54,7 +54,7 @@ if __name__=="__main__":
             try:
                 app.save(str(cnt))
                 cnt = cnt+1
-                time.sleep(1)
+                time.sleep(0.02)
             except KeyboardInterrupt:
                 break
     except Exception as e:

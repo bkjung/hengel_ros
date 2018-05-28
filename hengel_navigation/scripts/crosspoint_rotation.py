@@ -20,7 +20,6 @@ class CrosspiontRotation():
         image_cv = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
 
 
-
 if __name__ == "__main__":
     try:
         rospy.init_node('hengel_crosspoint_rotation')
