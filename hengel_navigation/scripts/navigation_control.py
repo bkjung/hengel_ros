@@ -87,12 +87,15 @@ class NavigationControl():
         #self.waypoint_increment = 1
 
         self.letter_index = 0
-        self.waypoint_index_in_current_letter = 0
+        self.segment_index = 0
+        self.waypoint_index_in_current_segment = 0
         self.waypoints = []
         self.current_waypoint = []
         self.cnt_letter = 0
         self.cnt_total_waypoints = 0
-        self.cnt_waypoints_in_current_letter = 0
+        self.cnt_segments_in_current_letter = 0
+        self.cnt_waypoints_in_current_segment = 0
+        
 
         self.path_points = []
 
@@ -151,19 +154,20 @@ class NavigationControl():
         print("number of letters = " + str(len(self.arr_path)))
         rospy.loginfo("number of letters = " + str(len(self.arr_path)))
         for idx_letter in range(len(self.arr_path)):
-            print("number of waypoints in letter no." + str(idx_letter) +
+            print("number of letter segments in letter no." + str(idx_letter) +
                   " = " + str(len(self.arr_path[idx_letter])))
-            rospy.loginfo("number of waypoints in letter no." + str(idx_letter) +
+            rospy.loginfo("number of letter segments in letter no." + str(idx_letter) +
                   " = " + str(len(self.arr_path[idx_letter])))
-            waypoints_in_letter = []
-            for idx_waypoint in range(len(self.arr_path[idx_letter])):
-                # waypoints_in_letter.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
-                waypoints_in_letter.append([
-                    self.arr_path[idx_letter][idx_waypoint][0],
-                    self.arr_path[idx_letter][idx_waypoint][1]
-                ])
-                self.cnt_total_waypoints = self.cnt_total_waypoints + 1
-            self.waypoints.append(waypoints_in_letter)
+            for idx_segment in range(len(self.arr_path[idx_letter]))
+                waypoints_in_segment = []
+                for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
+                    # waypoints_in_letter.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
+                    waypoints_in_letter.append([
+                        self.arr_path[idx_letter][idx_segment]idx_waypoint][0],
+                        self.arr_path[idx_letter][idx_segment]idx_waypoint][1]
+                    ])
+                    self.cnt_total_waypoints = self.cnt_total_waypoints + 1
+                self.waypoints.append(waypoints_in_segment)
 
         self.cnt_letter = len(self.arr_path)
 
@@ -172,151 +176,161 @@ class NavigationControl():
         while self.letter_index < self.cnt_letter:
             if rospy.is_shutdown():
                 break
-            self.cnt_waypoints_in_current_letter = len(
+            self.cnt_segments_in_current_letter = len(
                 self.arr_path[self.letter_index])
-            while self.waypoint_index_in_current_letter < self.cnt_waypoints_in_current_letter:
+            while self.segment_index < self.cnt_segments_in_current_letter:
                 if rospy.is_shutdown():
                     break
-                print("\n\nwaypoint index : " +
-                      str(self.waypoint_index_in_current_letter) +
-                      " in letter no. " + str(self.letter_index))
-                rospy.loginfo("\n\nwaypoint index : " +
-                      str(self.waypoint_index_in_current_letter) +
-                      " in letter no. " + str(self.letter_index))
-                self.current_waypoint = [
-                    self.waypoints[self.letter_index][
-                        self.waypoint_index_in_current_letter][0],
-                    self.waypoints[self.letter_index][
-                        self.waypoint_index_in_current_letter][1]
-                ]
-
-                if self.waypoint_index_in_current_letter == 0:
-                    print("moving to FIRST waypoint")
-                    rospy.loginfo("moving to FIRST waypoint")
-                    self.is_moving_between_letters = True
-                elif self.waypoint_index_in_current_letter == self.cnt_waypoints_in_current_letter - 1:
-                    print("moving to GLOBAL VIEW POINT")
-                    rospy.loginfo("moving to GLOBAL VIEW POINT")
-                    self.is_moving_between_letters = True
-                else:
-                    self.is_moving_between_letters = False
-
-                distance = sqrt(
-                    pow(self.current_waypoint[0] - self.point.x, 2) +
-                    pow(self.current_waypoint[1] - self.point.y, 2))
-                while distance > 0.03 * 0.58:
+                self.cnt_waypoints_in_current_segment = len(
+                    self.arr_path[self.letter_index][self.segment_index])
+                while self.waypoint_index_in_current_segment < self.cnt_waypoints_in_current_segment:
                     if rospy.is_shutdown():
                         break
-                    try:
-                        distance = sqrt(
-                            pow(self.current_waypoint[0] - self.point.x, 2) +
-                            pow(self.current_waypoint[1] - self.point.y, 2))
-                        alpha = angle_difference(
-                            atan2(self.current_waypoint[1] - self.point.y,
-                                  self.current_waypoint[0] - self.point.x),
-                            self.heading.data)
+                    print("\n\nwaypoint index : " +
+                        str(self.waypoint_index_in_current_segment) +
+                        " in segment no. " + str(self.segment_index) +
+                        " in letter no. " + str(self.letter_index))
+                    rospy.loginfo("\n\nwaypoint index : " +
+                        str(self.waypoint_index_in_current_segment) +
+                        " in segment no. " + str(self.segment_index) +
+                        " in letter no. " + str(self.letter_index))
+                    self.current_waypoint = [
+                        self.waypoints[self.letter_index][self.segment_index][
+                            self.waypoint_index_in_current_segment][0],
+                        self.waypoints[self.letter_index][self.segment_index][
+                            self.waypoint_index_in_current_segment][1]
+                    ]
 
-                        #print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
-                        #print("heading error: %0.3f" % np.rad2deg(alpha))
+                    if self.waypoint_index_in_current_segment == 0 and self.segment_index == 0:
+                        print("moving to FIRST waypoint")
+                        rospy.loginfo("moving to FIRST waypoint")
+                        self.is_moving_between_letters = True
+                    elif self.segment_index == self.cnt_segments_in_current_letter - 1:
+                        print("moving to GLOBAL VIEW POINT")
+                        rospy.loginfo("moving to GLOBAL VIEW POINT")
+                        self.is_moving_between_letters = True
+                    else:
+                        self.is_moving_between_letters = False
 
-                        if abs(alpha) <= self.thres3:
-                            self.valve_status = MARKER_DOWN
-                            x = distance * sin(alpha)
-                            curv = 2 * x / pow(distance, 2)
+                    distance = sqrt(
+                        pow(self.current_waypoint[0] - self.point.x, 2) +
+                        pow(self.current_waypoint[1] - self.point.y, 2))
+                    while distance > 0.03 * 0.58:
+                        if rospy.is_shutdown():
+                            break
+                        try:
+                            distance = sqrt(
+                                pow(self.current_waypoint[0] - self.point.x, 2) +
+                                pow(self.current_waypoint[1] - self.point.y, 2))
+                            alpha = angle_difference(
+                                atan2(self.current_waypoint[1] - self.point.y,
+                                    self.current_waypoint[0] - self.point.x),
+                                self.heading.data)
 
-                            if distance < 0.02:
-                                lin_vel_scaled = self.lin_vel / 5.0
-                            elif distance < 0.04:
-                                lin_vel_scaled = self.lin_vel / 4.0
-                            elif distance < 0.06:
-                                lin_vel_scaled = self.lin_vel / 3.0
-                            elif distance < 0.08:
-                                lin_vel_scaled = self.lin_vel / 2.0
+                            #print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
+                            #print("heading error: %0.3f" % np.rad2deg(alpha))
+
+                            if abs(alpha) <= self.thres3:
+                                self.valve_status = MARKER_DOWN
+                                x = distance * sin(alpha)
+                                curv = 2 * x / pow(distance, 2)
+
+                                if distance < 0.02:
+                                    lin_vel_scaled = self.lin_vel / 5.0
+                                elif distance < 0.04:
+                                    lin_vel_scaled = self.lin_vel / 4.0
+                                elif distance < 0.06:
+                                    lin_vel_scaled = self.lin_vel / 3.0
+                                elif distance < 0.08:
+                                    lin_vel_scaled = self.lin_vel / 2.0
+                                else:
+                                    lin_vel_scaled = self.lin_vel
+
+                                self.move_cmd.linear.x = lin_vel_scaled
+                                self.move_cmd.angular.z = curv * lin_vel_scaled
+
                             else:
-                                lin_vel_scaled = self.lin_vel
+                                #rotate to align in threshold
+                                #self.valve_status = MARKER_UP
 
-                            self.move_cmd.linear.x = lin_vel_scaled
-                            self.move_cmd.angular.z = curv * lin_vel_scaled
+                                if abs(alpha) > self.thres1:  #abs?
+                                    # if alpha>0 or alpha<-pi:
+                                    if alpha > 0:
+                                        self.move_cmd.linear.x = 0
+                                        self.move_cmd.angular.z = self.ang_vel_1
+                                    else:
+                                        self.move_cmd.linear.x = 0
+                                        self.move_cmd.angular.z = -self.ang_vel_1
 
-                        else:
-                            #rotate to align in threshold
-                            #self.valve_status = MARKER_UP
+                                elif abs(alpha) > self.thres2:
+                                    # if alpha>0 or alpha<-pi:
+                                    if alpha > 0:
+                                        self.move_cmd.linear.x = 0
+                                        self.move_cmd.angular.z = self.ang_vel_2
+                                    else:
+                                        self.move_cmd.linear.x = 0
+                                        self.move_cmd.angular.z = -self.ang_vel_2
 
-                            if abs(alpha) > self.thres1:  #abs?
-                                # if alpha>0 or alpha<-pi:
-                                if alpha > 0:
-                                    self.move_cmd.linear.x = 0
-                                    self.move_cmd.angular.z = self.ang_vel_1
-                                else:
-                                    self.move_cmd.linear.x = 0
-                                    self.move_cmd.angular.z = -self.ang_vel_1
+                                elif abs(alpha) > self.thres3:
+                                    # if alpha>0 or alpha<-pi:
+                                    if alpha > 0:
+                                        self.move_cmd.linear.x = 0
+                                        self.move_cmd.angular.z = self.ang_vel_3
+                                    else:
+                                        self.move_cmd.linear.x = 0
+                                        self.move_cmd.angular.z = -self.ang_vel_3
 
-                            elif abs(alpha) > self.thres2:
-                                # if alpha>0 or alpha<-pi:
-                                if alpha > 0:
-                                    self.move_cmd.linear.x = 0
-                                    self.move_cmd.angular.z = self.ang_vel_2
-                                else:
-                                    self.move_cmd.linear.x = 0
-                                    self.move_cmd.angular.z = -self.ang_vel_2
+                            if self.is_moving_between_letters:
+                                self.valve_status = MARKER_UP
+                            else:
+                                pass
+                            self.valve_angle_input.goal_position = self.valve_status
+                            self.valve_angle_publisher.publish(
+                                self.valve_angle_input)
 
-                            elif abs(alpha) > self.thres3:
-                                # if alpha>0 or alpha<-pi:
-                                if alpha > 0:
-                                    self.move_cmd.linear.x = 0
-                                    self.move_cmd.angular.z = self.ang_vel_3
-                                else:
-                                    self.move_cmd.linear.x = 0
-                                    self.move_cmd.angular.z = -self.ang_vel_3
+                            self.cmd_vel.publish(self.move_cmd)
 
-                        if self.is_moving_between_letters:
-                            self.valve_status = MARKER_UP
-                        else:
-                            pass
-                        self.valve_angle_input.goal_position = self.valve_status
-                        self.valve_angle_publisher.publish(
-                            self.valve_angle_input)
+                            #                        self.loop_cnt_pathmap = self.loop_cnt_pathmap + 1
+                            #                            if self.loop_cnt_pathmap==25:
+                            #                                self.loop_cnt_pathmap = 0
+                            #                                self.path_points.append([self.point.x, self.point.y])
+                            #                                self.generate_pathmap()
+                            #
+                            self.r.sleep()
 
-                        self.cmd_vel.publish(self.move_cmd)
+                        except KeyboardInterrupt:
+                            print("Got KeyboardInterrupt")
+                            rospy.signal_shutdown("KeyboardInterrupt")
+                            break
 
-                        #                        self.loop_cnt_pathmap = self.loop_cnt_pathmap + 1
-                        #                            if self.loop_cnt_pathmap==25:
-                        #                                self.loop_cnt_pathmap = 0
-                        #                                self.path_points.append([self.point.x, self.point.y])
-                        #                                self.generate_pathmap()
-                        #
-                        self.r.sleep()
+                    #Arrived at the waypoint
+                    print("CURRENT: " + str(self.point.x) + ", " +
+                        str(self.point.y) + " \t\t WAYPOINT: " +
+                        str(self.current_waypoint[0]) + ", " +
+                        str(self.current_waypoint[1]))
+                    rospy.loginfo("CURRENT: " + str(self.point.x) + ", " +
+                        str(self.point.y) + " \t\t WAYPOINT: " +
+                        str(self.current_waypoint[0]) + ", " +
+                        str(self.current_waypoint[1]))
 
-                    except KeyboardInterrupt:
-                        print("Got KeyboardInterrupt")
-                        rospy.signal_shutdown("KeyboardInterrupt")
-                        break
+                    #stop the robot
+                    self.cmd_vel.publish(Twist())
 
-                #Arrived at the waypoint
-                print("CURRENT: " + str(self.point.x) + ", " +
-                      str(self.point.y) + " \t\t WAYPOINT: " +
-                      str(self.current_waypoint[0]) + ", " +
-                      str(self.current_waypoint[1]))
-                rospy.loginfo("CURRENT: " + str(self.point.x) + ", " +
-                      str(self.point.y) + " \t\t WAYPOINT: " +
-                      str(self.current_waypoint[0]) + ", " +
-                      str(self.current_waypoint[1]))
+                    if self.pi_cam_save_option==1:
+                        #take picam floor photo
+                        self.wait_for_seconds(0.5)
+                        self.pi_cam_manager.save("picam_letter-" +
+                            str(self.letter_index) + "_segment-" +
+                            str(self.segment_index) + "_waypoint-" +
+                            str(self.waypoint_index_in_current_letter))
+                        print("Pi Cam Saved")
+                        rospy.loginfo("Pi Cam Saved")
+                    else:
+                        pass
 
-                #stop the robot
-                self.cmd_vel.publish(Twist())
-
-                if self.pi_cam_save_option==1:
-                    #take picam floor photo
-                    self.wait_for_seconds(0.5)
-                    self.pi_cam_manager.save("picam_letter-" +
-                        str(self.letter_index) + "_wayopint-" +
-                        str(self.waypoint_index_in_current_letter))
-                    print("Pi Cam Saved")
-                    rospy.loginfo("Pi Cam Saved")
-                else:
-                    pass
-
-                self.waypoint_index_in_current_letter = self.waypoint_index_in_current_letter + 1
+                    self.waypoint_index_in_current_letter = self.waypoint_index_in_current_letter + 1
+                self.segment_index = self.segment_index + 1
+                self.waypoint_index_in_current_letter
 
             #End of current letter.
             #This is global map view point
@@ -335,6 +349,7 @@ class NavigationControl():
 
             #it's time for next letter
             self.letter_index = self.letter_index + 1
+            self.segment_index = 0
             self.waypoint_index_in_current_letter = 0
 
         rospy.loginfo("Stopping the robot at the final destination")
