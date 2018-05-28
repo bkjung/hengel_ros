@@ -117,19 +117,10 @@ class RealGlobalMap():
         x_padding = 10
         y_padding = 10
         ###################
-        last_letter_x = [i[0] for i in self.arr_path[letter_number - ind]]
-        last_letter_y = [i[1] for i in self.arr_path[letter_number - ind]]
-
-        x_min = min(last_letter_x)
-        x_max = max(last_letter_x)
-        y_min = min(last_letter_y)
-        y_max = max(last_letter_y)
-
-        crop_img = self.photo[int(max(y_min - y_padding, 0)):int((
-            y_max + y_padding)),
-                              int(max(x_min - x_padding, 0)):int((
-                                  x_max + x_padding))]
-
+	if ind==1:
+		crop_img = self.photo[363:518,125:365]
+	else:
+		crop_img = self.photo[160:315,125:365]
         ################ FOR DEBUGGING #####################
         # threshold_img1 = cv2.threshold(crop_img, 50, 255, cv2.THRESH_BINARY)
         # threshold_img2 = cv2.threshold(crop_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
