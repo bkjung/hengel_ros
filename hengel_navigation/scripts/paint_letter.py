@@ -40,37 +40,40 @@ class PaintLetter():
         self.run()
 
     def get_path(self):
-        dir_1 = package_base_path + "/hengel_path_manager/alphabet_path/path_"
-        dir_2 = ".txt"
+        dir_str = package_base_path + "/hengel_path_manager/alphabet_path/path_"
         letter_index = 0
         for letter in self.word:
             letter_path = []
             if letter == ' ':
                 pass
-                #if spacing is included
+
             else:
-                with open(dir_1 + letter.capitalize() + dir_2,
-                          "r") as file_path:
-                    for idx, line in enumerate(file_path):
-                        _str = line.split()
-                        if not len(_str) == 0:
-                            #letter_path.append([(float)(_str[0])+(float)(letter_index)-(2*(float)(letter_index)-1)*250/1632, 1.0-(float)(_str[1])])
-                            letter_path.append([
-                                (float)(_str[0]) * CANVAS_SIDE_LENGTH +
-                                (float)(letter_index) *
-                                (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
-                                (1.0 - (float)(_str[1])) * CANVAS_SIDE_LENGTH
-                            ])
-                        else:
-                            pass
-            #count the number of letters including spacing
+                for i in range(1, 5):
+                    subletter_path = []
+                    path_str = dir_str + letter.capitalize() + "_" + str(i) + ".txt"
+                    if os.path.isfile(path_str):
+                        with open(path_str, "r") as file_path:
+                            for idx, line in enumerate(file_path):
+                                _str = line.split()
+                                if not len(_str) == 0:
+                                    #letter_path.append([(float)(_str[0])+(float)(letter_index)-(2*(float)(letter_index)-1)*250/1632, 1.0-(float)(_str[1])])
+                                    subletter_path.append([
+                                        (float)(_str[0]) * CANVAS_SIDE_LENGTH +
+                                        (float)(letter_index) *
+                                        (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
+                                        (1.0 - (float)(_str[1])) * CANVAS_SIDE_LENGTH
+                                    ])
+                                else:
+                                    pass
+                        letter_path.append(subletter_path)
 
             #Stop point for global view photo
-            letter_path.append([
+            subletter_path = [
                 CANVAS_SIDE_LENGTH + VIEWPOINT_DISTANCE +
                 (float)(letter_index) * (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
                 (0.5) * CANVAS_SIDE_LENGTH
-            ])
+            ]
+            letter_path.append(subletter_path)
             self.arr_path.append(letter_path)
 
             #Keypoint Calculation
