@@ -42,8 +42,8 @@ imgPts[2] = [[228,402],[390,402],[363,333],[255,333]] #top
 
 for i in range(3):
     for j in range(4):
-        objPts[i][j][0] += 0
-        objPts[i][j][1] -= 500
+        objPts[i][j][0] += 200
+        objPts[i][j][1] += 300
     objPts[i] = np.array(objPts[i], np.float32)
     imgPts[i] = np.array(imgPts[i], np.float32)
 
@@ -60,7 +60,7 @@ homography_top = cv2.getPerspectiveTransform(imgPts[2], objPts[2])
 
 
 def warp_image(image, homography):
-    im_out = cv2.warpPerspective(image, homography, (1000,1400))
+    im_out = cv2.warpPerspective(image, homography, (1400,2200))
     return im_out
 
 
@@ -93,9 +93,9 @@ def imagePublisher():
                 _, middle_img = cam_middle.read()
                 _, top_img = cam_top.read()
 
-                cv2.imshow("bottom", bottom_img)
-                cv2.imshow("middle", middle_img)
-                cv2.imshow("top", top_img)
+                cv2.imshow("0", bottom_img)
+                cv2.imshow("2", middle_img)
+                cv2.imshow("1", top_img)
 
                 h, w = bottom_img.shape[:2]
                 # optimalMat, roi = cv2.getOptimalNewCameraMatrix(intrin, dist, (w,h), 1, (w,h))
@@ -109,14 +109,23 @@ def imagePublisher():
                 im_top = warp_image(top_img,
                                       homography_top).astype('uint8')
                 # MULTIPLY WARPED IMAGE, THEN ADD TO BLANK IMAGE
-                im_mask_inv, im_mask = find_mask(im_middle)
-                bottom_masked = np.multiply(im_bottom,       im_mask).astype('uint8')
-                middle_masked = np.multiply(im_middle, im_mask_inv).astype('uint8')
-                top_masked = np.multiply(im_top, im_mask).astype('uint8')
-                summed_image = bottom_masked + middle_masked + top_masked
-                #summed_image = im_bottom+im_middle+im_top
+                #im_mask_inv, im_mask = find_mask(im_middle)
+                #bottom_masked = np.multiply(im_bottom,       im_mask).astype('uint8')
+                #middle_masked = np.multiply(im_middle, im_mask_inv).astype('uint8')
+                #top_masked = np.multiply(im_top, im_mask).astype('uint8')
+                #summed_image = bottom_masked + middle_masked + top_masked
+                ##summed_image = im_bottom+im_middle+im_top
+                im_mask_inv, im_mask = find_mask(im_top)
+                middle_masked=np.multiply(im_middle, im_mask).astype('uint8')
+                top_masked=np.multiply(im_top, im_mask_inv).astype('uint8')
+                tmp_img= middle_masked+top_masked
+                im_mask_inv, im_mask = find_mask(tmp_img)
+                bottom_masked=np.multiply(im_bottom, im_mask).astype('uint8')
+                midtop_masked=np.multiply(tmp_img, im_mask_inv).astype('uint8')
+                summed_image= bottom_masked+midtop_masked
+
                 summed_image = cv2.resize(
-                    summed_image, (500,700), interpolation=cv2.INTER_AREA)
+                    summed_image, (700,1100), interpolation=cv2.INTER_AREA)
 
                 cv2.imshow('warped', summed_image)
 
