@@ -18,6 +18,8 @@ from cv_bridge import CvBridge
 from matplotlib import pyplot as plt
 from around_view import AroundImage
 
+package_base_path = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../.."))
 
 class RealGlobalMap():
     def __init__(self, _arr_path):
@@ -59,16 +61,13 @@ class RealGlobalMap():
         self.aroundImage = AroundImage()
 
     def run(self, letter_number, _position):
-        print("run start")
         self.photo = self.aroundImage.takeAroundImage()
-        print("photo saved")
         self.x = _position[0]
         self.y = _position[1]
         self.th = _position[2]
 
         data = [0, 0, 0]
         if letter_number > 1:
-            print("in if-loop")
             # 1. Crop second last letter
             self.last2_letter_img = self.crop_letter(letter_number, 2)
 
@@ -77,7 +76,7 @@ class RealGlobalMap():
             warp_matrix = np.eye(3, 3, dtype=np.float32)
             #########################
             number_of_iterations = 5000
-            termination_eps = 1e-6 
+            termination_eps = 1e-6
             #########################
             criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                         number_of_iterations, termination_eps)
@@ -117,19 +116,10 @@ class RealGlobalMap():
         x_padding = 10
         y_padding = 10
         ###################
-        last_letter_x = [i[0] for i in self.arr_path[letter_number - ind]]
-        last_letter_y = [i[1] for i in self.arr_path[letter_number - ind]]
-
-        x_min = min(last_letter_x)
-        x_max = max(last_letter_x)
-        y_min = min(last_letter_y)
-        y_max = max(last_letter_y)
-
-        crop_img = self.photo[int(max(y_min - y_padding, 0)):int((
-            y_max + y_padding)),
-                              int(max(x_min - x_padding, 0)):int((
-                                  x_max + x_padding))]
-
+	if ind==1:
+		crop_img = self.photo[363:528,125:365]
+	else:
+		crop_img = self.photo[160:325,125:365]
         ################ FOR DEBUGGING #####################
         # threshold_img1 = cv2.threshold(crop_img, 50, 255, cv2.THRESH_BINARY)
         # threshold_img2 = cv2.threshold(crop_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
@@ -144,6 +134,8 @@ class RealGlobalMap():
         #     plt.xticks([]), plt.yticks([])
         # plt.show()
         #####################################################
+        cv2.imwrite(package_base_path +
+                "/hengel_navigation/viewpoint_img/cropped_" +str(ind)+time.strftime("%y%m%d_%H%M%S") + '.jpg',crop_img)
 
         return cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
 
