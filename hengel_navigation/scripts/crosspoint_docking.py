@@ -8,13 +8,13 @@ import sys
 import time
 
 
-class CrosspiontDocking():
+class CrosspointDocking():
     def __init__(self, _starttime):
         self.floorcam_subscriber = rospy.Subscriber('/pi_floorcam/image_raw/compressed',
                                                     CompressedImage, self.callback_floorcam)
         self.pub_box = rospy.Publisher(
-        '/pi_floorcam_box/image_raw/compressed', CompressedImage, queue_size=3)                                                    
-        
+        '/pi_floorcam_box/image_raw/compressed', CompressedImage, queue_size=3)
+
         #initialize
         self.np_arr = np.empty(0)
         self.image_cv = np.zeros((0,0,3), np.uint8)
@@ -35,7 +35,7 @@ class CrosspiontDocking():
             self.image_cv = cv2.imdecode(self.np_arr, cv2.IMREAD_COLOR)
             self.image_cv_box = self.image_cv
             self.image_cv_gray = cv2.cvtColor(self.image_cv, cv2.COLOR_BGR2GRAY)
-            
+
             # if self.save_mode:
             #     cv2.imwrite(
             #         "~/Dropbox/intern_share/experiment_data/rosbag_analysis/" + self.filename
@@ -58,7 +58,7 @@ class CrosspiontDocking():
             for j in range(199, 300):
                 self.image_cv_box[169][j] = [255, 0, 0]
                 self.image_cv_box[330][j] = [255, 0, 0]
-            
+
             self.msg_box.data = np.array(cv2.imencode('.jpg', self.image_cv_box)[1]).tostring()
             self.pub_box.publish(self.msg_box)
 
@@ -85,7 +85,7 @@ class CrosspiontDocking():
 if __name__ == "__main__":
     try:
         rospy.init_node('hengel_crosspoint_docking')
-        app = CrosspiontDocking("")
+        app = CrosspointDocking("")
         app.start()
         app.run()
 
