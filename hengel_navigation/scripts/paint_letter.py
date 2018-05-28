@@ -68,11 +68,12 @@ class PaintLetter():
                         letter_path.append(subletter_path)
 
             #Stop point for global view photo
-            subletter_path = [
+            subletter_path = []
+            subletter_path.append([
                 CANVAS_SIDE_LENGTH + VIEWPOINT_DISTANCE +
                 (float)(letter_index) * (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
                 (0.5) * CANVAS_SIDE_LENGTH
-            ]
+            ])
             letter_path.append(subletter_path)
             self.arr_path.append(letter_path)
 
