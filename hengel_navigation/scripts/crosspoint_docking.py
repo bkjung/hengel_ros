@@ -67,7 +67,7 @@ class CrosspiontDocking():
                 break
 
             if self.imageReceived:
-                self.save(str(cnt))
+                # self.save(str(cnt))
                 cnt=cnt+1
                 print(self.analysis())
             self.r.sleep()
