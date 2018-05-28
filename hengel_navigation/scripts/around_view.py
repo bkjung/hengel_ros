@@ -145,21 +145,21 @@ class AroundImage:
                 im_top = self.warp_image(top_img, self.homography[i][2]).astype('uint8')
                 print("image warped")
 
-                # MULTIPLY WARPED IMAGE, THEN ADD TO BLANK IMAGE
-                #im_mask_inv, im_mask = self.find_mask(im_middle)
-                #bottom_masked = np.multiply(im_bottom, im_mask).astype('uint8')
-                #middle_masked = np.multiply(im_middle, im_mask_inv).astype('uint8')
-                #top_masked = np.multiply(im_top, im_mask).astype('uint8')
-                #summed_image = bottom_masked + middle_masked + top_masked
+                #MULTIPLY WARPED IMAGE, THEN ADD TO BLANK IMAGE
+                im_mask_inv, im_mask = self.find_mask(im_middle)
+                bottom_masked = np.multiply(im_bottom, im_mask).astype('uint8')
+                middle_masked = np.multiply(im_middle, im_mask_inv).astype('uint8')
+                top_masked = np.multiply(im_top, im_mask).astype('uint8')
+                summed_image = bottom_masked + middle_masked + top_masked
 
-                im_mask_inv, im_mask = self.find_mask(im_top)
-                middle_masked=np.multiply(im_middle, im_mask).astype('uint8')
-                top_masked=np.multiply(im_top, im_mask_inv).astype('uint8')
-                tmp_img= middle_masked+top_masked
-                im_mask_inv, im_mask = self.find_mask(tmp_img)
-                bottom_masked=np.multiply(im_bottom, im_mask).astype('uint8')
-                midtop_masked=np.multiply(tmp_img, im_mask_inv).astype('uint8')
-                summed_image= bottom_masked+midtop_masked
+                #im_mask_inv, im_mask = self.find_mask(im_top)
+                #middle_masked=np.multiply(im_middle, im_mask).astype('uint8')
+                #top_masked=np.multiply(im_top, im_mask_inv).astype('uint8')
+                #tmp_img= middle_masked+top_masked
+                #im_mask_inv, im_mask = self.find_mask(tmp_img)
+                #bottom_masked=np.multiply(im_bottom, im_mask).astype('uint8')
+                #midtop_masked=np.multiply(tmp_img, im_mask_inv).astype('uint8')
+                #summed_image= bottom_masked+midtop_masked
 
                 summed_image = cv2.resize(
                     summed_image, (700,1100), interpolation=cv2.INTER_AREA)
