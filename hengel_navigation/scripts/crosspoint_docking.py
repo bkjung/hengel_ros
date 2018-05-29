@@ -7,6 +7,13 @@ from sensor_msgs.msg import CompressedImage
 import sys
 import time
 
+# X_MIN = 199
+# X_MAX = 299
+
+X_MIN = 100
+X_MAX = 200
+Y_MIN = 169
+Y_MAX = 329
 
 class CrosspointDocking():
     def __init__(self, _starttime):
@@ -52,17 +59,17 @@ class CrosspointDocking():
 
     def analysis(self):
         if self.imageReceived and self.isStarted:
-            for i in range(169, 330):
-                self.image_cv_box[i][199] = [255, 0, 0]
-                self.image_cv_box[i][300] = [255, 0, 0]
-            for j in range(199, 300):
-                self.image_cv_box[169][j] = [255, 0, 0]
-                self.image_cv_box[330][j] = [255, 0, 0]
+            for i in range(Y_MIN, Y_MAX+1):
+                self.image_cv_box[i][X_MIN] = [255, 0, 0]
+                self.image_cv_box[i][X_MAX] = [255, 0, 0]
+            for j in range(X_MIN, X_MAX+1):
+                self.image_cv_box[Y_MIN][j] = [255, 0, 0]
+                self.image_cv_box[Y_MAX][j] = [255, 0, 0]
 
             self.msg_box.data = np.array(cv2.imencode('.jpg', self.image_cv_box)[1]).tostring()
             self.pub_box.publish(self.msg_box)
 
-            return self.image_cv[169:330, 199:300].mean()
+            return self.image_cv[Y_MIN:Y_MAX+1, X_MIN:X_MAX+1].mean()
 
     def save(self, _filename):
         # self.save_mode = True
