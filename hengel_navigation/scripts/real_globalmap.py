@@ -135,7 +135,7 @@ class RealGlobalMap():
         # plt.show()
         #####################################################
         cv2.imwrite(package_base_path +
-                "/hengel_navigation/viewpoint_img/cropped_" +str(ind)+time.strftime("%y%m%d_%H%M%S") + '.jpg',crop_img)
+                "/hengel_navigation/viewpoint_img/cropped_" +str(ind)+"_"+time.strftime("%y%m%d_%H%M%S") + '.jpg',crop_img)
 
         return cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
 

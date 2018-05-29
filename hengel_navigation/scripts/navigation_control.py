@@ -95,7 +95,7 @@ class NavigationControl():
         self.cnt_total_waypoints = 0
         self.cnt_segments_in_current_letter = 0
         self.cnt_waypoints_in_current_segment = 0
-        
+
 
         self.path_points = []
 
@@ -158,13 +158,13 @@ class NavigationControl():
                   " = " + str(len(self.arr_path[idx_letter])))
             rospy.loginfo("number of letter segments in letter no." + str(idx_letter) +
                   " = " + str(len(self.arr_path[idx_letter])))
-            for idx_segment in range(len(self.arr_path[idx_letter]))
+            for idx_segment in range(len(self.arr_path[idx_letter])):
                 waypoints_in_segment = []
                 for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
-                    # waypoints_in_letter.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
-                    waypoints_in_letter.append([
-                        self.arr_path[idx_letter][idx_segment]idx_waypoint][0],
-                        self.arr_path[idx_letter][idx_segment]idx_waypoint][1]
+                    # waypoints_in_segment.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
+                    waypoints_in_segment.append([
+                        self.arr_path[idx_letter][idx_segment][idx_waypoint][0],
+                        self.arr_path[idx_letter][idx_segment][idx_waypoint][1]
                     ])
                     self.cnt_total_waypoints = self.cnt_total_waypoints + 1
                 self.waypoints.append(waypoints_in_segment)
@@ -195,15 +195,15 @@ class NavigationControl():
                         " in segment no. " + str(self.segment_index) +
                         " in letter no. " + str(self.letter_index))
                     self.current_waypoint = [
-                        self.waypoints[self.letter_index][self.segment_index][
+                        self.arr_path[self.letter_index][self.segment_index][
                             self.waypoint_index_in_current_segment][0],
-                        self.waypoints[self.letter_index][self.segment_index][
+                        self.arr_path[self.letter_index][self.segment_index][
                             self.waypoint_index_in_current_segment][1]
                     ]
 
-                    if self.waypoint_index_in_current_segment == 0 and self.segment_index == 0:
+                    if self.waypoint_index_in_current_segment == 0:
                         print("moving to FIRST waypoint")
-                        rospy.loginfo("moving to FIRST waypoint")
+                        rospy.loginfo("moving to FIRST waypoint in segment")
                         self.is_moving_between_letters = True
                     elif self.segment_index == self.cnt_segments_in_current_letter - 1:
                         print("moving to GLOBAL VIEW POINT")
@@ -322,15 +322,15 @@ class NavigationControl():
                         self.pi_cam_manager.save("picam_letter-" +
                             str(self.letter_index) + "_segment-" +
                             str(self.segment_index) + "_waypoint-" +
-                            str(self.waypoint_index_in_current_letter))
+                            str(self.waypoint_index_in_current_segment))
                         print("Pi Cam Saved")
                         rospy.loginfo("Pi Cam Saved")
                     else:
                         pass
 
-                    self.waypoint_index_in_current_letter = self.waypoint_index_in_current_letter + 1
+                    self.waypoint_index_in_current_segment = self.waypoint_index_in_current_segment + 1
                 self.segment_index = self.segment_index + 1
-                self.waypoint_index_in_current_letter
+                self.waypoint_index_in_current_segment = 0
 
             #End of current letter.
             #This is global map view point
@@ -350,7 +350,7 @@ class NavigationControl():
             #it's time for next letter
             self.letter_index = self.letter_index + 1
             self.segment_index = 0
-            self.waypoint_index_in_current_letter = 0
+            self.waypoint_index_in_current_segment = 0
 
         rospy.loginfo("Stopping the robot at the final destination")
         #Wait for 1 second to close valve

@@ -17,7 +17,7 @@ import cv2
 CANVAS_SIDE_LENGTH = 1.5 * 0.58
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #PADDING_LENGTH = 0.0
-PADDING_LENGTH = -0.4 * 0.58
+PADDING_LENGTH = -0.65 * 0.58
 VIEWPOINT_DISTANCE = 0.3 * 0.58
 
 package_base_path = os.path.abspath(
@@ -68,11 +68,12 @@ class PaintLetter():
                         letter_path.append(subletter_path)
 
             #Stop point for global view photo
-            subletter_path = [
+            subletter_path = []
+            subletter_path.append([
                 CANVAS_SIDE_LENGTH + VIEWPOINT_DISTANCE +
                 (float)(letter_index) * (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
                 (0.5) * CANVAS_SIDE_LENGTH
-            ]
+            ])
             letter_path.append(subletter_path)
             self.arr_path.append(letter_path)
 
