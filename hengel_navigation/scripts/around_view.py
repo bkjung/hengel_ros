@@ -6,6 +6,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import time
 import os
+import subprocess
 '''
 CAMERA NODE RUNNING AT FULL SPEED
 NO IMAGE RECORDING
@@ -21,10 +22,33 @@ class AroundImage:
         self.Initialize()
 
     def Initialize(self):
-        self.save_index =2
-        self.cam_bottom = cv2.VideoCapture(0)
-        self.cam_middle = cv2.VideoCapture(2)
-        self.cam_top = cv2.VideoCapture(1)
+        self.save_index =1
+        #self.cam_bottom = cv2.VideoCapture(10)
+        #self.cam_middle = cv2.VideoCapture(11)
+        #self.cam_top = cv2.VideoCapture(12)
+
+        cmd_bottom = "readlink -f /dev/video12"
+        cmd_middle = "readlink -f /dev/video10"
+        cmd_top = "readlink -f /dev/video11"
+        process_bottom = subprocess.Popen(cmd_bottom.split(), stdout=subprocess.PIPE)
+        process_middle = subprocess.Popen(cmd_middle.split(), stdout=subprocess.PIPE)
+        process_top = subprocess.Popen(cmd_top.split(), stdout=subprocess.PIPE)
+
+        # output of form /dev/videoX
+        out_bottom = process_bottom.communicate()[0]
+        out_middle = process_middle.communicate()[0]
+        out_top = process_top.communicate()[0]
+
+        # parse for ints
+        nums_bottom = [int(x) for x in out_bottom if x.isdigit()]
+        nums_middle = [int(x) for x in out_middle if x.isdigit()]
+        nums_top = [int(x) for x in out_top if x.isdigit()]
+
+        self.cam_bottom = cv2.VideoCapture(nums_bottom[0])
+        self.cam_middle = cv2.VideoCapture(nums_middle[0])
+        self.cam_top = cv2.VideoCapture(nums_top[0])
+
+
         # self.cam_bottom.set(cv2.CV_CAP_PROP_BUFFERSIZE, 1)
         self.cam_bottom.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
         self.cam_bottom.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)

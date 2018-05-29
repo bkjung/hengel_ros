@@ -43,8 +43,8 @@ class CrosspointDocking():
             #     self.save_mode = False
             #     self.filename = ""
 
-            print("Box Average: " + str(self.analysis()))
-            rospy.loginfo("Box Average: " + str(self.analysis()))
+            #print("Box Average: " + str(self.analysis()))
+            #rospy.loginfo("Box Average: " + str(self.analysis()))
 
         except Exception as e:
             print(e)
