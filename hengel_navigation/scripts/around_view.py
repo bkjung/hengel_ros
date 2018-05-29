@@ -169,7 +169,7 @@ class AroundImage:
                 cv2.imwrite(
                         package_base_path +
                         "/hengel_navigation/viewpoint_img/warped_" +str(i)+
-                        time.strftime("%m%d_%H%M%S") + '.jpg', summed_image)
+                        "_"+time.strftime("%m%d_%H%M%S") + '.jpg', summed_image)
 
                 if i== self.save_index:
                     return_image=summed_image
