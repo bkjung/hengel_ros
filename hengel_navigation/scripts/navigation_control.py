@@ -24,7 +24,11 @@ from crosspoint_docking import CrosspointDocking
 #2480 is too large, so that it hits the ground and the valve_control while loop does not end.
 #MARKER_DOWN = 2480
 #MARKER_DOWN = 2460
-MARKER_DOWN = 2430
+#MARKER_DOWN = 2430
+
+#Due to wheel height change
+MARKER_DOWN = 2450
+
 MARKER_UP = 2000
 
 scale_factor = 3  #[pixel/cm]

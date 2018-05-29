@@ -6,6 +6,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import time
 import os
+import subprocess
 '''
 CAMERA NODE RUNNING AT FULL SPEED
 NO IMAGE RECORDING
@@ -13,10 +14,32 @@ NO IMAGE RECORDING
 
 # Node to obtain call camera data. Separate I/O pipeline
 rospy.loginfo('Init Cameras...')
+#####################################
+cmd_bottom = "readlink -f /dev/video12"
+cmd_middle = "readlink -f /dev/video10"
+cmd_top = "readlink -f /dev/video11"
+process_bottom = subprocess.Popen(cmd_bottom.split(), stdout=subprocess.PIPE)
+process_middle = subprocess.Popen(cmd_middle.split(), stdout=subprocess.PIPE)
+process_top = subprocess.Popen(cmd_top.split(), stdout=subprocess.PIPE)
 
-cam_bottom = cv2.VideoCapture(0)
-cam_middle = cv2.VideoCapture(2)
-cam_top = cv2.VideoCapture(1)
+# output of form /dev/videoX
+out_bottom = process_bottom.communicate()[0]
+out_middle = process_middle.communicate()[0]
+out_top = process_top.communicate()[0]
+
+# parse for ints
+nums_bottom = [int(x) for x in out_bottom if x.isdigit()]
+nums_middle = [int(x) for x in out_middle if x.isdigit()]
+nums_top = [int(x) for x in out_top if x.isdigit()]
+
+cam_bottom = cv2.VideoCapture(nums_bottom[0])
+cam_middle = cv2.VideoCapture(nums_middle[0])
+cam_top = cv2.VideoCapture(nums_top[0])
+
+#####################################
+#cam_bottom = cv2.VideoCapture(10)
+#cam_middle = cv2.VideoCapture(11)
+#cam_top = cv2.VideoCapture(12)
 cam_bottom.set(cv2.CAP_PROP_FRAME_WIDTH, 864)
 cam_bottom.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 cam_bottom.set(cv2.CAP_PROP_FOURCC, int(
@@ -93,9 +116,9 @@ def imagePublisher():
                 _, middle_img = cam_middle.read()
                 _, top_img = cam_top.read()
 
-                cv2.imshow("0", bottom_img)
-                cv2.imshow("2", middle_img)
-                cv2.imshow("1", top_img)
+                cv2.imshow("12", bottom_img)
+                cv2.imshow("11", middle_img)
+                cv2.imshow("10", top_img)
 
                 h, w = bottom_img.shape[:2]
                 # optimalMat, roi = cv2.getOptimalNewCameraMatrix(intrin, dist, (w,h), 1, (w,h))
