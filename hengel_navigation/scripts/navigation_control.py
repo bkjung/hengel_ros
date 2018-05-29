@@ -27,9 +27,9 @@ from crosspoint_docking import CrosspointDocking
 #MARKER_DOWN = 2430
 
 #Due to wheel height change
-MARKER_DOWN = 2450
-
-MARKER_UP = 2000
+#MARKER_DOWN = 3790
+MARKER_DOWN = 3700
+MARKER_UP = 3200
 
 scale_factor = 3  #[pixel/cm]
 robot_size = 15  #[cm]; diameter
@@ -136,11 +136,11 @@ class NavigationControl():
 
         #self.crop_map_publisher = rospy.Publisher('/cropped_predict_map', PIL.Image, queue_size=5)
         self.offset_change_x_publisher = rospy.Publisher(
-            '/offset_x', Float32, queue_size=5)
+            '/offset_change_x', Float32, queue_size=5)
         self.offset_change_y_publisher = rospy.Publisher(
-            '/offset_y', Float32, queue_size=5)
+            '/offset_change_y', Float32, queue_size=5)
         self.offset_change_theta_publisher = rospy.Publisher(
-            '/offset_theta', Float32, queue_size=5)
+            '/offset_change_theta', Float32, queue_size=5)
 
         self.position_subscriber = rospy.Subscriber('/current_position', Point,
                                                     self.callback_position)
@@ -304,6 +304,8 @@ class NavigationControl():
 
                         except KeyboardInterrupt:
                             print("Got KeyboardInterrupt")
+                            self.cmd_vel.publish(Twist())
+
                             rospy.signal_shutdown("KeyboardInterrupt")
                             break
 

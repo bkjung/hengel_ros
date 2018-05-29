@@ -82,48 +82,9 @@ class AroundImage:
 
         #save_index=0
         self.homography=[]
-        homography1=[]
-        homography1.append(cv2.getPerspectiveTransform(imgPts[0], objPts[0]))
-        homography1.append(cv2.getPerspectiveTransform(imgPts[1], objPts[1]))
-        homography1.append(cv2.getPerspectiveTransform(imgPts[2], objPts[2]))
-        self.homography.append(homography1)
-
-        #save_index=1
-        homography2=[]
-        homography2.append(cv2.getPerspectiveTransform(imgPts[0], objPts[0]))
-        homography2.append(cv2.getPerspectiveTransform(imgPts[2], objPts[2]))
-        homography2.append(cv2.getPerspectiveTransform(imgPts[1], objPts[1]))
-        self.homography.append(homography2)
-
-        #save_index=2
-        homography3=[]
-        homography3.append(cv2.getPerspectiveTransform(imgPts[1], objPts[1]))
-        homography3.append(cv2.getPerspectiveTransform(imgPts[0], objPts[0]))
-        homography3.append(cv2.getPerspectiveTransform(imgPts[2], objPts[2]))
-        self.homography.append(homography3)
-
-        #save_index=3
-        homography3=[]
-        homography3.append(cv2.getPerspectiveTransform(imgPts[1], objPts[1]))
-        homography3.append(cv2.getPerspectiveTransform(imgPts[2], objPts[2]))
-        homography3.append(cv2.getPerspectiveTransform(imgPts[0], objPts[0]))
-        self.homography.append(homography3)
-
-        #save_index = 4
-        homography3=[]
-        homography3.append(cv2.getPerspectiveTransform(imgPts[2], objPts[2]))
-        homography3.append(cv2.getPerspectiveTransform(imgPts[1], objPts[1]))
-        homography3.append(cv2.getPerspectiveTransform(imgPts[0], objPts[0]))
-        self.homography.append(homography3)
-
-        #save_index=5
-        homography3=[]
-        homography3.append(cv2.getPerspectiveTransform(imgPts[2], objPts[2]))
-        homography3.append(cv2.getPerspectiveTransform(imgPts[0], objPts[0]))
-        homography3.append(cv2.getPerspectiveTransform(imgPts[1], objPts[1]))
-        self.homography.append(homography3)
-
-
+        self.homography.append(cv2.getPerspectiveTransform(imgPts[0], objPts[0]))
+        self.homography.append(cv2.getPerspectiveTransform(imgPts[1], objPts[1]))
+        self.homography.append(cv2.getPerspectiveTransform(imgPts[2], objPts[2]))
 
     def warp_image(self, image, homography):
         im_out = cv2.warpPerspective(image, homography, (1400,2200))
@@ -163,41 +124,37 @@ class AroundImage:
             # undist_middle= cv2.undistort(middle_img,intrin, dist, None, intrin)
 
             init_time = time.time()
-            for i in range(6):
-                im_bottom = self.warp_image(bottom_img, self.homography[i][0]).astype('uint8')
-                im_middle = self.warp_image(middle_img, self.homography[i][1]).astype('uint8')
-                im_top = self.warp_image(top_img, self.homography[i][2]).astype('uint8')
-                print("image warped")
+            im_bottom = self.warp_image(bottom_img, self.homography[0]).astype('uint8')
+            im_middle = self.warp_image(middle_img, self.homography[1]).astype('uint8')
+            im_top = self.warp_image(top_img, self.homography[2]).astype('uint8')
+            print("image warped")
 
-                #MULTIPLY WARPED IMAGE, THEN ADD TO BLANK IMAGE
-                im_mask_inv, im_mask = self.find_mask(im_middle)
-                bottom_masked = np.multiply(im_bottom, im_mask).astype('uint8')
-                middle_masked = np.multiply(im_middle, im_mask_inv).astype('uint8')
-                top_masked = np.multiply(im_top, im_mask).astype('uint8')
-                summed_image = bottom_masked + middle_masked + top_masked
+            #MULTIPLY WARPED IMAGE, THEN ADD TO BLANK IMAGE
+            im_mask_inv, im_mask = self.find_mask(im_middle)
+            bottom_masked = np.multiply(im_bottom, im_mask).astype('uint8')
+            middle_masked = np.multiply(im_middle, im_mask_inv).astype('uint8')
+            top_masked = np.multiply(im_top, im_mask).astype('uint8')
+            summed_image = bottom_masked + middle_masked + top_masked
 
-                #im_mask_inv, im_mask = self.find_mask(im_top)
-                #middle_masked=np.multiply(im_middle, im_mask).astype('uint8')
-                #top_masked=np.multiply(im_top, im_mask_inv).astype('uint8')
-                #tmp_img= middle_masked+top_masked
-                #im_mask_inv, im_mask = self.find_mask(tmp_img)
-                #bottom_masked=np.multiply(im_bottom, im_mask).astype('uint8')
-                #midtop_masked=np.multiply(tmp_img, im_mask_inv).astype('uint8')
-                #summed_image= bottom_masked+midtop_masked
+            #im_mask_inv, im_mask = self.find_mask(im_top)
+            #middle_masked=np.multiply(im_middle, im_mask).astype('uint8')
+            #top_masked=np.multiply(im_top, im_mask_inv).astype('uint8')
+            #tmp_img= middle_masked+top_masked
+            #im_mask_inv, im_mask = self.find_mask(tmp_img)
+            #bottom_masked=np.multiply(im_bottom, im_mask).astype('uint8')
+            #midtop_masked=np.multiply(tmp_img, im_mask_inv).astype('uint8')
+            #summed_image= bottom_masked+midtop_masked
 
-                summed_image = cv2.resize(
-                    summed_image, (700,1100), interpolation=cv2.INTER_AREA)
+            summed_image = cv2.resize(
+                summed_image, (700,1100), interpolation=cv2.INTER_AREA)
 
 
-                print("summed image made")
-                cv2.imwrite(
-                        package_base_path +
-                        "/hengel_navigation/viewpoint_img/warped_" +str(i)+
-                        "_"+time.strftime("%m%d_%H%M%S") + '.jpg', summed_image)
+            print("summed image made")
+            cv2.imwrite(
+                    package_base_path +
+                    "/hengel_navigation/viewpoint_img/warped_" +time.strftime("%m%d_%H%M%S") + '.jpg', summed_image)
 
-                if i== self.save_index:
-                    return_image=summed_image
-            return return_image
+            return summed_image
 
             # SEND IMAGE AS ROS imgmsg
             # summed_image_msg = bridge.cv2_to_imgmsg(summed_image, "bgr8")

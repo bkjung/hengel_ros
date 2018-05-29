@@ -11,7 +11,7 @@ from time import sleep
 from geometry_msgs.msg import Point
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Image
-from math import sqrt
+import math
 import numpy as np
 import cv2
 from cv_bridge import CvBridge
@@ -52,7 +52,7 @@ class RealGlobalMap():
 
         self.size_x = 1000
         self.size_y = 1000
-        self.scale_factor = 5.5  #[pixel/cm]
+        self.scale_factor = 350/85  #[pixel/cm]
 
         self.r = rospy.Rate(50)
 
@@ -66,14 +66,15 @@ class RealGlobalMap():
         self.y = _position[1]
         self.th = _position[2]
 
+        warp_matrix = np.eye(2, 3, dtype=np.float32)
         data = [0, 0, 0]
-        if letter_number > 1:
+        if letter_number > 0:
+            rospy.loginfo("letter # >0, start transformation")
             # 1. Crop second last letter
             self.last2_letter_img = self.crop_letter(letter_number, 2)
 
             # 2. Calculate the offset
             sz = self.last2_letter_img.shape
-            warp_matrix = np.eye(3, 3, dtype=np.float32)
             #########################
             number_of_iterations = 5000
             termination_eps = 1e-6
@@ -82,33 +83,30 @@ class RealGlobalMap():
                         number_of_iterations, termination_eps)
             try:
                 (cc, warp_matrix) = cv2.findTransformECC(
-                    self.im2_gray, warp_matrix, warp_mode, criteria)
+                        self.last2_letter_img, self.last_letter_img, warp_matrix, cv2.MOTION_EUCLIDEAN, criteria)
+                print(warp_matrix)
+                offset_th = math.atan2(-warp_matrix[0][1],warp_matrix[0][0])
+                print(offset_th)
+                #Calculate x, y offset
+                xx = math.cos(offset_th)*892-math.sin(offset_th)*352+warp_matrix[0][2]
+                yy = math.sin(offset_th)*892+math.cos(offset_th)*352+warp_matrix[1][2]
+                offset_x = xx-892
+                offset_y = yy-352
+                print("offset_x:", offset_x, "offset_y:", offset_y)
+                #Change to the world coordinate
+                data = [offset_y/self.scale_factor, offset_x/self.scale_factor,  -offset_th/self.scale_factor]
+                print("calculated offset:", data)
             except:
                 print("ECC transform error")
-                return data
-
-            offset_th = math.atan(warp_matrix[0][0], -warp_matrix[0][1])
-
-            #Calculate x, y offset
-            xx = sz[0] / 2 - warp_matrix[0][2]
-            yy = sz[1] / 2 - warp_matrix[1][2]
-            x2 = cos(offset_th) * xx - sin(offset_th) * yy
-            y2 = sin(offset_th) * xx + cos(offset_th) * yy
-
-            offset_x = x2 - sz[0] / 2
-            offset_y = y2 - sz[1] / 2
-
-            #Change to the world coordinate
-            data = [
-                offset_y / self.scale_factor, offset_x / self.scale_factor,
-                offset_th / self.scale_factor
-            ]
-            print("calculated offset:", data)
 
         # 3. Update last letter
         #while not self.around_subscribed:
         #    self.wait_for_aroundimg()
         self.last_letter_img = self.crop_letter(letter_number, 1)
+        sz=self.last_letter_img.shape
+        if letter_number >0:
+            print(warp_matrix)
+            self.last_letter_img = cv2.warpAffine(self.last_letter_img, warp_matrix, (sz[1], sz[0]), flags=cv2.INTER_LINEAR+cv2.WARP_INVERSE_MAP)
         return data
 
     def crop_letter(self, letter_number, ind):
@@ -117,9 +115,9 @@ class RealGlobalMap():
         y_padding = 10
         ###################
 	if ind==1:
-		crop_img = self.photo[363:528,125:365]
+            crop_img = self.photo[500:852,108:596]
 	else:
-		crop_img = self.photo[160:325,125:365]
+            crop_img = self.photo[126:478,108:596]
         ################ FOR DEBUGGING #####################
         # threshold_img1 = cv2.threshold(crop_img, 50, 255, cv2.THRESH_BINARY)
         # threshold_img2 = cv2.threshold(crop_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
@@ -135,7 +133,7 @@ class RealGlobalMap():
         # plt.show()
         #####################################################
         cv2.imwrite(package_base_path +
-                "/hengel_navigation/viewpoint_img/cropped_" +str(ind)+"_"+time.strftime("%y%m%d_%H%M%S") + '.jpg',crop_img)
+                "/hengel_navigation/viewpoint_img/cropped_"+str(ind)+"_" +time.strftime("%y%m%d_%H%M%S") + '.jpg',crop_img)
 
         return cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
 
@@ -145,7 +143,7 @@ class RealGlobalMap():
 
         #Rotate image (size: diagonal * diagonal)
         rows, cols = self.photo.shape[:2]
-        diagonal = (int)(sqrt(rows * rows + cols * cols))
+        diagonal = (int)(math.sqrt(rows * rows + cols * cols))
 
         offsetX = int((diagonal - cols) / 2)
         offsetY = int((diagonal - rows) / 2)
