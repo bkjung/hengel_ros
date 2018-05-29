@@ -10,8 +10,8 @@ import time
 # X_MIN = 199
 # X_MAX = 299
 
-X_MIN = 100
-X_MAX = 200
+X_MIN = 150
+X_MAX = 250
 Y_MIN = 169
 Y_MAX = 329
 

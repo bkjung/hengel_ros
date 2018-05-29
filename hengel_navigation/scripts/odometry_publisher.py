@@ -24,7 +24,7 @@ class LidarOdometry():
 
             self.offset_x = 0
             self.offset_y = 0
-            self.offset_heading = 0
+            self.offset_theta = 0
 
             self.pnt = Point()
             self.heading = Float32()
@@ -35,14 +35,14 @@ class LidarOdometry():
                 if self.isFirst:
                     self.offset_x = self.pnt.x
                     self.offset_y = self.pnt.y
-                    self.offset_heading = angle_difference(
+                    self.offset_theta = angle_difference(
                         self.heading, pi / 2.0)
                     self.isFirst = False
 
                 self.pnt.x = self.pnt.x - self.offset_x
                 self.pnt.y = self.pnt.y - self.offset_y
                 self.heading.data = angle_difference(self.heading.data,
-                                                     self.offset_heading)
+                                                     self.offset_theta)
 
                 self.position_publisher.publish(self.pnt)
                 self.heading_publisher.publish(self.heading)
@@ -86,7 +86,7 @@ class WheelOdometry():
 
             self.offset_x = 0
             self.offset_y = 0
-            self.offset_rot = 0
+            self.offset_theta = 0
 
             self.pnt = Point()
             self.heading = Float32()
@@ -135,14 +135,14 @@ class WheelOdometry():
                     if self.isFirst:
                         self.offset_x = self.pnt.x
                         self.offset_y = self.pnt.y
-                        #self.offset_heading=self.heading.data-pi/2.0
-                        self.offset_heading = self.heading.data
+                        #self.offset_theta=self.heading.data-pi/2.0
+                        self.offset_theta = self.heading.data
                         self.isFirst = False
 
                     self.pnt.x = self.pnt.x - self.offset_x
                     self.pnt.y = self.pnt.y - self.offset_y
                     self.heading.data = normalize_rad(self.heading.data -
-                                                      self.offset_heading)
+                                                      self.offset_theta)
 
                     self.position_publisher.publish(self.pnt)
                     self.heading_publisher.publish(self.heading)
@@ -158,16 +158,16 @@ class WheelOdometry():
             sys.exit()
 
     def callback_offset_change_x(self, _data):
-        self.offset_x = self.offset_x - _data
-        print("OFFSET_X Changed by : " + str(_data))
+        self.offset_x = self.offset_x - _data.data
+        print("OFFSET_X Changed by : " + str(_data.data))
 
     def callback_offset_change_y(self, _data):
-        self.offset_y = self.offset_y - _data
-        print("OFFSET_Y Changed by : " + str(_data))
+        self.offset_y = self.offset_y - _data.data
+        print("OFFSET_Y Changed by : " + str(_data.data))
 
     def callback_offset_change_theta(self, _data):
-        self.offset_theta = self.offset_theta - _data
-        print("OFFSET_THETA Changed by : " + str(_data))
+        self.offset_theta = self.offset_theta - _data.data
+        print("OFFSET_THETA Changed by : " + str(_data.data))
 
 
 def initialOptionSelect():
