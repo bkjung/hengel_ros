@@ -27,9 +27,10 @@ from crosspoint_docking import CrosspointDocking
 #MARKER_DOWN = 2430
 
 #Due to wheel height change
-MARKER_DOWN = 2450
-
-MARKER_UP = 2000
+#MARKER_DOWN = 3790
+#MARKER_DOWN = 3700
+MARKER_DOWN = 3950
+MARKER_UP = 3200
 
 scale_factor = 3  #[pixel/cm]
 robot_size = 15  #[cm]; diameter
@@ -61,13 +62,14 @@ class NavigationControl():
     #     self.initial_setting()
     #     self.run()
 
-    def __init__(self, _arr_path):
+    def __init__(self, _arr_path, _docking_point_list):
         word = raw_input(
             "There are two options for pi cam save.\n[1] Save Pi Cam - Floor Image.\n[2] Do not Save. \nType 1 or 2 :"
         )
         self.pi_cam_save_option = int(word)
 
         self.arr_path = _arr_path
+        self.docking_point_list = _docking_point_list
         self.initial_setting()
         self.run()
 
@@ -99,7 +101,6 @@ class NavigationControl():
         self.cnt_total_waypoints = 0
         self.cnt_segments_in_current_letter = 0
         self.cnt_waypoints_in_current_segment = 0
-
 
         self.path_points = []
 
@@ -136,11 +137,11 @@ class NavigationControl():
 
         #self.crop_map_publisher = rospy.Publisher('/cropped_predict_map', PIL.Image, queue_size=5)
         self.offset_change_x_publisher = rospy.Publisher(
-            '/offset_x', Float32, queue_size=5)
+            '/offset_change_x', Float32, queue_size=5)
         self.offset_change_y_publisher = rospy.Publisher(
-            '/offset_y', Float32, queue_size=5)
+            '/offset_change_y', Float32, queue_size=5)
         self.offset_change_theta_publisher = rospy.Publisher(
-            '/offset_theta', Float32, queue_size=5)
+            '/offset_change_theta', Float32, queue_size=5)
 
         self.position_subscriber = rospy.Subscriber('/current_position', Point,
                                                     self.callback_position)
@@ -154,6 +155,9 @@ class NavigationControl():
 
     def run(self):
         self.wait_for_seconds(2)
+        self.offset_change_x_publisher.publish(0)   #add offset_x by offset[0]
+        self.offset_change_y_publisher.publish(0)   #add offset_y by offset[1]
+        self.offset_change_theta_publisher.publish(0)   #add offset_theta by offset[2]
         # go through path array
         print("number of letters = " + str(len(self.arr_path)))
         rospy.loginfo("number of letters = " + str(len(self.arr_path)))
@@ -188,6 +192,8 @@ class NavigationControl():
                 self.cnt_waypoints_in_current_segment = len(
                     self.arr_path[self.letter_index][self.segment_index])
                 while self.waypoint_index_in_current_segment < self.cnt_waypoints_in_current_segment:
+                    isDockingPoint = False
+
                     if rospy.is_shutdown():
                         break
                     print("\n\nwaypoint index : " +
@@ -198,6 +204,14 @@ class NavigationControl():
                         str(self.waypoint_index_in_current_segment) +
                         " in segment no. " + str(self.segment_index) +
                         " in letter no. " + str(self.letter_index))
+
+                    for docking_point in self.docking_point_list:
+                        if docking_point[0]==self.letter_index and docking_point[1]==self.segment_index and docking_point[2]==self.waypoint_index_in_current_segment:
+                            print("MOVING TO DOCKING POINT")
+                            isDockingPoint = True
+                            break
+
+
                     self.current_waypoint = [
                         self.arr_path[self.letter_index][self.segment_index][
                             self.waypoint_index_in_current_segment][0],
@@ -219,17 +233,35 @@ class NavigationControl():
                     distance = sqrt(
                         pow(self.current_waypoint[0] - self.point.x, 2) +
                         pow(self.current_waypoint[1] - self.point.y, 2))
-                    while distance > 0.03 * 0.58:
+
+                    docking_buffer_cnt = 0
+                    # Motion Control
+                    while True:
                         if rospy.is_shutdown():
                             break
                         try:
                             distance = sqrt(
                                 pow(self.current_waypoint[0] - self.point.x, 2) +
                                 pow(self.current_waypoint[1] - self.point.y, 2))
+
+                            if isDockingPoint:
+                                if self.crosspoint_docking.check():
+                                    print("DOCKED!!!!!")
+                                    time.sleep(1.0)
+                                    break
+                                elif distance < 0.03 * 0.58:
+                                    self.current_waypoint[0] = self.current_waypoint[0]+(self.current_waypoint[0]-self.point.x)*0.03*0.58/distance
+                                    self.current_waypoint[1] = self.current_waypoint[1]+(self.current_waypoint[1]-self.point.y)*0.03*0.58/distance
+
+                            elif distance < 0.03 * 0.58:
+                                self.cmd_vel.publish(Twist())
+                                break
+
                             alpha = angle_difference(
                                 atan2(self.current_waypoint[1] - self.point.y,
                                     self.current_waypoint[0] - self.point.x),
                                 self.heading.data)
+                            #print("HEADING=", str(self.heading.data))
 
                             #print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
                             #print("heading error: %0.3f" % np.rad2deg(alpha))
@@ -304,6 +336,8 @@ class NavigationControl():
 
                         except KeyboardInterrupt:
                             print("Got KeyboardInterrupt")
+                            self.cmd_vel.publish(Twist())
+
                             rospy.signal_shutdown("KeyboardInterrupt")
                             break
 
@@ -345,7 +379,17 @@ class NavigationControl():
 
             print("real globalmap run!!")
             rospy.loginfo("real globalmap run!!")
-            self.real_globalmap_run()
+            warp_matrix = self.real_globalmap_run()
+            
+            for idx_letter in range(len(self.arr_path)):
+                for idx_segment in range(len(self.arr_path[idx_letter])):
+                    for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
+                        a, b, c = np.matmul(warp_matrix,
+                        [self.arr_path[idx_letter][idx_segment][idx_waypoint][0],self.arr_path[idx_letter][idx_segment][idx_waypoint][1],1])
+                        self.waypoints[idx_letter][idx_segment][0] = a
+                        self.waypoints[idx_letter][idx_segment][1] = b
+
+            print("multiplied warp matrix to all waypoints")
 
             print("wait for 5 sec")
             rospy.loginfo("wait for 5 sec")
@@ -518,9 +562,9 @@ class NavigationControl():
             offset = self.real_globalmap.run(self.letter_index, position)
 
             #realign the frame position, according to calculated offset from global map
-            self.offset_change_x_publisher.publish(offset[0])
-            self.offset_change_y_publisher.publish(offset[1])
-            self.offset_change_theta_publisher.publish(offset[2])
+            self.offset_change_x_publisher.publish(offset[0])   #add offset_x by offset[0]
+            self.offset_change_y_publisher.publish(offset[1])   #add offset_y by offset[1]
+            self.offset_change_theta_publisher.publish(offset[2])   #add offset_theta by offset[2]
 
         except rospy.ServiceException, e:
             print("Service call failed")

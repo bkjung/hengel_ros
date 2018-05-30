@@ -19,11 +19,10 @@ import os
 #MARKER_DOWN = 870
 #MARKER_DOWN = 890
 #MARKER_DOWN = 2430
-MARKER_DOWN = 2450
+MARKER_DOWN = 3870
 #MARKER_DOWN=900
 #MARKER_UP = 512
-MARKER_UP = 2000
-
+MARKER_UP = 3200
 
 class UnitTestApplicator():
     def __init__(self):
