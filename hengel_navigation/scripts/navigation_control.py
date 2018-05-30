@@ -28,7 +28,8 @@ from crosspoint_docking import CrosspointDocking
 
 #Due to wheel height change
 #MARKER_DOWN = 3790
-MARKER_DOWN = 3700
+#MARKER_DOWN = 3700
+MARKER_DOWN = 3950
 MARKER_UP = 3200
 
 scale_factor = 3  #[pixel/cm]
@@ -230,6 +231,7 @@ class NavigationControl():
                                 atan2(self.current_waypoint[1] - self.point.y,
                                     self.current_waypoint[0] - self.point.x),
                                 self.heading.data)
+                            print("HEADING=", str(self.heading.data))
 
                             #print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
                             #print("heading error: %0.3f" % np.rad2deg(alpha))
