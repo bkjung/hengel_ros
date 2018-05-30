@@ -64,11 +64,12 @@ class PaintLetter():
                                         (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
                                         (1.0 - (float)(_str[1])) * CANVAS_SIDE_LENGTH
                                     ])
-                                    if _str[2]=="docking_line" or _str[2]=="docking_point_list":
-                                        #letter_index, segment_index, waypoint_index
-                                        self.docking_point_list.append([letter_index, i-1, idx])
-                                else:
-                                    pass
+                                    if len(_str)>2:
+                                        if _str[2]=="docking_line" or _str[2]=="docking_point_list":
+                                            #letter_index, segment_index, waypoint_index
+                                            self.docking_point_list.append([letter_index, i-1, idx])
+                                    else:
+                                        pass
                         letter_path.append(subletter_path)
 
             #Stop point for global view photo

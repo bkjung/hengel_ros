@@ -68,7 +68,7 @@ class CrosspointDocking():
 
                 self.msg_box.data = np.array(cv2.imencode('.jpg', self.image_cv_box)[1]).tostring()
                 self.pub_box.publish(self.msg_box)
-                
+
                 print(self.average_box)
 
             self.r.sleep()
@@ -78,6 +78,7 @@ class CrosspointDocking():
 
     def check(self):
         if self.average_box < 50:
+            print("BOX AVERAGE="+str(self.average_box))
             return True
         else:
             return False

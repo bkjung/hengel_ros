@@ -204,9 +204,7 @@ class NavigationControl():
                         " in letter no. " + str(self.letter_index))
 
                     for docking_point in self.docking_point_list:
-                        if docking_point[0]==self.letter_index and
-                            docking_point[1]==self.segment_index and
-                            docking_point[2]==self.waypoint_index_in_current_segment:
+                        if docking_point[0]==self.letter_index and docking_point[1]==self.segment_index and docking_point[2]==self.waypoint_index_in_current_segment:
                             print("MOVING TO DOCKING POINT")
                             isDockingPoint = True
                             break
@@ -233,7 +231,7 @@ class NavigationControl():
                     distance = sqrt(
                         pow(self.current_waypoint[0] - self.point.x, 2) +
                         pow(self.current_waypoint[1] - self.point.y, 2))
-                    
+
                     docking_buffer_cnt = 0
                     # Motion Control
                     while True:
@@ -246,12 +244,13 @@ class NavigationControl():
 
                             if isDockingPoint:
                                 if self.crosspoint_docking.check():
-                                    #docked
+                                    print("DOCKED!!!!!")
+                                    time.sleep(1.0)
                                     break
                                 elif distance < 0.03 * 0.58:
                                     self.current_waypoint[0] = self.current_waypoint[0]+(self.current_waypoint[0]-self.point.x)*0.03*0.58/distance
                                     self.current_waypoint[1] = self.current_waypoint[1]+(self.current_waypoint[1]-self.point.y)*0.03*0.58/distance
-                            
+
                             elif distance < 0.03 * 0.58:
                                 self.cmd_vel.publish(Twist())
                                 break
@@ -260,7 +259,7 @@ class NavigationControl():
                                 atan2(self.current_waypoint[1] - self.point.y,
                                     self.current_waypoint[0] - self.point.x),
                                 self.heading.data)
-                            print("HEADING=", str(self.heading.data))
+                            #print("HEADING=", str(self.heading.data))
 
                             #print("CURRENT: "+str(self.point.x)+", "+str(self.point.y)+"  NEXT: "+str(self.current_waypoint[0])+", "+str(self.current_waypoint[1]))
                             #print("heading error: %0.3f" % np.rad2deg(alpha))
