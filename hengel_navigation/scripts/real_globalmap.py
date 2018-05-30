@@ -96,7 +96,7 @@ class RealGlobalMap():
                 ##Change to the world coordinate
                 #data = [-offset_y/self.scale_factor, offset_x/self.scale_factor, offset_th]
                 #print("calculated offset:", data)
-                self.arr_path
+                data = warp_matrix
             except:
                 print("ECC transform error")
 
