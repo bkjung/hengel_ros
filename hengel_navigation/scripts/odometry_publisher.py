@@ -26,6 +26,8 @@ class LidarOdometry():
             self.offset_y = 0
             self.offset_theta = 0
 
+	    self.offset_del_theta=0
+
             self.pnt = Point()
             self.heading = Float32()
 
@@ -158,20 +160,24 @@ class WheelOdometry():
             sys.exit()
 
     def callback_offset_change_x(self, _data):
-        pass
-        #self.offset_x = self.offset_x - _data.data
-        #print("OFFSET_X Changed by : " + str(_data.data))
+        self.offset_x = self.offset_x - _data.data
+        print("OFFSET_X Changed by : " + str(_data.data))
+
 
     def callback_offset_change_y(self, _data):
-        pass
-        #self.offset_y = self.offset_y - _data.data
-        #print("OFFSET_Y Changed by : " + str(_data.data))
+        self.offset_y = self.offset_y - _data.data
+        print("OFFSET_Y Changed by : " + str(_data.data))
 
     def callback_offset_change_theta(self, _data):
-        pass
         #self.offset_theta = self.offset_theta - _data.data
         #print("OFFSET_THETA Changed by : " + str(_data.data) + "(rad) / " + str(_data.data*180.0/3.141592) + "(deg)")
-
+	#transform = tf.Transform()
+	#transform.setOrigin(tf.Vector3(0.0,0.0,0.0))
+	#transform.setRotation(tf.createQuaternionFromRPY(0,0,_data.data))
+	#tf.StampedTransform(transform, rospy.Time(), "/base_link", "/new_link")
+	br = tf.TransformBroadcaster()
+	br.sendTransform((0,0,0), tf.transformations.quaternion_from_euler(0,0,_data.data), rospy.Time.now(),'/new_base_odom',self.base_frame)
+	self.base_frame='/new_base_odom'
 
 def initialOptionSelect():
     if sys.argv[1] == 'wheel':
