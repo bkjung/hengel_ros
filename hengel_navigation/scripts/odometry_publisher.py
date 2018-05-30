@@ -158,16 +158,19 @@ class WheelOdometry():
             sys.exit()
 
     def callback_offset_change_x(self, _data):
-        self.offset_x = self.offset_x - _data.data
-        print("OFFSET_X Changed by : " + str(_data.data))
+        pass
+        #self.offset_x = self.offset_x - _data.data
+        #print("OFFSET_X Changed by : " + str(_data.data))
 
     def callback_offset_change_y(self, _data):
-        self.offset_y = self.offset_y - _data.data
-        print("OFFSET_Y Changed by : " + str(_data.data))
+        pass
+        #self.offset_y = self.offset_y - _data.data
+        #print("OFFSET_Y Changed by : " + str(_data.data))
 
     def callback_offset_change_theta(self, _data):
-        self.offset_theta = self.offset_theta - _data.data
-        print("OFFSET_THETA Changed by : " + str(_data.data) + "(rad) / " + str(_data.data*180.0/3.141592) + "(deg)")
+        pass
+        #self.offset_theta = self.offset_theta - _data.data
+        #print("OFFSET_THETA Changed by : " + str(_data.data) + "(rad) / " + str(_data.data*180.0/3.141592) + "(deg)")
 
 
 def initialOptionSelect():
