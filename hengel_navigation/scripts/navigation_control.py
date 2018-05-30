@@ -102,7 +102,6 @@ class NavigationControl():
         self.cnt_segments_in_current_letter = 0
         self.cnt_waypoints_in_current_segment = 0
 
-
         self.path_points = []
 
         self.thres1 = np.deg2rad(30)
@@ -380,7 +379,17 @@ class NavigationControl():
 
             print("real globalmap run!!")
             rospy.loginfo("real globalmap run!!")
-            self.real_globalmap_run()
+            warp_matrix = self.real_globalmap_run()
+            
+            for idx_letter in range(len(self.arr_path)):
+                for idx_segment in range(len(self.arr_path[idx_letter])):
+                    for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
+                        a, b, c = np.matmul(warp_matrix,
+                        [self.arr_path[idx_letter][idx_segment][idx_waypoint][0],self.arr_path[idx_letter][idx_segment][idx_waypoint][1],1])
+                        self.waypoints[idx_letter][idx_segment][0] = a
+                        self.waypoints[idx_letter][idx_segment][1] = b
+
+            print("multiplied warp matrix to all waypoints")
 
             print("wait for 5 sec")
             rospy.loginfo("wait for 5 sec")
