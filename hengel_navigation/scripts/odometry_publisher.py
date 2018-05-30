@@ -167,7 +167,7 @@ class WheelOdometry():
 
     def callback_offset_change_theta(self, _data):
         self.offset_theta = self.offset_theta - _data.data
-        print("OFFSET_THETA Changed by : " + str(_data.data))
+        print("OFFSET_THETA Changed by : " + str(_data.data) + "(rad) / " + str(_data.data*180.0/3.141592) + "(deg)")
 
 
 def initialOptionSelect():

@@ -94,7 +94,7 @@ class RealGlobalMap():
                 offset_y = yy-352
                 print("offset_x:", offset_x, "offset_y:", offset_y)
                 #Change to the world coordinate
-                data = [offset_y/self.scale_factor, offset_x/self.scale_factor,  -offset_th/self.scale_factor]
+                data = [-offset_y/self.scale_factor, offset_x/self.scale_factor, offset_th]
                 print("calculated offset:", data)
             except:
                 print("ECC transform error")
