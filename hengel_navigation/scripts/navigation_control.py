@@ -156,6 +156,9 @@ class NavigationControl():
 
     def run(self):
         self.wait_for_seconds(2)
+        self.offset_change_x_publisher.publish(0)   #add offset_x by offset[0]
+        self.offset_change_y_publisher.publish(0)   #add offset_y by offset[1]
+        self.offset_change_theta_publisher.publish(0)   #add offset_theta by offset[2]
         # go through path array
         print("number of letters = " + str(len(self.arr_path)))
         rospy.loginfo("number of letters = " + str(len(self.arr_path)))

@@ -84,18 +84,19 @@ class RealGlobalMap():
             try:
                 (cc, warp_matrix) = cv2.findTransformECC(
                         self.last2_letter_img, self.last_letter_img, warp_matrix, cv2.MOTION_EUCLIDEAN, criteria)
-                print(warp_matrix)
-                offset_th = math.atan2(-warp_matrix[0][1],warp_matrix[0][0])
-                print(offset_th)
-                #Calculate x, y offset
-                xx = math.cos(offset_th)*892-math.sin(offset_th)*352+warp_matrix[0][2]
-                yy = math.sin(offset_th)*892+math.cos(offset_th)*352+warp_matrix[1][2]
-                offset_x = xx-892
-                offset_y = yy-352
-                print("offset_x:", offset_x, "offset_y:", offset_y)
-                #Change to the world coordinate
-                data = [-offset_y/self.scale_factor, offset_x/self.scale_factor, offset_th]
-                print("calculated offset:", data)
+                #print(warp_matrix)
+                #offset_th = math.atan2(-warp_matrix[0][1],warp_matrix[0][0])
+                #print(offset_th)
+                ##Calculate x, y offset
+                #xx = math.cos(offset_th)*892-math.sin(offset_th)*352+warp_matrix[0][2]
+                #yy = math.sin(offset_th)*892+math.cos(offset_th)*352+warp_matrix[1][2]
+                #offset_x = xx-892
+                #offset_y = yy-352
+                #print("offset_x:", offset_x, "offset_y:", offset_y)
+                ##Change to the world coordinate
+                #data = [-offset_y/self.scale_factor, offset_x/self.scale_factor, offset_th]
+                #print("calculated offset:", data)
+                self.arr_path
             except:
                 print("ECC transform error")
 

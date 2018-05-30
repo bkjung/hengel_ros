@@ -175,9 +175,7 @@ class WheelOdometry():
 	#transform.setOrigin(tf.Vector3(0.0,0.0,0.0))
 	#transform.setRotation(tf.createQuaternionFromRPY(0,0,_data.data))
 	#tf.StampedTransform(transform, rospy.Time(), "/base_link", "/new_link")
-	br = tf.TransformBroadcaster()
-	br.sendTransform((0,0,0), tf.transformations.quaternion_from_euler(0,0,_data.data), rospy.Time.now(),'/new_base_odom',self.base_frame)
-	self.base_frame='/new_base_odom'
+        pass
 
 def initialOptionSelect():
     if sys.argv[1] == 'wheel':
