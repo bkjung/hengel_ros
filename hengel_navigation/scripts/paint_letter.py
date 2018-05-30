@@ -33,6 +33,7 @@ class PaintLetter():
         print("Length of Padding = " + str(PADDING_LENGTH))
         print("Distance of Viewpoint = " + str(VIEWPOINT_DISTANCE))
         self.arr_path = []
+        self.docking_point_list = []
         # self.arr_keypoint=[]
         self.word = raw_input("Type letters to draw:")
 
@@ -63,6 +64,9 @@ class PaintLetter():
                                         (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
                                         (1.0 - (float)(_str[1])) * CANVAS_SIDE_LENGTH
                                     ])
+                                    if _str[2]=="docking_line" or _str[2]=="docking_point_list":
+                                        #letter_index, segment_index, waypoint_index
+                                        self.docking_point_list.append([letter_index, i-1, idx])
                                 else:
                                     pass
                         letter_path.append(subletter_path)
@@ -85,7 +89,7 @@ class PaintLetter():
             letter_index = letter_index + 1
 
     def run(self):
-        NavigationControl(self.arr_path)
+        NavigationControl(self.arr_path, self.docking_point_list)
 
 
 if __name__ == '__main__':
