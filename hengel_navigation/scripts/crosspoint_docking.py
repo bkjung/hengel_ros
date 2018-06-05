@@ -9,11 +9,12 @@ import time
 
 # X_MIN = 199
 # X_MAX = 299
-
-X_MIN = 100
+X_MIN = 150
 X_MAX = 200
-Y_MIN = 169
-Y_MAX = 329
+
+#This is fit to the width of marker tip.
+Y_MIN = 170
+Y_MAX = 330
 
 class CrosspointDocking():
     def __init__(self, _starttime):
@@ -33,6 +34,7 @@ class CrosspointDocking():
         self.r = rospy.Rate(10) #10Hz
         # self.save_mode = False
         self.isStarted = False
+        self.box_average = 0.0
 
     def callback_floorcam(self, _img):
         try:
@@ -50,7 +52,7 @@ class CrosspointDocking():
             #     self.save_mode = False
             #     self.filename = ""
 
-            #print("Box Average: " + str(self.analysis()))
+            print("Box Average: " + str(self.analysis()))
             #rospy.loginfo("Box Average: " + str(self.analysis()))
 
         except Exception as e:
@@ -69,7 +71,12 @@ class CrosspointDocking():
             self.msg_box.data = np.array(cv2.imencode('.jpg', self.image_cv_box)[1]).tostring()
             self.pub_box.publish(self.msg_box)
 
-            return self.image_cv[Y_MIN:Y_MAX+1, X_MIN:X_MAX+1].mean()
+            self.box_average = self.image_cv[Y_MIN:Y_MAX+1, X_MIN:X_MAX+1].mean()
+
+            if self.box_average<50:
+                print("occupied")
+
+            return self.box_average
 
     def save(self, _filename):
         # self.save_mode = True
