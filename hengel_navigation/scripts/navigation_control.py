@@ -94,6 +94,7 @@ class NavigationControl():
     def initial_setting(self):
         self.program_start_time = time.strftime("%y%m%d_%H%M%S")
         logging.basicConfig(filename='~/Dropbox/intern_share/experiment_data/Global_Alignment/log/'+self.program_start_time+'.txt', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+        #logging.basicConfig(filename='~/Dropbox/intern_share/experiment_data/Global_Alignment/log/'+self.program_start_time+'.txt', level=logging.DEBUG)
         logging.debug('----Initial Center Point----')
         logging.debug(self.center_point_list)
 
