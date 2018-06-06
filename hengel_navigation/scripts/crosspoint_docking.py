@@ -37,13 +37,16 @@ class CrosspointDocking():
 
     def callback_floorcam(self, _img):
         try:
-            self.imageReceived = True
+            if self.isStarted:
+                self.imageReceived = True
 
-            self.np_arr = np.fromstring(_img.data, np.uint8)
-            self.image_cv = cv2.imdecode(self.np_arr, cv2.IMREAD_COLOR)
-            self.image_cv_box = self.image_cv
-            self.image_cv_gray = cv2.cvtColor(self.image_cv, cv2.COLOR_BGR2GRAY)
-            self.average_box = self.image_cv_gray[Y_MIN:Y_MAX+1, X_MIN:X_MAX+1].mean()
+                self.np_arr = np.fromstring(_img.data, np.uint8)
+                self.image_cv = cv2.imdecode(self.np_arr, cv2.IMREAD_COLOR)
+                self.image_cv_box = self.image_cv
+                self.image_cv_gray = cv2.cvtColor(self.image_cv, cv2.COLOR_BGR2GRAY)
+                self.average_box = self.image_cv_gray[Y_MIN:Y_MAX+1, X_MIN:X_MAX+1].mean()
+            else:
+                pass
 
         except Exception as e:
             print(e)
@@ -77,7 +80,7 @@ class CrosspointDocking():
         self.isStarted = True
 
     def check(self):
-        if self.average_box < 50:
+        if self.isStarted and self.average_box < 50:
             print("BOX AVERAGE="+str(self.average_box))
             return True
         else:
