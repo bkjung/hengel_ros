@@ -41,7 +41,7 @@ class PaintDrawing():
 
     def run(self):
         if self.PathUI.isFinishedCorrectly == True:
-            NavigationControl(self.path_return, [])
+            NavigationControl(self.path_return, [], [])
         else:
             raise Exception("Path Drawing UI did not finish correctly")
 
