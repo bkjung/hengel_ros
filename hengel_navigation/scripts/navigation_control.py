@@ -19,6 +19,7 @@ import cv_bridge
 from real_globalmap import RealGlobalMap
 from pi_cam_manager import PiCamManager
 from crosspoint_docking import CrosspointDocking
+import logging
 
 
 #2480 is too large, so that it hits the ground and the valve_control while loop does not end.
@@ -29,8 +30,9 @@ from crosspoint_docking import CrosspointDocking
 #Due to wheel height change
 #MARKER_DOWN = 3790
 #MARKER_DOWN = 3700
-MARKER_DOWN = 3950
-MARKER_UP = 3200
+MARKER_DOWN = 3900
+#MARKER_UP = 3200
+MARKER_UP = 3270
 
 scale_factor = 3  #[pixel/cm]
 robot_size = 15  #[cm]; diameter
@@ -67,6 +69,16 @@ class NavigationControl():
             "There are two options for pi cam save.\n[1] Save Pi Cam - Floor Image.\n[2] Do not Save. \nType 1 or 2 :"
         )
         self.pi_cam_save_option = int(word)
+
+        word2 = raw_input(
+            "Do you want Local Compensation?\n[1] Yes.\n[2] No.\nType 1 or 2:"
+            )
+        self.local_option = int(word2)
+
+        word3 = raw_input(
+            "Do you want Global Compensation?\n[1] Yes.\n[2] No.\nType 1 or 2:"
+            )
+        self.global_option = int(word3)
 
         self.arr_path = _arr_path
         self.docking_point_list = _docking_point_list
@@ -150,14 +162,12 @@ class NavigationControl():
 
         self.real_globalmap = RealGlobalMap(self.arr_path)
         self.pi_cam_manager = PiCamManager(self.program_start_time)
-        self.crosspoint_docking = CrosspointDocking(self.program_start_time)
-        self.crosspoint_docking.start()
+        if self.local_option == 1:
+            self.crosspoint_docking = CrosspointDocking(self.program_start_time)
+            self.crosspoint_docking.start()
 
     def run(self):
         self.wait_for_seconds(2)
-        self.offset_change_x_publisher.publish(0)   #add offset_x by offset[0]
-        self.offset_change_y_publisher.publish(0)   #add offset_y by offset[1]
-        self.offset_change_theta_publisher.publish(0)   #add offset_theta by offset[2]
         # go through path array
         print("number of letters = " + str(len(self.arr_path)))
         rospy.loginfo("number of letters = " + str(len(self.arr_path)))
@@ -167,15 +177,15 @@ class NavigationControl():
             rospy.loginfo("number of letter segments in letter no." + str(idx_letter) +
                   " = " + str(len(self.arr_path[idx_letter])))
             for idx_segment in range(len(self.arr_path[idx_letter])):
-                waypoints_in_segment = []
+                #waypoints_in_segment = []
                 for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
                     # waypoints_in_segment.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
-                    waypoints_in_segment.append([
-                        self.arr_path[idx_letter][idx_segment][idx_waypoint][0],
-                        self.arr_path[idx_letter][idx_segment][idx_waypoint][1]
-                    ])
+                    #waypoints_in_segment.append([
+                    #    self.arr_path[idx_letter][idx_segment][idx_waypoint][0],
+                    #    self.arr_path[idx_letter][idx_segment][idx_waypoint][1]
+                    #])
                     self.cnt_total_waypoints = self.cnt_total_waypoints + 1
-                self.waypoints.append(waypoints_in_segment)
+                #self.waypoints.append(waypoints_in_segment)
 
         self.cnt_letter = len(self.arr_path)
 
@@ -196,10 +206,10 @@ class NavigationControl():
 
                     if rospy.is_shutdown():
                         break
-                    print("\n\nwaypoint index : " +
-                        str(self.waypoint_index_in_current_segment) +
-                        " in segment no. " + str(self.segment_index) +
-                        " in letter no. " + str(self.letter_index))
+                    #print("\n\nwaypoint index : " +
+                    #    str(self.waypoint_index_in_current_segment) +
+                    #    " in segment no. " + str(self.segment_index) +
+                    #    " in letter no. " + str(self.letter_index))
                     rospy.loginfo("\n\nwaypoint index : " +
                         str(self.waypoint_index_in_current_segment) +
                         " in segment no. " + str(self.segment_index) +
@@ -220,11 +230,11 @@ class NavigationControl():
                     ]
 
                     if self.waypoint_index_in_current_segment == 0:
-                        print("moving to FIRST waypoint")
+                        #print("moving to FIRST waypoint")
                         rospy.loginfo("moving to FIRST waypoint in segment")
                         self.is_moving_between_letters = True
                     elif self.segment_index == self.cnt_segments_in_current_letter - 1:
-                        print("moving to GLOBAL VIEW POINT")
+                        #print("moving to GLOBAL VIEW POINT")
                         rospy.loginfo("moving to GLOBAL VIEW POINT")
                         self.is_moving_between_letters = True
                     else:
@@ -244,7 +254,7 @@ class NavigationControl():
                                 pow(self.current_waypoint[0] - self.point.x, 2) +
                                 pow(self.current_waypoint[1] - self.point.y, 2))
 
-                            if isDockingPoint:
+                            if isDockingPoint and self.local_option == 1:
                                 if self.crosspoint_docking.check():
                                     print("DOCKED!!!!!")
                                     time.sleep(1.0)
@@ -254,7 +264,7 @@ class NavigationControl():
                                     self.current_waypoint[1] = self.current_waypoint[1]+(self.current_waypoint[1]-self.point.y)*0.03*0.58/distance
 
                             elif distance < 0.03 * 0.58:
-                                self.cmd_vel.publish(Twist())
+                                #self.cmd_vel.publish(Twist())
                                 break
 
                             alpha = angle_difference(
@@ -288,7 +298,7 @@ class NavigationControl():
                             else:
                                 #rotate to align in threshold
                                 #self.valve_status = MARKER_UP
-
+                                #print("ROBOT STOPS, ROTATING\n")
                                 if abs(alpha) > self.thres1:  #abs?
                                     # if alpha>0 or alpha<-pi:
                                     if alpha > 0:
@@ -351,10 +361,10 @@ class NavigationControl():
                         str(self.current_waypoint[0]) + ", " +
                         str(self.current_waypoint[1]))
 
-                    #stop the robot
-                    self.cmd_vel.publish(Twist())
 
                     if self.pi_cam_save_option==1:
+                    #stop the robot
+                        self.cmd_vel.publish(Twist())
                         #take picam floor photo
                         self.wait_for_seconds(0.5)
                         self.pi_cam_manager.save("picam_letter-" +
@@ -379,21 +389,30 @@ class NavigationControl():
 
             print("real globalmap run!!")
             rospy.loginfo("real globalmap run!!")
-            warp_matrix = self.real_globalmap_run()
-            
-            for idx_letter in range(len(self.arr_path)):
-                for idx_segment in range(len(self.arr_path[idx_letter])):
-                    for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
-                        a, b, c = np.matmul(warp_matrix,
-                        [self.arr_path[idx_letter][idx_segment][idx_waypoint][0],self.arr_path[idx_letter][idx_segment][idx_waypoint][1],1])
-                        self.waypoints[idx_letter][idx_segment][0] = a
-                        self.waypoints[idx_letter][idx_segment][1] = b
 
-            print("multiplied warp matrix to all waypoints")
+            if self.global_option == 1:
+                warp_matrix = self.real_globalmap_run()
+                print(warp_matrix)
+            else:
+                warp_matrix=np.eye(2,3)
 
-            print("wait for 5 sec")
-            rospy.loginfo("wait for 5 sec")
-            time.sleep(5)
+
+
+            if self.global_option == 1:
+                if self.letter_index!=0:
+                    for idx_letter in range(len(self.arr_path)):
+                        for idx_segment in range(len(self.arr_path[idx_letter])):
+                            for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
+                                a, b = np.matmul(warp_matrix,
+                                [self.arr_path[idx_letter][idx_segment][idx_waypoint][0],self.arr_path[idx_letter][idx_segment][idx_waypoint][1],1])
+                                self.arr_path[idx_letter][idx_segment][idx_waypoint][0] = a
+                                self.arr_path[idx_letter][idx_segment][idx_waypoint][1] = b
+
+                print("multiplied warp matrix to all waypoints")
+
+                print("wait for 5 sec")
+                rospy.loginfo("wait for 5 sec")
+                time.sleep(5)
 
             #it's time for next letter
             self.letter_index = self.letter_index + 1
@@ -559,12 +578,12 @@ class NavigationControl():
         try:
             position = [self.point.x, self.point.y, self.heading.data]
             #print("input for real_globmap_run = " + str(position))
-            offset = self.real_globalmap.run(self.letter_index, position)
+            return self.real_globalmap.run(self.letter_index, position)
 
             #realign the frame position, according to calculated offset from global map
-            self.offset_change_x_publisher.publish(offset[0])   #add offset_x by offset[0]
-            self.offset_change_y_publisher.publish(offset[1])   #add offset_y by offset[1]
-            self.offset_change_theta_publisher.publish(offset[2])   #add offset_theta by offset[2]
+            #self.offset_change_x_publisher.publish(offset[0])   #add offset_x by offset[0]
+            #self.offset_change_y_publisher.publish(offset[1])   #add offset_y by offset[1]
+            #self.offset_change_theta_publisher.publish(offset[2])   #add offset_theta by offset[2]
 
         except rospy.ServiceException, e:
             print("Service call failed")

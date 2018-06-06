@@ -14,7 +14,8 @@ import os
 from navigation_control import NavigationControl
 import cv2
 
-CANVAS_SIDE_LENGTH = 1.5 * 0.58
+CANVAS_SIDE_LENGTH = 6.0 * 0.58
+#CANVAS_SIDE_LENGTH = 1.5 * 0.58
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #PADDING_LENGTH = 0.0
 PADDING_LENGTH = -0.65 * 0.58
@@ -27,36 +28,31 @@ os.system("mkdir -p " + package_base_path +
 os.system("mkdir -p " + package_base_path + "/hengel_path_manager/waypnts")
 
 
-class PaintLetter():
+class PaintLieul():
     def __init__(self):
         print("Length of Canvas Side = " + str(CANVAS_SIDE_LENGTH))
         print("Length of Padding = " + str(PADDING_LENGTH))
         print("Distance of Viewpoint = " + str(VIEWPOINT_DISTANCE))
         self.arr_path = []
         self.docking_point_list = []
-        # self.arr_keypoint=[]
-        self.word = raw_input("Type letters to draw:")
+        self.word = "a"
 
         self.get_path()
         self.run()
 
     def get_path(self):
-        #dir_str=package_base_path + "/hengel_path_manager/alphabet_path/li_eul_continuous.txt"
-        dir_str = package_base_path + "/hengel_path_manager/alphabet_path/path_"
+        dir_str=package_base_path + "/hengel_path_manager/alphabet_path/li_eul_continuous.txt"
         letter_index = 0
-        row_index = 0
         for letter in self.word:
             letter_path = []
             if letter == ' ':
                 pass
-            elif letter == '\n':
-                print("new line included")
-                row_index = row_index + 1
+
             else:
                 for i in range(1, 5):
                     subletter_path = []
-                    path_str = dir_str + letter.capitalize() + "_" + str(i) + ".txt"
-                    #path_str = dir_str
+                    #path_str = dir_str + letter.capitalize() + "_" + str(i) + ".txt"
+                    path_str = dir_str
                     if os.path.isfile(path_str):
                         with open(path_str, "r") as file_path:
                             for idx, line in enumerate(file_path):
@@ -67,7 +63,7 @@ class PaintLetter():
                                         (float)(_str[0]) * CANVAS_SIDE_LENGTH +
                                         (float)(letter_index) *
                                         (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
-                                        (1.0 - (float)(_str[1])) * CANVAS_SIDE_LENGTH + row_index * CANVAS_SIDE_LENGTH
+                                        (1.0 - (float)(_str[1])) * CANVAS_SIDE_LENGTH
                                     ])
                                     if len(_str)>2:
                                         if _str[2]=="docking_line" or _str[2]=="docking_point_list":
@@ -82,7 +78,7 @@ class PaintLetter():
             subletter_path.append([
                 CANVAS_SIDE_LENGTH + VIEWPOINT_DISTANCE +
                 (float)(letter_index) * (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
-                (0.5) * CANVAS_SIDE_LENGTH + row_index * CANVAS_SIDE_LENGTH
+                (0.5) * CANVAS_SIDE_LENGTH
             ])
             letter_path.append(subletter_path)
             self.arr_path.append(letter_path)
@@ -100,7 +96,7 @@ class PaintLetter():
 
 if __name__ == '__main__':
     try:
-        PaintLetter()
+        PaintLieul()
 
         print("End of Main Function")
 
