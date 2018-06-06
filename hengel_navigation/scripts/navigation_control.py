@@ -130,7 +130,8 @@ class NavigationControl():
         self.ang_vel_1 = 0.15
         self.ang_vel_2 = 0.1
         self.ang_vel_3 = 0.06
-        self.lin_vel = 0.07
+        #self.lin_vel = 0.07
+        self.lin_vel = 0.10
 
         self.target_speed = 0.0
         self.current_speed = 0.0
