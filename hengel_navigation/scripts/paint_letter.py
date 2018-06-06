@@ -34,6 +34,7 @@ class PaintLetter():
         print("Distance of Viewpoint = " + str(VIEWPOINT_DISTANCE))
         self.arr_path = []
         self.docking_point_list = []
+        self.center_point_list = []
         # self.arr_keypoint=[]
         self.word = raw_input("Type letters to draw:")
 
@@ -49,7 +50,7 @@ class PaintLetter():
             letter_path = []
             if letter == ' ':
                 pass
-            elif letter == '\n':
+            elif letter == '^':
                 print("new line included")
                 row_index = row_index + 1
             else:
@@ -76,6 +77,14 @@ class PaintLetter():
                                     else:
                                         pass
                         letter_path.append(subletter_path)
+                        self.center_point_list.append([
+                            0.5 * CANVAS_SIDE_LENGTH +
+                            (float)(letter_index) *
+                            (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
+                            0.5 * CANVAS_SIDE_LENGTH + row_index * CANVAS_SIDE_LENGTH
+                        ])
+
+
 
             #Stop point for global view photo
             subletter_path = []
@@ -95,7 +104,7 @@ class PaintLetter():
             letter_index = letter_index + 1
 
     def run(self):
-        NavigationControl(self.arr_path, self.docking_point_list)
+        NavigationControl(self.arr_path, self.docking_point_list, self.center_point_list)
 
 
 if __name__ == '__main__':

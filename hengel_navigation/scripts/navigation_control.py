@@ -70,7 +70,7 @@ class NavigationControl():
     #     self.initial_setting()
     #     self.run()
 
-    def __init__(self, _arr_path, _docking_point_list):
+    def __init__(self, _arr_path, _docking_point_list, _center_point_list):
         word = raw_input(
             "There are two options for pi cam save.\n[1] Save Pi Cam - Floor Image.\n[2] Do not Save. \nType 1 or 2 :"
         )
@@ -415,7 +415,7 @@ class NavigationControl():
 
             if self.global_option == 1:
                 warp_matrix = self.real_globalmap_run()
-                print(warp_matrix)
+                #print(warp_matrix)
             else:
                 warp_matrix=np.eye(3,3)
 
