@@ -42,6 +42,12 @@ package_base_path = os.path.abspath(
 os.system("mkdir -p " + package_base_path +
           "/hengel_path_manager/output_pathmap")
 
+Kp = 5.0  # speed proportional gain
+
+def pid_control(target, current):
+    a = Kp * (target - current)
+
+    return a
 
 def normalize_rad(input_angle):
     if input_angle > pi:
@@ -98,7 +104,8 @@ class NavigationControl():
 
         self.valve_status = MARKER_UP
 
-        self.r = rospy.Rate(50)  #50hz
+        self.dt = 0.02  # [s]
+        self.r = rospy.Rate(1.0/self.dt)  #50hz
 
         #It SHOULD BE 1 for current code.
         #If it's not 1, then self.check_whether_moving_to_next_start() should be modified
@@ -124,6 +131,9 @@ class NavigationControl():
         self.ang_vel_2 = 0.1
         self.ang_vel_3 = 0.06
         self.lin_vel = 0.07
+
+        self.target_speed = 0.0
+        self.current_speed = 0.0
 
         self.is_moving_between_letters = False
 
@@ -292,7 +302,8 @@ class NavigationControl():
                                 else:
                                     lin_vel_scaled = self.lin_vel
 
-                                self.move_cmd.linear.x = lin_vel_scaled
+                                #self.move_cmd.linear.x = lin_vel_scaled
+                                self.target_speed = lin_vel_scaled
                                 self.move_cmd.angular.z = curv * lin_vel_scaled
 
                             else:
@@ -302,28 +313,34 @@ class NavigationControl():
                                 if abs(alpha) > self.thres1:  #abs?
                                     # if alpha>0 or alpha<-pi:
                                     if alpha > 0:
-                                        self.move_cmd.linear.x = 0
+                                        #self.move_cmd.linear.x = 0
+                                        self.target_speed = 0
                                         self.move_cmd.angular.z = self.ang_vel_1
                                     else:
-                                        self.move_cmd.linear.x = 0
+                                        #self.move_cmd.linear.x = 0
+                                        self.target_speed = 0
                                         self.move_cmd.angular.z = -self.ang_vel_1
 
                                 elif abs(alpha) > self.thres2:
                                     # if alpha>0 or alpha<-pi:
                                     if alpha > 0:
-                                        self.move_cmd.linear.x = 0
+                                        #self.move_cmd.linear.x = 0
+                                        self.target_speed = 0
                                         self.move_cmd.angular.z = self.ang_vel_2
                                     else:
-                                        self.move_cmd.linear.x = 0
+                                        #self.move_cmd.linear.x = 0
+                                        self.target_speed = 0
                                         self.move_cmd.angular.z = -self.ang_vel_2
 
                                 elif abs(alpha) > self.thres3:
                                     # if alpha>0 or alpha<-pi:
                                     if alpha > 0:
-                                        self.move_cmd.linear.x = 0
+                                        #self.move_cmd.linear.x = 0
+                                        self.target_speed = 0
                                         self.move_cmd.angular.z = self.ang_vel_3
                                     else:
-                                        self.move_cmd.linear.x = 0
+                                        #self.move_cmd.linear.x = 0
+                                        self.target_speed = 0
                                         self.move_cmd.angular.z = -self.ang_vel_3
 
                             if self.is_moving_between_letters:
@@ -333,6 +350,11 @@ class NavigationControl():
                             self.valve_angle_input.goal_position = self.valve_status
                             self.valve_angle_publisher.publish(
                                 self.valve_angle_input)
+
+
+                            feedback = pid_control(self.target_speed, self.current_speed)
+                            self.vel_update(feedback)
+                            self.move_cmd.linear.x = self.current_speed
 
                             self.cmd_vel.publish(self.move_cmd)
 
@@ -426,6 +448,9 @@ class NavigationControl():
         #self.look_opposite_side()
         #stop the robot
         self.cmd_vel.publish(Twist())
+
+    def vel_update(self, a):
+        self.current_speed = self.current_speed + a*self.dt
 
     def callback_position(self, _data):
         self.point.x = _data.x
