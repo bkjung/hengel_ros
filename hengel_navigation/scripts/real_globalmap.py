@@ -54,7 +54,7 @@ class RealGlobalMap():
 
         self.size_x = 1000
         self.size_y = 1000
-        self.scale_factor =400/50*100  #[pixel/m]
+        self.scale_factor =200/0.5  #[pixel/m]
 
         self.r = rospy.Rate(50)
 
@@ -84,37 +84,67 @@ class RealGlobalMap():
             criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                         number_of_iterations, termination_eps)
             try:
-                (cc, warp_matrix) = cv2.findTransformECC(
-                        self.last_letter_img, self.last2_letter_img, warp_matrix, cv2.MOTION_EUCLIDEAN, criteria)
+                #(cc, warp_matrix) = cv2.findTransformECC(self.last_letter_img, self.last2_letter_img, warp_matrix, cv2.MOTION_EUCLIDEAN, criteria)
+                ##warp_matirix: virtual to actual transformation in image world
+                #s_th=-warp_matrix[0][1]
+                #c_th=warp_matrix[0][0]
+                #tx=warp_matrix[0][2]
+                #ty=warp_matrix[1][2]
+                #print("warp_matrix", warp_matrix)
+
+       		##frame center
+		#center_x= (0.75+(letter_number-1)*0.85)
+                #center_y=(0.75)
+
+		##frame origin
+		#fx= (0.75-0.44+(letter_number-1)*0.85)
+                #fy=(0.75-0.61)
+
+
+		#tx_real = (fx*(1-c_th)+s_th*fy+ty/self.scale_factor)*0.58
+		#ty_real = (fy*(1-c_th)-s_th*fx+tx/self.scale_factor)*0.58
+
+		###Calculate center in real world
+                #center_m=[center_x+s_th*tx/(2*(1-c_th)*self.scale_factor), center_y-s_th*ty/(2*(1-c_th)*self.scale_factor)]
+                #center_m[0]=center_m[0]
+                #center_m[1]=center_m[1]
+
+		##Compute warp_matrix in real world
+		#T=[]
+                #T.append([c_th, s_th, (-c_th*center_m[0]-s_th*center_m[1]+center_m[0])*0.58])
+                #T.append([-s_th, c_th, (s_th*center_m[0]-c_th*center_m[1]+center_m[1])*0.58])
+                #T.append([0,0,1])
+		##T=[[c_th, -s_th, tx_real],[s_th, c_th, ty_real],[0,0,1]]
+                ##T: virtual to actual transformation in real world
+                #T= np.linalg.inv(T)
+
+
+                #####################180607 MODIFY##########################
+                (cc, warp_matrix) = cv2.findTransformECC(self.last2_letter_img, self.last_letter_img, warp_matrix, cv2.MOTION_EUCLIDEAN, criteria)
+                #warp_matirix: virtual to actual transformation in image world
                 s_th=-warp_matrix[0][1]
                 c_th=warp_matrix[0][0]
                 tx=warp_matrix[0][2]
                 ty=warp_matrix[1][2]
                 print("warp_matrix", warp_matrix)
 
-       		#Virtual view point         
-		center_x= (0.75+(letter_number-1)*0.85)*0.58
-                center_y=(0.75)*0.58
-		
-		#frame center	
-		fx= (0.75-0.44+(letter_number-1)*0.85)*0.58
-                fy=(0.75+0.61)*0.58
-		
-		tx_real = fx*(1-c_th)+self.scale_factor*ty-s_th*fy
-		ty_real = fy*(1-c_th)+self.scale_factor*tx+s_th*fx
-			
-		##Calculate center in real world
-                #center_m=[center_x+s_th*tx/(2*(1-c_th)*self.scale_factor), center_y-s_th*ty/(2*(1-c_th)*self.scale_factor)]
-                #center_m[0]=center_m[0]*0.58
-                #center_m[1]=center_m[1]*0.58
-                
-		##Compute warp_matrix in real world
-		#T=[]
-                #T.append([c_th, s_th, -c_th*center_m[0]-s_th*center_m[1]+center_m[0]])
-                #T.append([-s_th, c_th, s_th*center_m[0]-c_th*center_m[1]+center_m[1]])
-                
+		#frame origin
+		fx=0.75-0.44+(letter_number-1)*0.85
+                fy=0.75-0.61
+
+                fx2=fx+ty/self.scale_factor
+                fy2=fy+tx/self.scale_factor
+
+		tx_real =-c_th*fx+s_th*fy+fx2
+		ty_real =-s_th*fx-c_th*fy+fy2
+
+                tx_real=tx_real*0.58
+                ty_real=ty_real*0.58
+
+		#Compute warp_matrix in real world
 		T=[[c_th, -s_th, tx_real],[s_th, c_th, ty_real],[0,0,1]]
-		print("T:", T) 
+                #T: virtual to actual transformation in real world
+                print("T:", T)
             except:
                 print("ECC transform error")
 
@@ -125,9 +155,7 @@ class RealGlobalMap():
         sz=self.last_letter_img.shape
         if letter_number >0:
             self.last_letter_img = cv2.warpAffine(self.last_letter_img, warp_matrix, (sz[1], sz[0]), flags=cv2.INTER_LINEAR)
-        print(T)
-	T_inv= np.linalg.inv(T)
-        return T_inv
+        return T
 
     def crop_letter(self, letter_number, ind):
         ###################
