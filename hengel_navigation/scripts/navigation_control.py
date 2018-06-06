@@ -21,7 +21,6 @@ from pi_cam_manager import PiCamManager
 from crosspoint_docking import CrosspointDocking
 import logging
 
-
 #2480 is too large, so that it hits the ground and the valve_control while loop does not end.
 #MARKER_DOWN = 2480
 #MARKER_DOWN = 2460
@@ -88,11 +87,15 @@ class NavigationControl():
 
         self.arr_path = _arr_path
         self.docking_point_list = _docking_point_list
+        self.center_point_list = _center_point_list
         self.initial_setting()
         self.run()
 
     def initial_setting(self):
         self.program_start_time = time.strftime("%y%m%d_%H%M%S")
+        logging.basicConfig(filename='~/Dropbox/intern_share/experiment_data/Global_Alignment/log/'+self.program_start_time+'.txt', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+        logging.debug('----Initial Center Point----')
+        logging.debug(self.center_point_list)
 
         self.point = Point()
         self.heading = Float32()
@@ -432,6 +435,19 @@ class NavigationControl():
                                 self.arr_path[idx_letter][idx_segment][idx_waypoint][1] = b
 
                 print("multiplied warp matrix to all waypoints")
+
+                for i in range(len(self.center_point_list)):
+                    a, b, c = np.matmul(warp_matrix,
+                    [self.center_point_list[i][0],self.center_point_list[i][1],1])
+                    self.center_point_list[i][0] = a
+                    self.center_point_list[i][1] = b
+
+                logging.debug('No. '+letter_index+' finished')
+                logging.debug('Warp Matrix : ')
+                logging.debug(warp_matrix)
+                logging.debug(' ')
+                logging.debug('----New Center Point----')
+                logging.debug(self.center_point_list)
 
                 print("wait for 5 sec")
                 rospy.loginfo("wait for 5 sec")
