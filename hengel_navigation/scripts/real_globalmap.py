@@ -68,7 +68,7 @@ class RealGlobalMap():
         self.y = _position[1]
         self.th = _position[2]
 
-        T=np.eye(2,3, dtype=np.float32)
+        T=np.eye(3,3, dtype=np.float32)
         warp_matrix = np.eye(2, 3, dtype=np.float32)
         if letter_number > 0:
             rospy.loginfo("letter # >0, start transformation")
@@ -91,31 +91,30 @@ class RealGlobalMap():
                 tx=warp_matrix[0][2]
                 ty=warp_matrix[1][2]
                 print("warp_matrix", warp_matrix)
-#                center_px=(sz[1]/2-s_th*ty(2*(1-c_th)),sz[0]/2+s_th*tx(2*(1-c_th)))
-                center_x= 0.75+(letter_number-1)*0.85
-                center_y=0.75
-                print("center x, y:", center_x, center_y)
-                center_m=[center_x+s_th*tx/(2*(1-c_th)*self.scale_factor), center_y-s_th*ty/(2*(1-c_th)*self.scale_factor)]
-                print("center m, before scale:", center_m)
-                center_m[0]=center_m[0]*0.58
-                center_m[1]=center_m[1]*0.58
-                print("center m, after scale:", center_m)
-                T=[]
-                T.append([c_th, s_th, -c_th*center_m[0]-s_th*center_m[1]+center_m[0]])
-                T.append([-s_th, c_th, s_th*center_m[0]-c_th*center_m[1]+center_m[1]])
-                print("T:", T)
-                #print(warp_matrix)
-                #offset_th = math.atan2(-warp_matrix[0][1],warp_matrix[0][0])
-                #print(offset_th)
-                ##Calculate x, y offset
-                #xx = math.cos(offset_th)*892-math.sin(offset_th)*352+warp_matrix[0][2]
-                #yy = math.sin(offset_th)*892+math.cos(offset_th)*352+warp_matrix[1][2]
-                #offset_x = xx-892
-                #offset_y = yy-352
-                #print("offset_x:", offset_x, "offset_y:", offset_y)
-                ##Change to the world coordinate
-                #data = [-offset_y/self.scale_factor, offset_x/self.scale_factor, offset_th]
-                #print("calculated offset:", data)
+
+       		#Virtual view point         
+		center_x= (0.75+(letter_number-1)*0.85)*0.58
+                center_y=(0.75)*0.58
+		
+		#frame center	
+		fx= (0.75-0.44+(letter_number-1)*0.85)*0.58
+                fy=(0.75+0.61)*0.58
+		
+		tx_real = fx*(1-c_th)+self.scale_factor*ty-s_th*fy
+		ty_real = fy*(1-c_th)+self.scale_factor*tx+s_th*fx
+			
+		##Calculate center in real world
+                #center_m=[center_x+s_th*tx/(2*(1-c_th)*self.scale_factor), center_y-s_th*ty/(2*(1-c_th)*self.scale_factor)]
+                #center_m[0]=center_m[0]*0.58
+                #center_m[1]=center_m[1]*0.58
+                
+		##Compute warp_matrix in real world
+		#T=[]
+                #T.append([c_th, s_th, -c_th*center_m[0]-s_th*center_m[1]+center_m[0]])
+                #T.append([-s_th, c_th, s_th*center_m[0]-c_th*center_m[1]+center_m[1]])
+                
+		T=[[c_th, -s_th, tx_real],[s_th, c_th, ty_real],[0,0,1]]
+		print("T:", T) 
             except:
                 print("ECC transform error")
 
@@ -127,7 +126,8 @@ class RealGlobalMap():
         if letter_number >0:
             self.last_letter_img = cv2.warpAffine(self.last_letter_img, warp_matrix, (sz[1], sz[0]), flags=cv2.INTER_LINEAR)
         print(T)
-        return T
+	T_inv= np.linalg.inv(T)
+        return T_inv
 
     def crop_letter(self, letter_number, ind):
         ###################

@@ -394,7 +394,7 @@ class NavigationControl():
                 warp_matrix = self.real_globalmap_run()
                 print(warp_matrix)
             else:
-                warp_matrix=np.eye(2,3)
+                warp_matrix=np.eye(3,3)
 
 
 
@@ -403,7 +403,7 @@ class NavigationControl():
                     for idx_letter in range(len(self.arr_path)):
                         for idx_segment in range(len(self.arr_path[idx_letter])):
                             for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
-                                a, b = np.matmul(warp_matrix,
+                                a, b, c = np.matmul(warp_matrix,
                                 [self.arr_path[idx_letter][idx_segment][idx_waypoint][0],self.arr_path[idx_letter][idx_segment][idx_waypoint][1],1])
                                 self.arr_path[idx_letter][idx_segment][idx_waypoint][0] = a
                                 self.arr_path[idx_letter][idx_segment][idx_waypoint][1] = b
