@@ -17,6 +17,8 @@ import cv2
 from cv_bridge import CvBridge
 from matplotlib import pyplot as plt
 from around_view import AroundImage
+import logging
+
 
 package_base_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../.."))
@@ -66,8 +68,8 @@ class RealGlobalMap():
         self.y = _position[1]
         self.th = _position[2]
 
+        T=np.eye(2,3, dtype=np.float32)
         warp_matrix = np.eye(2, 3, dtype=np.float32)
-        data = [0, 0, 0]
         if letter_number > 0:
             rospy.loginfo("letter # >0, start transformation")
             # 1. Crop second last letter
@@ -83,7 +85,25 @@ class RealGlobalMap():
                         number_of_iterations, termination_eps)
             try:
                 (cc, warp_matrix) = cv2.findTransformECC(
-                        self.last2_letter_img, self.last_letter_img, warp_matrix, cv2.MOTION_EUCLIDEAN, criteria)
+                        self.last_letter_img, self.last2_letter_img, warp_matrix, cv2.MOTION_EUCLIDEAN, criteria)
+                s_th=-warp_matrix[0][1]
+                c_th=warp_matrix[0][0]
+                tx=warp_matrix[0][2]
+                ty=warp_matrix[1][2]
+                print("warp_matrix", warp_matrix)
+#                center_px=(sz[1]/2-s_th*ty(2*(1-c_th)),sz[0]/2+s_th*tx(2*(1-c_th)))
+                center_x= 0.75+(letter_number-1)*0.85
+                center_y=0.75
+                print("center x, y:", center_x, center_y)
+                center_m=[center_x+s_th*tx/(2*(1-c_th)*self.scale_factor), center_y-s_th*ty/(2*(1-c_th)*self.scale_factor)]
+                print("center m, before scale:", center_m)
+                center_m[0]=center_m[0]*0.58
+                center_m[1]=center_m[1]*0.58
+                print("center m, after scale:", center_m)
+                T=[]
+                T.append([c_th, s_th, -c_th*center_m[0]-s_th*center_m[1]+center_m[0]])
+                T.append([-s_th, c_th, s_th*center_m[0]-c_th*center_m[1]+center_m[1]])
+                print("T:", T)
                 #print(warp_matrix)
                 #offset_th = math.atan2(-warp_matrix[0][1],warp_matrix[0][0])
                 #print(offset_th)
@@ -96,7 +116,6 @@ class RealGlobalMap():
                 ##Change to the world coordinate
                 #data = [-offset_y/self.scale_factor, offset_x/self.scale_factor, offset_th]
                 #print("calculated offset:", data)
-                data = warp_matrix
             except:
                 print("ECC transform error")
 
@@ -106,9 +125,9 @@ class RealGlobalMap():
         self.last_letter_img = self.crop_letter(letter_number, 1)
         sz=self.last_letter_img.shape
         if letter_number >0:
-            print(warp_matrix)
-            self.last_letter_img = cv2.warpAffine(self.last_letter_img, warp_matrix, (sz[1], sz[0]), flags=cv2.INTER_LINEAR+cv2.WARP_INVERSE_MAP)
-        return data
+            self.last_letter_img = cv2.warpAffine(self.last_letter_img, warp_matrix, (sz[1], sz[0]), flags=cv2.INTER_LINEAR)
+        print(T)
+        return T
 
     def crop_letter(self, letter_number, ind):
         ###################

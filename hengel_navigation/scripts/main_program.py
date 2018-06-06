@@ -5,11 +5,13 @@ import roslaunch
 import sys
 from paint_drawing import PaintDrawing
 from paint_letter import PaintLetter
+from paint_lieul import PaintLieul
 from test_code import GoToPoint
 
 OPTION_LETTERS = 1
 OPTION_DRAWING = 2
 OPTION_TEST = 3
+OPTION_LIEUL = 4
 
 
 class HengelMain():
@@ -30,6 +32,8 @@ class HengelMain():
 
             elif self.runningOption == OPTION_TEST:
                 GoToPoint()
+            elif self.runningOption == OPTION_LIEUL:
+                PaintLieul()
 
             else:
                 raise Exception(
