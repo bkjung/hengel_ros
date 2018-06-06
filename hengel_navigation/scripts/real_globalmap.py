@@ -52,7 +52,7 @@ class RealGlobalMap():
 
         self.size_x = 1000
         self.size_y = 1000
-        self.scale_factor = 350/85*100  #[pixel/m]
+        self.scale_factor =400/50*100  #[pixel/m]
 
         self.r = rospy.Rate(50)
 
