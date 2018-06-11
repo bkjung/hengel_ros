@@ -4,6 +4,8 @@ import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Image
+from nav_msgs.msg import Path
+from visualization_msgs.msg import Marker
 from hengel_navigation.msg import ValveInput, OperationMode
 import tf
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos
@@ -124,8 +126,28 @@ class NavigationControl():
         self.cnt_segments_in_current_letter = 0
         self.cnt_waypoints_in_current_segment = 0
 
-        self.path_points = []
-
+        self.traj = Marker()
+        self.traj.header.frame_id = '/odom'
+        self.traj.header.stamp = rospy.get_rostime()
+        self.traj.ns = "hengel_traj"
+        self.traj.action = Marker.ADD
+        self.traj.pose.orientation.w = 1.0
+        self.traj.type = Marker.LINE_STRIP
+        self.traj.scale.x = 0.01 # line width
+        self.traj.color.r = 1.0
+        self.traj.color.b = 0.0
+        self.traj.color.a = 1.0
+        
+        # if(WRITE_MULTIPLE_SHAPES):
+        #     traj.id = shapeCount;
+        # else:
+        #     traj.id = 0; #overwrite any existing shapes
+        #     traj.lifetime.secs = 1; #timeout for display
+        self.traj.id = 0; #overwrite any existing shapes
+        self.traj.lifetime.secs = 1; #timeout for display
+        
+        self.traj.points = []
+        
         self.thres1 = np.deg2rad(30)
         self.thres2 = np.deg2rad(15)
         self.thres3 = np.deg2rad(4)
@@ -173,6 +195,8 @@ class NavigationControl():
                                                     self.callback_position)
         self.heading_subscriber = rospy.Subscriber('/current_heading', Float32,
                                                    self.callback_heading)
+
+        self.pub_markers = rospy.Publisher('/hengel_trajectory_visualization', Marker, queue_size=5)
 
         self.real_globalmap = RealGlobalMap(self.arr_path)
         self.pi_cam_manager = PiCamManager(self.program_start_time)
@@ -361,13 +385,9 @@ class NavigationControl():
                             self.move_cmd.linear.x = self.current_speed
 
                             self.cmd_vel.publish(self.move_cmd)
+                            if self.valve_status == MARKER_DOWN:
+                                self.visualize_traj(self.point)
 
-                            #                        self.loop_cnt_pathmap = self.loop_cnt_pathmap + 1
-                            #                            if self.loop_cnt_pathmap==25:
-                            #                                self.loop_cnt_pathmap = 0
-                            #                                self.path_points.append([self.point.x, self.point.y])
-                            #                                self.generate_pathmap()
-                            #
                             self.r.sleep()
 
                         except KeyboardInterrupt:
@@ -476,53 +496,59 @@ class NavigationControl():
     def callback_heading(self, _data):
         self.heading.data = _data.data
 
-    def generate_pathmap(self):
-        scale = 10
-        pixel_size = 100  #1m*1m canvas of 1cm accuracy points (including boundary points)
-        # img = PIL.Image.new("RGB", ((100+pixel_size*self.cnt_letter)*scale, (100+pixel_size)*scale), (255, 255, 255))
-        pil_image = PIL.Image.new("RGB",
-                                  ((pixel_size * self.cnt_letter) * scale,
-                                   (pixel_size) * scale), (255, 255, 255))
+    def visualize_traj(self, _data):
+        self.traj.points.append(Point(_data.x, _data.y, 0.0))
+        self.pub_markers.publish(self.traj)
+        
+        
 
-        print("loop_cnt_pathmap = ", self.loop_cnt_pathmap)
-        rospy.loginfo("loop_cnt_pathmap = ", self.loop_cnt_pathmap)
+    # def generate_pathmap(self):
+    #     scale = 10
+    #     pixel_size = 100  #1m*1m canvas of 1cm accuracy points (including boundary points)
+    #     # img = PIL.Image.new("RGB", ((100+pixel_size*self.cnt_letter)*scale, (100+pixel_size)*scale), (255, 255, 255))
+    #     pil_image = PIL.Image.new("RGB",
+    #                               ((pixel_size * self.cnt_letter) * scale,
+    #                                (pixel_size) * scale), (255, 255, 255))
 
-        for i in range(self.loop_cnt_pathmap):
-            # print(self.path_points[i][0], self.path_points[i][1])
-            if self.path_points[i][0] < 0 or self.path_points[i][0] > 1.0 * self.cnt_letter:
-                continue
-            if (1.0 - self.path_points[i][1]) < 0 or (
-                    1.0 - self.path_points[i][1]) > 1.0:
-                continue
+    #     print("loop_cnt_pathmap = ", self.loop_cnt_pathmap)
+    #     rospy.loginfo("loop_cnt_pathmap = ", self.loop_cnt_pathmap)
 
-            x = 0.99 if self.path_points[i][0] == 1.0 else self.path_points[i][
-                0]
-            y = 0.99 if (1.0 - self.path_points[i][1]) == 1.0 else (
-                1.0 - self.path_points[i][1])
-            x = (int)(floor(x * pixel_size))
-            y = (int)(floor(y * pixel_size))
+    #     for i in range(self.loop_cnt_pathmap):
+    #         # print(self.path_points[i][0], self.path_points[i][1])
+    #         if self.path_points[i][0] < 0 or self.path_points[i][0] > 1.0 * self.cnt_letter:
+    #             continue
+    #         if (1.0 - self.path_points[i][1]) < 0 or (
+    #                 1.0 - self.path_points[i][1]) > 1.0:
+    #             continue
 
-            # x=x+50
-            # y=y+50
+    #         x = 0.99 if self.path_points[i][0] == 1.0 else self.path_points[i][
+    #             0]
+    #         y = 0.99 if (1.0 - self.path_points[i][1]) == 1.0 else (
+    #             1.0 - self.path_points[i][1])
+    #         x = (int)(floor(x * pixel_size))
+    #         y = (int)(floor(y * pixel_size))
 
-            for k in range(scale):
-                for t in range(scale):
-                    pil_image.putpixel((x * scale + t, y * scale + k),
-                                       (0, 0, 0))
+    #         # x=x+50
+    #         # y=y+50
 
-        image_save_path = package_base_path + "/hengel_path_manager/output_pathmap/" + self.program_start_time + ".png"
-        print("Pathmap image saved at " + image_save_path)
-        rospy.loginfo("Pathmap image saved at " + image_save_path)
-        pil_image.save(image_save_path, "PNG")
-        self.map_img = np.ndarray(pil_image)
-        #self.crop_image()
-        # Convert RGB to BGR
-        #cv2.cvtColor(open_cv_image, cv2.cv.CV_BGR2RGB)
+    #         for k in range(scale):
+    #             for t in range(scale):
+    #                 pil_image.putpixel((x * scale + t, y * scale + k),
+    #                                    (0, 0, 0))
 
-        bridge = CvBridge()
-        img_msg = bridge.cv2_to_imgmsg(open_cv_image, "rgb8")
+    #     image_save_path = package_base_path + "/hengel_path_manager/output_pathmap/" + self.program_start_time + ".png"
+    #     print("Pathmap image saved at " + image_save_path)
+    #     rospy.loginfo("Pathmap image saved at " + image_save_path)
+    #     pil_image.save(image_save_path, "PNG")
+    #     self.map_img = np.ndarray(pil_image)
+    #     #self.crop_image()
+    #     # Convert RGB to BGR
+    #     #cv2.cvtColor(open_cv_image, cv2.cv.CV_BGR2RGB)
 
-        # global map
+    #     bridge = CvBridge()
+    #     img_msg = bridge.cv2_to_imgmsg(open_cv_image, "rgb8")
+
+    #     # global map
 
     def crop_image(self):
         x_px = scale_factor * self.point.x
