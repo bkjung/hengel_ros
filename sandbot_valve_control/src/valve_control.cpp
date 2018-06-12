@@ -32,6 +32,8 @@
 #define PROTOCOL_VERSION                2.0                 // See which protocol version is used in the Dynamixel
 
 // Default setting
+// #define DXL_ID_10                       1                  // Dynamixel ID: 10
+// #define DXL_ID_13                       2                  // Dynamixel ID: 10
 #define DXL_ID_10                       10                  // Dynamixel ID: 10
 #define DXL_ID_13                       13                  // Dynamixel ID: 10
 #define DXL_ID_254                      254

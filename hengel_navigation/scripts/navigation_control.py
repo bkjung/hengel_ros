@@ -3,6 +3,7 @@
 import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
 from std_msgs.msg import Float32
+from std_msgs.msg import Int32
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Path
 from visualization_msgs.msg import Marker
@@ -172,6 +173,8 @@ class NavigationControl():
         rospy.on_shutdown(self.shutdown)
 
         self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
+        self.left_wheel_angle = rospy.Publisher('/left_wheel_angle', Int32, queue_size=5)
+        self.right_wheel_angle = rospy.Publisher('/right_wheel_angle', Int32, queue_size=5)
 
         self.valve_angle_publisher = rospy.Publisher(
             '/valve_input', ValveInput, queue_size=5)
@@ -229,6 +232,7 @@ class NavigationControl():
 
         #self.real_globalmap_run()
 
+        while_loop_cnt = 0
         while self.letter_index < self.cnt_letter:
             if rospy.is_shutdown():
                 break
@@ -384,9 +388,16 @@ class NavigationControl():
                             self.vel_update(feedback)
                             self.move_cmd.linear.x = self.current_speed
 
+
                             self.cmd_vel.publish(self.move_cmd)
                             if self.valve_status == MARKER_DOWN:
                                 self.visualize_traj(self.point)
+
+                            self.left_wheel_angle.publish(while_loop_cnt)
+                            self.right_wheel_angle.publish(while_loop_cnt)
+                            while_loop_cnt = while_loop_cnt+1
+
+                            # print("wheel angle publish")
 
                             self.r.sleep()
 
