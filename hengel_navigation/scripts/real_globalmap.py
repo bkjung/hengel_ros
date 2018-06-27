@@ -54,10 +54,9 @@ class RealGlobalMap():
 
         self.size_x = 1000
         self.size_y = 1000
-        self.scale_factor =200/0.5  #[pixel/m]
+        self.scale_factor =282/0.74  #[pixel/m]
 
         self.r = rospy.Rate(50)
-
         # self.aroundview_subscriber=rospy.Subscriber('/around_img', Image, self.callback_view)
         # print("initialized")
         self.aroundImage = AroundImage()
@@ -68,7 +67,7 @@ class RealGlobalMap():
         self.y = _position[1]
         self.th = _position[2]
 
-        T=np.eye(3,3, dtype=np.float32)
+        T = np.eye(2,3, dtype=np.float32)
         warp_matrix = np.eye(2, 3, dtype=np.float32)
         if letter_number > 0:
             rospy.loginfo("letter # >0, start transformation")
@@ -120,7 +119,11 @@ class RealGlobalMap():
 
 
                 #####################180607 MODIFY##########################
-                (cc, warp_matrix) = cv2.findTransformECC(self.last2_letter_img, self.last_letter_img, warp_matrix, cv2.MOTION_EUCLIDEAN, criteria)
+                #cv2.imwrite(package_base_path +"/hengel_navigation/viewpoint_img/cropped_2_" +time.strftime("%y%m%d_%H%M%S") + '.jpg',self.last2_letter_img)
+                #cv2.imwrite(package_base_path + "/hengel_navigation/viewpoint_img/cropped_1_" +time.strftime("%y%m%d_%H%M%S") + '.jpg',self.last_letter_img)
+                cv2.imwrite("/home/hengel/ecc/0611/cropped_2_" +time.strftime("%y%m%d_%H%M%S") + '.jpg',self.last2_letter_img)
+                cv2.imwrite("/home/hengel/ecc/0611/cropped_1_" +time.strftime("%y%m%d_%H%M%S") + '.jpg',self.last_letter_img)
+                (cc, self.warp_matrix) = cv2.findTransformECC(self.last_letter_img, self.last2_letter_img, warp_matrix, cv2.MOTION_EUCLIDEAN, criteria)
                 #warp_matirix: virtual to actual transformation in image world
                 s_th=-warp_matrix[0][1]
                 c_th=warp_matrix[0][0]
@@ -131,20 +134,22 @@ class RealGlobalMap():
 		#frame origin
 		fx=0.75-0.44+(letter_number-1)*0.85
                 fy=0.75-0.61
+                print("fx, fy:", fx, fy)
 
                 fx2=fx+ty/self.scale_factor
                 fy2=fy+tx/self.scale_factor
+                print("fx2, fy2:", fx2, fy2)
 
-		tx_real =-c_th*fx+s_th*fy+fx2
-		ty_real =-s_th*fx-c_th*fy+fy2
+		tx_real =-c_th*fx-s_th*fy+fx2
+		ty_real =s_th*fx-c_th*fy+fy2
+                print("tx_real, ty_real:", tx_real, ty_real)
 
                 tx_real=tx_real*0.58
                 ty_real=ty_real*0.58
 
 		#Compute warp_matrix in real world
-		T=[[c_th, -s_th, tx_real],[s_th, c_th, ty_real],[0,0,1]]
+		T=[[c_th, s_th, tx_real],[-s_th, c_th, ty_real]]
                 #T: virtual to actual transformation in real world
-                print("T:", T)
             except:
                 print("ECC transform error")
 
@@ -154,7 +159,10 @@ class RealGlobalMap():
         self.last_letter_img = self.crop_letter(letter_number, 1)
         sz=self.last_letter_img.shape
         if letter_number >0:
-            self.last_letter_img = cv2.warpAffine(self.last_letter_img, warp_matrix, (sz[1], sz[0]), flags=cv2.INTER_LINEAR)
+            T=np.array(T)
+            self.last_letter_img = self.warpImage(self.last_letter_img, T)
+            #self.last_letter_img = cv2.warpAffinedddd(self.last_letter_img, T, (sz[1], sz[0]), flags=cv2.INTER_LINEAR+cv2.WARP_INVERSE_MAP)
+        print("T:", T)
         return T
 
     def crop_letter(self, letter_number, ind):
@@ -180,10 +188,29 @@ class RealGlobalMap():
         #     plt.xticks([]), plt.yticks([])
         # plt.show()
         #####################################################
-        cv2.imwrite(package_base_path +
-                "/hengel_navigation/viewpoint_img/cropped_"+str(ind)+"_" +time.strftime("%y%m%d_%H%M%S") + '.jpg',crop_img)
 
         return cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+
+    def warpImage(self, image, warp_mat):
+        rows, cols = image.shape[:2]
+        diagonal = (int)(math.sqrt(rows * rows + cols * cols))
+
+        offsetX = int((diagonal - cols) / 2)
+        offsetY = int((diagonal - rows) / 2)
+
+        background = np.zeros((diagonal, diagonal), np.uint8)
+        for i in range(diagonal):
+            for j in range(diagonal):
+                if i in range(offsetX, rows + offsetX) and j in range(
+                        offsetY, offsetY + cols):
+                    background[i][j] += image[i - offsetX][j - offsetY]
+                else:
+                    background[i][j] = 255
+
+        rot_image = cv2.warpAffine(
+            background, warp_mat, (diagonal, diagonal), borderValue=(256, 256, 256),
+            flags=cv2.INTER_LINEAR)
+        return rot_image[offsetX:(rows+offsetX), offsetY:(cols+offsetY)]
 
     def MapPublisher(self):
         x_px = self.scale_factor * self.x

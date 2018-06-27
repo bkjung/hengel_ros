@@ -54,7 +54,7 @@
 
 #define VALVE_OPEN                      3900
 //int GOAL_POSITION = 3200;
-int GOAL_POSITION = 3250;
+int GOAL_POSITION = 3270;
 int MODE = 1;
 int SHUTDOWN = 0;
 bool RECEIVED_MSG = false;

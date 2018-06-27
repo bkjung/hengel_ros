@@ -14,7 +14,7 @@ import os
 from pathmaker_ui import PathMaker
 from navigation_control import NavigationControl
 
-CANVAS_SIDE_LENGTH = 1.5 * 0.58
+CANVAS_SIDE_LENGTH = 6.0 * 0.58
 VIEWPOINT_DISTANCE = 0.3 * 0.58
 
 class PaintDrawing():
