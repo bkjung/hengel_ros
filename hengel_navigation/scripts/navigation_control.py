@@ -83,7 +83,11 @@ class NavigationControl():
         word3 = raw_input(
             "Do you want Global Compensation?\n[1] Yes.\n[2] No.\nType 1 or 2:"
             )
+        word4= raw_input(
+                "Is appicator on middle?\n[1] Middle. \n[2] End.\nType 1 or 2:"
+                )
         self.global_option = int(word3)
+        self.applicator_option=int(word4)
 
         self.arr_path = _arr_path
         self.docking_point_list = _docking_point_list
@@ -93,10 +97,12 @@ class NavigationControl():
 
     def initial_setting(self):
         self.program_start_time = time.strftime("%y%m%d_%H%M%S")
-        logging.basicConfig(filename='~/Dropbox/intern_share/experiment_data/Global_Alignment/log/'+self.program_start_time+'.txt', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+        #logging.basicConfig(filename='~/Dropbox/intern_share/experiment_data/Global_Alignment/log/'+self.program_start_time+'.txt', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
         #logging.basicConfig(filename='~/Dropbox/intern_share/experiment_data/Global_Alignment/log/'+self.program_start_time+'.txt', level=logging.DEBUG)
-        logging.debug('----Initial Center Point----')
-        logging.debug(self.center_point_list)
+        #logging.debug('----Initial Center Point----')
+        #logging.debug(self.center_point_list)
+        print('----Initial Center Point----')
+        print(self.center_point_list)
 
         self.point = Point()
         self.heading = Float32()
@@ -417,11 +423,15 @@ class NavigationControl():
             print("real globalmap run!!")
             rospy.loginfo("real globalmap run!!")
 
+            print("wait for 5 sec")
+            rospy.loginfo("wait for 5 sec")
+            time.sleep(5)
+
             if self.global_option == 1:
                 warp_matrix = self.real_globalmap_run()
                 #print(warp_matrix)
             else:
-                warp_matrix=np.eye(3,3)
+                warp_matrix=np.eye(2,3)
 
 
 
@@ -430,7 +440,7 @@ class NavigationControl():
                     for idx_letter in range(len(self.arr_path)):
                         for idx_segment in range(len(self.arr_path[idx_letter])):
                             for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
-                                a, b, c = np.matmul(warp_matrix,
+                                a, b = np.matmul(warp_matrix,
                                 [self.arr_path[idx_letter][idx_segment][idx_waypoint][0],self.arr_path[idx_letter][idx_segment][idx_waypoint][1],1])
                                 self.arr_path[idx_letter][idx_segment][idx_waypoint][0] = a
                                 self.arr_path[idx_letter][idx_segment][idx_waypoint][1] = b
@@ -438,21 +448,20 @@ class NavigationControl():
                 print("multiplied warp matrix to all waypoints")
 
                 for i in range(len(self.center_point_list)):
-                    a, b, c = np.matmul(warp_matrix,
+                    a, b = np.matmul(warp_matrix,
                     [self.center_point_list[i][0],self.center_point_list[i][1],1])
                     self.center_point_list[i][0] = a
                     self.center_point_list[i][1] = b
 
-                logging.debug('No. '+letter_index+' finished')
-                logging.debug('Warp Matrix : ')
-                logging.debug(warp_matrix)
-                logging.debug(' ')
-                logging.debug('----New Center Point----')
-                logging.debug(self.center_point_list)
+               # logging.debug('No. '+letter_index+' finished')
+               # logging.debug('Warp Matrix : ')
+               # logging.debug(warp_matrix)
+               # logging.debug(' ')
+               # logging.debug('----New Center Point----')
+               # logging.debug(self.center_point_list)
+                print('----New Center Point----')
+                print(self.center_point_list)
 
-                print("wait for 5 sec")
-                rospy.loginfo("wait for 5 sec")
-                time.sleep(5)
 
             #it's time for next letter
             self.letter_index = self.letter_index + 1

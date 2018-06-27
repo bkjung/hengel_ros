@@ -61,7 +61,7 @@ objPts[2] = [[300,1000],[700,1000],[700,600],[300,600]] #top
 imgPts = np.zeros((3, 4, 2), dtype=np.float32)
 imgPts[0] = [[37,462],[581,444],[452,97],[150,100]]  #bottom_1
 imgPts[1] = [[172,352],[417,349],[369,238],[219,239]]  #middle
-imgPts[2] = [[228,402],[390,402],[363,333],[255,333]] #top
+imgPts[2] = [[228,402],[390,402],[363,333],[257,333]] #top
 
 for i in range(3):
     for j in range(4):
@@ -116,9 +116,9 @@ def imagePublisher():
                 _, middle_img = cam_middle.read()
                 _, top_img = cam_top.read()
 
-                cv2.imshow("12", bottom_img)
-                cv2.imshow("11", middle_img)
-                cv2.imshow("10", top_img)
+                cv2.imshow("bottom", bottom_img)
+                cv2.imshow("middle", middle_img)
+                cv2.imshow("top", top_img)
 
                 h, w = bottom_img.shape[:2]
                 # optimalMat, roi = cv2.getOptimalNewCameraMatrix(intrin, dist, (w,h), 1, (w,h))

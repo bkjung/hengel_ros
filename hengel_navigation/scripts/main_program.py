@@ -6,12 +6,14 @@ import sys
 from paint_drawing import PaintDrawing
 from paint_letter import PaintLetter
 from paint_lieul import PaintLieul
+from paint_korea import PaintKorea
 from test_code import GoToPoint
 
 OPTION_LETTERS = 1
 OPTION_DRAWING = 2
 OPTION_TEST = 3
 OPTION_LIEUL = 4
+OPTION_KOREA = 5
 
 
 class HengelMain():
@@ -34,6 +36,8 @@ class HengelMain():
                 GoToPoint()
             elif self.runningOption == OPTION_LIEUL:
                 PaintLieul()
+            elif self.runningOption == OPTION_KOREA:
+                PaintKorea()
 
             else:
                 raise Exception(

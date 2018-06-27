@@ -23,10 +23,6 @@ class AroundImage:
 
     def Initialize(self):
         self.save_index =1
-        #self.cam_bottom = cv2.VideoCapture(10)
-        #self.cam_middle = cv2.VideoCapture(11)
-        #self.cam_top = cv2.VideoCapture(12)
-
         cmd_bottom = "readlink -f /dev/video12"
         cmd_middle = "readlink -f /dev/video10"
         cmd_top = "readlink -f /dev/video11"
@@ -70,8 +66,9 @@ class AroundImage:
 
         imgPts = np.zeros((3, 4, 2), dtype=np.float32)
         imgPts[0] = [[37,462],[581,444],[452,97],[150,100]]  #bottom_1
-        imgPts[1] = [[172,352],[417,349],[369,238],[219,239]]  #middle
-        imgPts[2] = [[228,402],[390,402],[363,333],[255,333]] #top
+        #imgPts[1] = [[172,352],[417,349],[369,238],[219,239]]  #middle
+        imgPts[1] = [[172,352],[417,349],[365,238],[225,239]]  #middle
+        imgPts[2] = [[228,402],[390,402],[363,333],[257,333]] #top
 
         for i in range(3):
             for j in range(4):
@@ -114,10 +111,6 @@ class AroundImage:
             _, middle_img = self.cam_middle.read()
             _, top_img = self.cam_top.read()
 
-            # cv2.imshow("bottom", bottom_img)
-            # cv2.imshow("middle", middle_img)
-            # cv2.imshow("top", top_img)
-
             h, w = bottom_img.shape[:2]
             # optimalMat, roi = cv2.getOptimalNewCameraMatrix(intrin, dist, (w,h), 1, (w,h))
             # undist_bottom = cv2.undistort(bottom_img, intrin, dist, None, intrin)
@@ -130,20 +123,14 @@ class AroundImage:
             print("image warped")
 
             #MULTIPLY WARPED IMAGE, THEN ADD TO BLANK IMAGE
-            im_mask_inv, im_mask = self.find_mask(im_middle)
-            bottom_masked = np.multiply(im_bottom, im_mask).astype('uint8')
-            middle_masked = np.multiply(im_middle, im_mask_inv).astype('uint8')
-            top_masked = np.multiply(im_top, im_mask).astype('uint8')
-            summed_image = bottom_masked + middle_masked + top_masked
-
-            #im_mask_inv, im_mask = self.find_mask(im_top)
-            #middle_masked=np.multiply(im_middle, im_mask).astype('uint8')
-            #top_masked=np.multiply(im_top, im_mask_inv).astype('uint8')
-            #tmp_img= middle_masked+top_masked
-            #im_mask_inv, im_mask = self.find_mask(tmp_img)
-            #bottom_masked=np.multiply(im_bottom, im_mask).astype('uint8')
-            #midtop_masked=np.multiply(tmp_img, im_mask_inv).astype('uint8')
-            #summed_image= bottom_masked+midtop_masked
+            im_mask_inv, im_mask = self.find_mask(im_top)
+            middle_masked=np.multiply(im_middle, im_mask).astype('uint8')
+            top_masked=np.multiply(im_top, im_mask_inv).astype('uint8')
+            tmp_img= middle_masked+top_masked
+            im_mask_inv, im_mask = self.find_mask(tmp_img)
+            bottom_masked=np.multiply(im_bottom, im_mask).astype('uint8')
+            midtop_masked=np.multiply(tmp_img, im_mask_inv).astype('uint8')
+            summed_image= bottom_masked+midtop_masked
 
             summed_image = cv2.resize(
                 summed_image, (700,1100), interpolation=cv2.INTER_AREA)
