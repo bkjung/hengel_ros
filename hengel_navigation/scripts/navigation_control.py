@@ -37,7 +37,7 @@ MARKER_UP = 3270
 
 scale_factor = 3  #[pixel/cm]
 robot_size = 15  #[cm]; diameter
-D=0.01		#Applicator offset
+D=0.05		#Applicator offset
 
 package_base_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "../.."))
@@ -111,7 +111,7 @@ class NavigationControl():
         print(self.center_point_list)
 
         self.point = Point()
-                self.endPoint= Point()
+        self.endPoint= Point()
         self.heading = Float32()
         self.move_cmd = Twist()
 
@@ -449,7 +449,6 @@ class NavigationControl():
                             [self.center_point_list[i][0],self.center_point_list[i][1],1])
                     self.center_point_list[i][0] = a
                     self.center_point_list[i][1] = b
-
                 print('----New Center Point----')
                 print(self.center_point_list)
 
@@ -471,6 +470,7 @@ class NavigationControl():
     def runOffset(self):
         self.wait_for_seconds(2)
         # go through path array
+        print("run offset started")
         print("number of letters = " + str(len(self.arr_path)))
         rospy.loginfo("number of letters = " + str(len(self.arr_path)))
         for idx_letter in range(len(self.arr_path)):
@@ -570,7 +570,7 @@ class NavigationControl():
                                     self.heading.data)
 
                             self.valve_status = MARKER_DOWN
-
+                            print("x_dot, y_dot:", x_dot, y_dot)
                             x_dot = (self.current_waypoint[0]-self.endPoint.x)*5
                             y_dot = (self.current_waypoint[1]-self.endPoint.y)*5
 
@@ -663,7 +663,7 @@ class NavigationControl():
                     self.center_point_list[i][0] = a
                     self.center_point_list[i][1] = b
 
-                                print('----New Center Point----')
+                print('----New Center Point----')
                 print(self.center_point_list)
 
 
@@ -785,7 +785,7 @@ class NavigationControl():
                                         -int(-y_px + 75.5 * scale_factor * sin(th) +
                                             111 * scale_factor * cos(th))
                                         ]]])
-                                    cv2.fillPoly(mask, pts, (255))
+        cv2.fillPoly(mask, pts, (255))
         res = cv2.bitwise_and(self.map_img, self.map_img, mask=mask)
 
         rect = cv2.boundingRect(pts)
