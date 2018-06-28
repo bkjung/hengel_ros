@@ -91,6 +91,7 @@ class NavigationControl():
                 )
         self.global_option = int(word3)
         self.applicator_offset=int(word4)
+        if (self.applicator_offset == )
 
         self.arr_path = _arr_path
         self.docking_point_list = _docking_point_list
