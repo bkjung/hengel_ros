@@ -14,7 +14,7 @@ import os
 from navigation_control import NavigationControl
 import cv2
 
-CANVAS_SIDE_LENGTH = 1.5 * 0.58
+CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #PADDING_LENGTH = 0.0
 PADDING_LENGTH = -0.65 * 0.58
