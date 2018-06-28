@@ -37,7 +37,7 @@ MARKER_UP = 3270
 
 scale_factor = 3  #[pixel/cm]
 robot_size = 15  #[cm]; diameter
-D=0.05		#Applicator offset
+D=0.01		#Applicator offset
 
 package_base_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "../.."))
@@ -97,7 +97,7 @@ class NavigationControl():
         self.center_point_list = _center_point_list
         self.initial_setting()
 
-        if word4 == 2:
+        if self.applicator_offset == 2:
             self.runOffset()
         else:
             self.run()
@@ -471,21 +471,17 @@ class NavigationControl():
         self.wait_for_seconds(2)
         # go through path array
         print("run offset started")
-        print("number of letters = " + str(len(self.arr_path)))
         rospy.loginfo("number of letters = " + str(len(self.arr_path)))
         for idx_letter in range(len(self.arr_path)):
-            print("number of letter segments in letter no." + str(idx_letter) +
-                    " = " + str(len(self.arr_path[idx_letter])))
             rospy.loginfo("number of letter segments in letter no." + str(idx_letter) +
                     " = " + str(len(self.arr_path[idx_letter])))
             for idx_segment in range(len(self.arr_path[idx_letter])):
-                waypoints_in_segment = []
+                #waypoints_in_segment = []
                 for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
-                    waypoints_in_segment.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
-                    waypoints_in_segment.append([
-                        self.arr_path[idx_letter][idx_segment][idx_waypoint][0],
-                        self.arr_path[idx_letter][idx_segment][idx_waypoint][1]
-                        ])
+                    #waypoints_in_segment.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
+                    #waypoints_in_segment.append([
+                    #    self.arr_path[idx_letter][idx_segment][idx_waypoint][0],
+                    #    self.arr_path[idx_letter][idx_segment][idx_waypoint][1] ])
                     self.cnt_total_waypoints = self.cnt_total_waypoints + 1
                 #self.waypoints.append(waypoints_in_segment)
 
@@ -570,9 +566,9 @@ class NavigationControl():
                                     self.heading.data)
 
                             self.valve_status = MARKER_DOWN
+                            x_dot = (self.current_waypoint[0]-self.endPoint.x)/200
+                            y_dot = (self.current_waypoint[1]-self.endPoint.y)/200
                             print("x_dot, y_dot:", x_dot, y_dot)
-                            x_dot = (self.current_waypoint[0]-self.endPoint.x)*5
-                            y_dot = (self.current_waypoint[1]-self.endPoint.y)*5
 
                             if self.is_moving_between_letters:
                                 self.valve_status = MARKER_UP
@@ -584,8 +580,9 @@ class NavigationControl():
 
                             th=self.heading.data
 
-                            self.move_cmd.linear.x=math.sqrt(pow(x_dot,2)*pow(cos(th),2)+pow(y_dot,2)*pow(sin(th),2)-x_dot*y_dot*sin(2*th)*cos(2*th))
+                            self.move_cmd.linear.x=sqrt(pow(x_dot,2)*pow(cos(th),2)+pow(y_dot,2)*pow(sin(th),2)-x_dot*y_dot*sin(2*th)*cos(2*th))
                             self.move_cmd.angular.z=(x_dot*sin(th)-y_dot*cos(th))/D
+                            print("v: ", self.move_cmd.linear., "w: ", self.move_cmd.angular.z)
 
                             self.cmd_vel.publish(self.move_cmd)
                             if self.valve_status == MARKER_DOWN:
