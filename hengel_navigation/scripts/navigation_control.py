@@ -98,7 +98,7 @@ class NavigationControl():
         self.center_point_list = _center_point_list
         self.initial_setting()
 
-        if word4 == 2:
+        if self.applicator_offset == 2:
             self.runOffset()
         else:
             self.run()
@@ -112,7 +112,7 @@ class NavigationControl():
         print(self.center_point_list)
 
         self.point = Point()
-                self.endPoint= Point()
+        self.endPoint= Point()
         self.heading = Float32()
         self.move_cmd = Twist()
 
@@ -450,7 +450,6 @@ class NavigationControl():
                             [self.center_point_list[i][0],self.center_point_list[i][1],1])
                     self.center_point_list[i][0] = a
                     self.center_point_list[i][1] = b
-
                 print('----New Center Point----')
                 print(self.center_point_list)
 
@@ -472,21 +471,18 @@ class NavigationControl():
     def runOffset(self):
         self.wait_for_seconds(2)
         # go through path array
-        print("number of letters = " + str(len(self.arr_path)))
+        print("run offset started")
         rospy.loginfo("number of letters = " + str(len(self.arr_path)))
         for idx_letter in range(len(self.arr_path)):
-            print("number of letter segments in letter no." + str(idx_letter) +
-                    " = " + str(len(self.arr_path[idx_letter])))
             rospy.loginfo("number of letter segments in letter no." + str(idx_letter) +
                     " = " + str(len(self.arr_path[idx_letter])))
             for idx_segment in range(len(self.arr_path[idx_letter])):
-                waypoints_in_segment = []
+                #waypoints_in_segment = []
                 for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
-                    waypoints_in_segment.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
-                    waypoints_in_segment.append([
-                        self.arr_path[idx_letter][idx_segment][idx_waypoint][0],
-                        self.arr_path[idx_letter][idx_segment][idx_waypoint][1]
-                        ])
+                    #waypoints_in_segment.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
+                    #waypoints_in_segment.append([
+                    #    self.arr_path[idx_letter][idx_segment][idx_waypoint][0],
+                    #    self.arr_path[idx_letter][idx_segment][idx_waypoint][1] ])
                     self.cnt_total_waypoints = self.cnt_total_waypoints + 1
                 #self.waypoints.append(waypoints_in_segment)
 
@@ -571,9 +567,9 @@ class NavigationControl():
                                     self.heading.data)
 
                             self.valve_status = MARKER_DOWN
-
-                            x_dot = (self.current_waypoint[0]-self.endPoint.x)*5
-                            y_dot = (self.current_waypoint[1]-self.endPoint.y)*5
+                            x_dot = (self.current_waypoint[0]-self.endPoint.x)/200
+                            y_dot = (self.current_waypoint[1]-self.endPoint.y)/200
+                            print("x_dot, y_dot:", x_dot, y_dot)
 
                             if self.is_moving_between_letters:
                                 self.valve_status = MARKER_UP
@@ -585,8 +581,9 @@ class NavigationControl():
 
                             th=self.heading.data
 
-                            self.move_cmd.linear.x=math.sqrt(pow(x_dot,2)*pow(cos(th),2)+pow(y_dot,2)*pow(sin(th),2)-x_dot*y_dot*sin(2*th)*cos(2*th))
+                            self.move_cmd.linear.x=sqrt(pow(x_dot,2)*pow(cos(th),2)+pow(y_dot,2)*pow(sin(th),2)-x_dot*y_dot*sin(2*th)*cos(2*th))
                             self.move_cmd.angular.z=(x_dot*sin(th)-y_dot*cos(th))/D
+                            print("v: ", self.move_cmd.linear., "w: ", self.move_cmd.angular.z)
 
                             self.cmd_vel.publish(self.move_cmd)
                             if self.valve_status == MARKER_DOWN:
@@ -664,7 +661,7 @@ class NavigationControl():
                     self.center_point_list[i][0] = a
                     self.center_point_list[i][1] = b
 
-                                print('----New Center Point----')
+                print('----New Center Point----')
                 print(self.center_point_list)
 
 
@@ -786,7 +783,7 @@ class NavigationControl():
                                         -int(-y_px + 75.5 * scale_factor * sin(th) +
                                             111 * scale_factor * cos(th))
                                         ]]])
-                                    cv2.fillPoly(mask, pts, (255))
+        cv2.fillPoly(mask, pts, (255))
         res = cv2.bitwise_and(self.map_img, self.map_img, mask=mask)
 
         rect = cv2.boundingRect(pts)
