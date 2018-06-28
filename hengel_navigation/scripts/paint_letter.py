@@ -14,11 +14,11 @@ import os
 from navigation_control import NavigationControl
 import cv2
 
-CANVAS_SIDE_LENGTH = 0.5 * 0.58
+CANVAS_SIDE_LENGTH = 0.5
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #PADDING_LENGTH = 0.0
-PADDING_LENGTH = -0.65 * 0.58
-VIEWPOINT_DISTANCE = 0.3 * 0.58
+PADDING_LENGTH = -0.65
+VIEWPOINT_DISTANCE = 0.3
 
 package_base_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../.."))
