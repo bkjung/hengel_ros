@@ -89,17 +89,17 @@ class NavigationControl():
                 "Is appicator on middle?\n[1] Middle. \n[2] End.\nType 1 or 2:"
                 )
         self.global_option = int(word3)
-                self.applicator_offset=int(word4)
+        self.applicator_offset=int(word4)
 
         self.arr_path = _arr_path
         self.docking_point_list = _docking_point_list
         self.center_point_list = _center_point_list
         self.initial_setting()
 
-                if word4 == 2:
-                    self.runOffset()
-                else:
-                    self.run()
+        if self.applicator_offset == 2:
+            self.runOffset()
+        else:
+            self.run()
 
     def initial_setting(self):
         self.program_start_time = time.strftime("%y%m%d_%H%M%S")
@@ -109,13 +109,13 @@ class NavigationControl():
         #logging.debug(self.center_point_list)
         print('----Initial Center Point----')
         print(self.center_point_list)
-        
-        self.D = 0		#Applicator offset
+
+        self.D = 0.01		#Applicator offset
         self.r = 0.115/2 #radius of wheel
-        self.L = 0.33/w #half of distance btw two wheels
+        self.L = 0.33/2 #half of distance btw two wheels
 
         self.point = Point()
-                self.endPoint= Point()
+        self.endPoint= Point()
         self.heading = Float32()
         self.move_cmd = Twist()
 
@@ -137,7 +137,6 @@ class NavigationControl():
         self.waypoint_index_in_current_segment = 0
         self.waypoints = []
         self.current_waypoint = []
-        self.last_waypoint = []
         self.cnt_letter = 0
         self.cnt_total_waypoints = 0
         self.cnt_segments_in_current_letter = 0
@@ -456,7 +455,7 @@ class NavigationControl():
                     self.center_point_list[i][0] = a
                     self.center_point_list[i][1] = b
 
-                                print('----New Center Point----')
+                print('----New Center Point----')
                 print(self.center_point_list)
 
 
@@ -485,13 +484,13 @@ class NavigationControl():
             rospy.loginfo("number of letter segments in letter no." + str(idx_letter) +
                     " = " + str(len(self.arr_path[idx_letter])))
             for idx_segment in range(len(self.arr_path[idx_letter])):
-                waypoints_in_segment = []
+                #waypoints_in_segment = []
                 for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
-                    waypoints_in_segment.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
-                    waypoints_in_segment.append([
-                        self.arr_path[idx_letter][idx_segment][idx_waypoint][0],
-                        self.arr_path[idx_letter][idx_segment][idx_waypoint][1]
-                        ])
+                    #waypoints_in_segment.append([self.arr_path[idx_letter][idx_waypoint][0]-self.arr_path[0][0][0], self.arr_path[idx_letter][idx_waypoint][1]-self.arr_path[0][0][1]])
+                    #waypoints_in_segment.append([
+                    #    self.arr_path[idx_letter][idx_segment][idx_waypoint][0],
+                    #    self.arr_path[idx_letter][idx_segment][idx_waypoint][1]
+                    #    ])
                     self.cnt_total_waypoints = self.cnt_total_waypoints + 1
                 #self.waypoints.append(waypoints_in_segment)
 
@@ -541,29 +540,31 @@ class NavigationControl():
                     else:
                         self.is_moving_between_letters = False
 
-                    self.endPoint.x=self.point.x-D*cos(self.heading.data)
-                    self.endPoint.y=self.point.y-D*sin(self.heading.data)
+                    print("DEBUG-1")
+                    self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
+                    self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
                     distance = sqrt(
                             pow(self.current_waypoint[0] - self.endPoint.x, 2) +
                             pow(self.current_waypoint[1] - self.endPoint.y, 2))
 
                     docking_buffer_cnt = 0
 
+                    print("DEBUG-2")
 
                     # Motion Control
                     while True:
                         if rospy.is_shutdown():
                             break
                         try:
-                            self.endPoint.x=self.point.x-D*cos(self.heading.data)
-                            self.endPoint.y=self.point.y-D*sin(self.heading.data)
+                            self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
+                            self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
 
+                            print("DEBUG-3")
                             distance = sqrt(
                                     pow(self.current_waypoint[0] - self.endPoint.x, 2) +
                                     pow(self.current_waypoint[1] - self.endPoint.y, 2))
 
-                            if self.local_option == 1 and i
-                            sDockingPoint:
+                            if self.local_option == 1 and isDockingPoint:
                                 if self.crosspoint_docking.check():
                                     print("DOCKED!!!!!")
                                     time.sleep(1.0)
@@ -578,8 +579,8 @@ class NavigationControl():
                             self.valve_status = MARKER_DOWN
 
                             th = self.heading.data
-                            delX= self.current_waypoint[0]-self.last_waypoint[0]
-                            delY= self.current_waypoint[1]-self.last_waypoint[1]
+                            delX= self.current_waypoint[0]-self.endPoint.x
+                            delY= self.current_waypoint[1]-self.endPoint.y
                             delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                             delS= self.D*cos(th)-self.D+delX*cos(th)+delY*sin(th)
                             delOmega1= (1/self.r)*(delS+self.L*delOmega)
@@ -596,7 +597,7 @@ class NavigationControl():
 
                             mat=[[self.r/2, self.r/2],[self.r/(2*self.L), -self.r/(2*self.L)]]
                             v,w=np.matmul(mat, [w1, w2])
- 
+
                             if self.is_moving_between_letters:
                                 self.valve_status = MARKER_UP
                             else:
@@ -631,7 +632,6 @@ class NavigationControl():
                             str(self.point.y) + " \t\t WAYPOINT: " +
                             str(self.current_waypoint[0]) + ", " +
                             str(self.current_waypoint[1]))
-                    self.last_waypoint=self.current_waypoint
 
 
                     if self.pi_cam_save_option==1:
@@ -808,7 +808,7 @@ class NavigationControl():
                                         -int(-y_px + 75.5 * scale_factor * sin(th) +
                                             111 * scale_factor * cos(th))
                                         ]]])
-                                    cv2.fillPoly(mask, pts, (255))
+        cv2.fillPoly(mask, pts, (255))
         res = cv2.bitwise_and(self.map_img, self.map_img, mask=mask)
 
         rect = cv2.boundingRect(pts)
