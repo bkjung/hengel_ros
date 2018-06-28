@@ -88,20 +88,19 @@ class NavigationControl():
             )
         word4= raw_input(
                 "Is appicator on middle?\n[1] Middle. \n[2] End.\nType 1 or 2:"
-                )
+                        )
         self.global_option = int(word3)
-		self.applicator_offset=int(word4)
-	
+        self.applicator_offset=int(word4)
+
         self.arr_path = _arr_path
         self.docking_point_list = _docking_point_list
         self.center_point_list = _center_point_list
         self.initial_setting()
-		
-		if word4 == 2:
-	        self.runOffset()
-		else:
-			self.run()
 
+    	if word4 == 2:
+	    self.runOffset()
+	else:
+            self.run()
     def initial_setting(self):
         self.program_start_time = time.strftime("%y%m%d_%H%M%S")
         #logging.basicConfig(filename='~/Dropbox/intern_share/experiment_data/Global_Alignment/log/'+self.program_start_time+'.txt', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -150,7 +149,7 @@ class NavigationControl():
         self.traj.color.r = 1.0
         self.traj.color.b = 0.0
         self.traj.color.a = 1.0
-        
+
         # if(WRITE_MULTIPLE_SHAPES):
         #     traj.id = shapeCount;
         # else:
@@ -158,9 +157,9 @@ class NavigationControl():
         #     traj.lifetime.secs = 1; #timeout for display
         self.traj.id = 0; #overwrite any existing shapes
         self.traj.lifetime.secs = 1; #timeout for display
-        
+
         self.traj.points = []
-        
+
         self.thres1 = np.deg2rad(30)
         self.thres2 = np.deg2rad(15)
         self.thres3 = np.deg2rad(4)
@@ -259,7 +258,7 @@ class NavigationControl():
                         str(self.waypoint_index_in_current_segment) +
                         " in segment no. " + str(self.segment_index) +
                         " in letter no. " + str(self.letter_index))
-					if self.local_option==1: 	
+					if self.local_option==1:
                     	for docking_point in self.docking_point_list:
                     	    if docking_point[0]==self.letter_index and docking_point[1]==self.segment_index and docking_point[2]==self.waypoint_index_in_current_segment:
                     	        print("MOVING TO DOCKING POINT")
@@ -450,7 +449,7 @@ class NavigationControl():
                     [self.center_point_list[i][0],self.center_point_list[i][1],1])
                     self.center_point_list[i][0] = a
                     self.center_point_list[i][1] = b
-                
+
 				print('----New Center Point----')
                 print(self.center_point_list)
 
@@ -510,7 +509,7 @@ class NavigationControl():
                         str(self.waypoint_index_in_current_segment) +
                         " in segment no. " + str(self.segment_index) +
                         " in letter no. " + str(self.letter_index))
-					if self.local_option==1: 	
+					if self.local_option==1:
                     	for docking_point in self.docking_point_list:
                     	    if docking_point[0]==self.letter_index and docking_point[1]==self.segment_index and docking_point[2]==self.waypoint_index_in_current_segment:
                     	        print("MOVING TO DOCKING POINT")
@@ -701,7 +700,7 @@ class NavigationControl():
                     [self.center_point_list[i][0],self.center_point_list[i][1],1])
                     self.center_point_list[i][0] = a
                     self.center_point_list[i][1] = b
-                
+
 				print('----New Center Point----')
                 print(self.center_point_list)
 
@@ -760,7 +759,7 @@ class NavigationControl():
                         str(self.waypoint_index_in_current_segment) +
                         " in segment no. " + str(self.segment_index) +
                         " in letter no. " + str(self.letter_index))
-					if self.local_option==1: 	
+					if self.local_option==1:
                     	for docking_point in self.docking_point_list:
                     	    if docking_point[0]==self.letter_index and docking_point[1]==self.segment_index and docking_point[2]==self.waypoint_index_in_current_segment:
                     	        print("MOVING TO DOCKING POINT")
@@ -798,8 +797,8 @@ class NavigationControl():
                         if rospy.is_shutdown():
                             break
                         try:
-							self.endPoint.x=self.point.x-D*cos(self.heading.data)
-							self.endPoint.y=self.point.y-D*sin(self.heading.data)
+                            self.endPoint.x=self.point.x-D*cos(self.heading.data)
+			    self.endPoint.y=self.point.y-D*sin(self.heading.data)
                             distance = sqrt(
                                 pow(self.current_waypoint[0] - self.endPoint.x, 2) +
                                 pow(self.current_waypoint[1] - self.endPoint.y, 2))
@@ -822,9 +821,9 @@ class NavigationControl():
                                 self.heading.data)
 
                             self.valve_status = MARKER_DOWN
-							
-							x_dot = (self.current_waypoint[0]-self.endPoint.x)*5
-							y_dot = (self.current_waypoint[1]-self.endPoint.y)*5
+
+			    x_dot = (self.current_waypoint[0]-self.endPoint.x)*5
+			    y_dot = (self.current_waypoint[1]-self.endPoint.y)*5
 
                             if self.is_moving_between_letters:
                                 self.valve_status = MARKER_UP
@@ -837,10 +836,10 @@ class NavigationControl():
 
                             feedback = pid_control(self.target_speed, self.current_speed)
                             self.vel_update(feedback)
-							th=self.heading.data
+			    th=self.heading.data
 
-							self.move_cmd.linear.x=math.sqrt(pow(x_dot,2)*pow(cos(th),2)+pow(y_dot,2)*pow(sin(th),2)-x_dot*y_dot*sin(2*th)*cos(2*th))
-							self.move_cmd.angular.z=(x_dot*sin(th)-y_dot*cos(th))/D
+                            self.move_cmd.linear.x=math.sqrt(pow(x_dot,2)*pow(cos(th),2)+pow(y_dot,2)*pow(sin(th),2)-x_dot*y_dot*sin(2*th)*cos(2*th))
+			    self.move_cmd.angular.z=(x_dot*sin(th)-y_dot*cos(th))/D
 
                             self.cmd_vel.publish(self.move_cmd)
                             if self.valve_status == MARKER_DOWN:
@@ -917,7 +916,7 @@ class NavigationControl():
                     [self.center_point_list[i][0],self.center_point_list[i][1],1])
                     self.center_point_list[i][0] = a
                     self.center_point_list[i][1] = b
-                
+
 				print('----New Center Point----')
                 print(self.center_point_list)
 
@@ -948,8 +947,8 @@ class NavigationControl():
     def visualize_traj(self, _data):
         self.traj.points.append(Point(_data.x, _data.y, 0.0))
         self.pub_markers.publish(self.traj)
-        
-        
+
+
 
     # def generate_pathmap(self):
     #     scale = 10
