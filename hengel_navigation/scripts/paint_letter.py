@@ -14,7 +14,7 @@ import os
 from navigation_control import NavigationControl
 import cv2
 
-CANVAS_SIDE_LENGTH = 1.0 * 0.58
+CANVAS_SIDE_LENGTH = 1.5 * 0.58
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #PADDING_LENGTH = 0.0
 PADDING_LENGTH = -0.65 * 0.58
@@ -75,7 +75,6 @@ class PaintLetter():
             else:
                 for i in range(1, 5):
                     subletter_path = []
-                    print("i: ", i)
                     if i==1:
                         subletter_path.append([-self.D,0])
                     else:
@@ -102,12 +101,8 @@ class PaintLetter():
 
                                         if len(subletter_path)!=0 or len(letter_path)!=0:
                                             dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
-                                            print("x_last: "+str(x_last)+", y_last: "+str(y_last))
-                                            print("x_curr: "+str(x_curr)+", y_curr: "+str(y_curr))
-                                            print("dist: "+str(dist))
                                             if dist>0.001:
                                                 div=int(ceil(dist/0.001))
-                                                print("div: "+str(div))
                                                 for k in range(div-1):
 
                                                     x=x_last+(k+1)/float(div)*(x_curr-x_last)
@@ -129,7 +124,6 @@ class PaintLetter():
                             (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
                             0.5 * CANVAS_SIDE_LENGTH + row_index * CANVAS_SIDE_LENGTH
                             ])
-                        print(letter_path)
 
 
 
