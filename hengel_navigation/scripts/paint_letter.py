@@ -4,7 +4,7 @@
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
 from std_msgs.msg import Float32
 import tf
-from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos
+from math import radians, copysign, sqrt, pow, pi, atan2, sin, ceil, floor, cos
 from tf.transformations import euler_from_quaternion
 import numpy as np
 import sys
@@ -14,16 +14,16 @@ import os
 from navigation_control import NavigationControl
 import cv2
 
-CANVAS_SIDE_LENGTH = 0.5 * 0.58
+CANVAS_SIDE_LENGTH = 1.0 * 0.58
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #PADDING_LENGTH = 0.0
 PADDING_LENGTH = -0.65 * 0.58
 VIEWPOINT_DISTANCE = 0.3 * 0.58
 
 package_base_path = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../.."))
+        os.path.join(os.path.dirname(__file__), "../.."))
 os.system("mkdir -p " + package_base_path +
-          "/hengel_path_manager/output_pathmap")
+        "/hengel_path_manager/output_pathmap")
 os.system("mkdir -p " + package_base_path + "/hengel_path_manager/waypnts")
 
 
@@ -37,6 +37,25 @@ class PaintLetter():
         self.center_point_list = []
         # self.arr_keypoint=[]
         self.word = raw_input("Type letters to draw:")
+
+        while True:
+            word = raw_input("[1] Position control, [2] RPM control\n Type 1 or 2 :")
+            if int(word)==1:
+                self.isPositionControl=True
+                break
+            elif int(word)==2:
+                self.isPositionControl=False
+                break
+
+        if self.isPositionControl:
+            while True:
+                word1=raw_input("Type the offset of the applicator: ")
+
+                self.D=float(word1)
+                if self.D==0:
+                    print("Offset cannot be zero")
+                else:
+                    break
 
         self.get_path()
         self.run()
@@ -56,6 +75,11 @@ class PaintLetter():
             else:
                 for i in range(1, 5):
                     subletter_path = []
+                    print("i: ", i)
+                    if i==1:
+                        subletter_path.append([-self.D,0])
+                    else:
+                        pass
                     path_str = dir_str + letter.capitalize() + "_" + str(i) + ".txt"
                     #path_str = dir_str
                     if os.path.isfile(path_str):
@@ -64,12 +88,34 @@ class PaintLetter():
                                 _str = line.split()
                                 if not len(_str) == 0:
                                     #letter_path.append([(float)(_str[0])+(float)(letter_index)-(2*(float)(letter_index)-1)*250/1632, 1.0-(float)(_str[1])])
-                                    subletter_path.append([
-                                        (float)(_str[0]) * CANVAS_SIDE_LENGTH +
-                                        (float)(letter_index) *
-                                        (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
-                                        (1.0 - (float)(_str[1])) * CANVAS_SIDE_LENGTH + row_index * CANVAS_SIDE_LENGTH
-                                    ])
+                                    x_curr=float(_str[0])*CANVAS_SIDE_LENGTH+float(letter_index)*(CANVAS_SIDE_LENGTH+PADDING_LENGTH)
+                                    y_curr=(1-float(_str[1]))*CANVAS_SIDE_LENGTH+row_index*CANVAS_SIDE_LENGTH
+                                    if self.isPositionControl:
+                                        if len(subletter_path)==0:
+                                            x_last=letter_path[-1][-1][0]
+                                            y_last=letter_path[-1][-1][1]
+                                        else:
+                                            x_last=subletter_path[-1][0]
+                                            y_last=subletter_path[-1][1]
+                                        x_last=subletter_path[-1][0]
+                                        y_last=subletter_path[-1][1]
+
+                                        if len(subletter_path)!=0 or len(letter_path)!=0:
+                                            dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
+                                            print("x_last: "+str(x_last)+", y_last: "+str(y_last))
+                                            print("x_curr: "+str(x_curr)+", y_curr: "+str(y_curr))
+                                            print("dist: "+str(dist))
+                                            if dist>0.001:
+                                                div=int(ceil(dist/0.001))
+                                                print("div: "+str(div))
+                                                for k in range(div-1):
+
+                                                    x=x_last+(k+1)/float(div)*(x_curr-x_last)
+                                                    y=y_last+(k+1)/float(div)*(y_curr-y_last)
+                                                    subletter_path.append([x,y])
+                                        else:
+                                            pass
+                                    subletter_path.append([x_curr, y_curr])
                                     if len(_str)>2:
                                         if _str[2]=="docking_line" or _str[2]=="docking_point_list":
                                             #letter_index, segment_index, waypoint_index
@@ -82,17 +128,18 @@ class PaintLetter():
                             (float)(letter_index) *
                             (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
                             0.5 * CANVAS_SIDE_LENGTH + row_index * CANVAS_SIDE_LENGTH
-                        ])
+                            ])
+                        print(letter_path)
 
 
 
-            #Stop point for global view photo
+                        #Stop point for global view photo
             subletter_path = []
             subletter_path.append([
                 CANVAS_SIDE_LENGTH + VIEWPOINT_DISTANCE +
                 (float)(letter_index) * (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
                 (0.5) * CANVAS_SIDE_LENGTH + row_index * CANVAS_SIDE_LENGTH
-            ])
+                ])
             letter_path.append(subletter_path)
             self.arr_path.append(letter_path)
 
@@ -104,7 +151,7 @@ class PaintLetter():
             letter_index = letter_index + 1
 
     def run(self):
-        NavigationControl(self.arr_path, self.docking_point_list, self.center_point_list)
+        NavigationControl(self.arr_path, self.docking_point_list, self.center_point_list, self.isPositionControl,self.D)
 
 
 if __name__ == '__main__':
