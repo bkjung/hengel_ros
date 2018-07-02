@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(hengel_visual_odometry)
+project(hengel_camera)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,12 +8,10 @@ project(hengel_visual_odometry)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
   rospy
   std_msgs
   sensor_msgs
   geometry_msgs
-  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -50,10 +48,6 @@ catkin_python_setup()
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  hengel_img.msg
-)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -104,10 +98,9 @@ add_message_files(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS scripts
- LIBRARIES hengel_visual_odometry
- CATKIN_DEPENDS roscpp rospy std_msgs message_runtime sensor_msgs geometry_msgs
- DEPENDS system_lib
+ CATKIN_DEPENDS rospy std_msgs sensor_msgs geometry_msgs
+# CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs
+# DEPENDS system_lib
 )
 
 ###########
@@ -116,14 +109,14 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
-  # include
-  ${catkin_INCLUDE_DIRS}
-)
+#include_directories(
+#  # include
+#  ${catkin_INCLUDE_DIRS}
+#)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/hengel_visual_odometry.cpp
+#   src/${PROJECT_NAME}/hengel_camera.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -193,11 +186,15 @@ include_directories(
 # )
 
 catkin_install_python(PROGRAMS
-src/wide_camera_publisher_1.py
-src/wide_camera_publisher_2.py
-src/wide_camera_publisher_3.py
-src/wide_camera_publisher_4.py
-DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  scripts/wide_camera_publisher_1.py
+  scripts/wide_camera_publisher_2.py
+  scripts/wide_camera_publisher_3.py
+  scripts/wide_camera_publisher_4.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 
