@@ -190,6 +190,7 @@ catkin_install_python(PROGRAMS
   scripts/wide_camera_publisher_2.py
   scripts/wide_camera_publisher_3.py
   scripts/wide_camera_publisher_4.py
+  scripts/undistort.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
