@@ -170,6 +170,35 @@ class NavigationControl():
 
         self.traj.points = []
 
+        self.traj.id = 0; #overwrite any existing shapes
+        self.traj.lifetime.secs = 1; #timeout for display
+
+        self.traj.points = []
+
+
+
+        self.traj_painting = Marker()
+        self.traj_painting.header.frame_id = '/base_footprint'
+        self.traj_painting.header.stamp = rospy.get_rostime()
+        self.traj_painting.ns = "painting_traj"
+        self.traj_painting.action = Marker.ADD
+        self.traj_painting.pose.orientation.w = 1.0
+        self.traj_painting.type = Marker.LINE_STRIP
+        self.traj_painting.scale.x = 0.01 # line width
+        self.traj_painting.color.r = 0.0
+        self.traj_painting.color.b = 1.0
+        self.traj_painting.color.a = 1.0
+
+        self.traj_painting.id = 0; #overwrite any existing shapes
+        self.traj_painting.lifetime.secs = 1; #timeout for display
+
+        self.traj_painting.points = []
+
+        self.traj_painting.id = 0; #overwrite any existing shapes
+        self.traj_painting.lifetime.secs = 1; #timeout for display
+
+        self.traj_painting.points = []
+
         self.thres1 = np.deg2rad(30)
         self.thres2 = np.deg2rad(15)
         self.thres3 = np.deg2rad(4)
@@ -218,7 +247,8 @@ class NavigationControl():
         self.heading_subscriber = rospy.Subscriber('/current_heading', Float32,
                 self.callback_heading)
 
-        self.pub_markers = rospy.Publisher('/hengel_trajectory_visualization', Marker, queue_size=5)
+        self.pub_markers = rospy.Publisher('/robot_trajectory_visualization', Marker, queue_size=5)
+        self.pub_markers_painting = rospy.Publisher('/painting_visualization', Marker, queue_size=5)
 
         self.real_globalmap = RealGlobalMap(self.arr_path)
         self.pi_cam_manager = PiCamManager(self.program_start_time)
@@ -505,10 +535,10 @@ class NavigationControl():
                 while self.waypoint_index_in_current_segment < self.cnt_waypoints_in_current_segment:
                     if rospy.is_shutdown():
                         break
-                    rospy.loginfo("\n\nwaypoint index : " +
-                            str(self.waypoint_index_in_current_segment) +
-                            " in segment no. " + str(self.segment_index) +
-                            " in letter no. " + str(self.letter_index))
+                    # rospy.loginfo("\n\nwaypoint index : " +
+                    #         str(self.waypoint_index_in_current_segment) +
+                    #         " in segment no. " + str(self.segment_index) +
+                    #         " in letter no. " + str(self.letter_index))
 
                     self.current_waypoint = [
                             self.arr_path[self.letter_index][self.segment_index][
@@ -527,6 +557,9 @@ class NavigationControl():
                         self.is_moving_between_letters = True
                     else:
                         self.is_moving_between_letters = False
+
+
+                    print("Heading : "+str(self.heading.data))
 
                     self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                     self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
@@ -549,7 +582,7 @@ class NavigationControl():
                                     pow(self.current_waypoint[0] - self.endPoint.x, 2) +
                                     pow(self.current_waypoint[1] - self.endPoint.y, 2))
 
-                            print("waypoint: ", self.current_waypoint, " endpoint: ", self.endPoint)
+                            # print("waypoint: ", self.current_waypoint, " endpoint: ", self.endPoint)
                             if self.local_option == 1 and isDockingPoint:
                                 if self.crosspoint_docking.check():
                                     print("DOCKED!!!!!")
@@ -567,7 +600,7 @@ class NavigationControl():
                             delX= self.current_waypoint[0]-self.endPoint.x
                             delY= self.current_waypoint[1]-self.endPoint.y
 
-                            print("delx: "+str(delX)+", dely: "+str(delY))
+                            # print("delx: "+str(delX)+", dely: "+str(delY))
 
                             delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                             delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
@@ -576,18 +609,18 @@ class NavigationControl():
 
                             targetTh1=self.th1+delOmega1
                             targetTh2=self.th2+delOmega2
-                            print("target: "+str(targetTh1)+", current: "+str(self.th1))
+                            # print("target: "+str(targetTh1)+", current: "+str(self.th1))
 
                             w1=(targetTh1- self.th1)
                             w2=(targetTh2- self.th2)
-                            print("w1: "+str(w1)+", w2: "+str(w2))
+                            # print("w1: "+str(w1)+", w2: "+str(w2))
 
                             self.th1=self.th1+w1*self.dt
                             self.th2=self.th2+w2*self.dt
 
                             mat=[[self.R/2, self.R/2],[self.R/(2*self.L), -self.R/(2*self.L)]]
                             v,w=np.matmul(mat, [w1, w2])
-                            print("v: "+str(v)+", w: "+str(w))
+                            # print("v: "+str(v)+", w: "+str(w))
 
                             if self.is_moving_between_letters:
                                 self.valve_status = MARKER_UP
@@ -614,7 +647,7 @@ class NavigationControl():
                             else:
                                 self.move_cmd.angular.z=ang_vel
 
-                            print("PUBLISH- lin: "+str(self.move_cmd.linear.x)+", ang: "+str(self.move_cmd.angular.z))
+                            # print("PUBLISH- lin: "+str(self.move_cmd.linear.x)+", ang: "+str(self.move_cmd.angular.z))
                             #print("CURRENT END POSITION- x: "+str(self.endPoint.x)+", y: "+str(self.endPoint.y))
                             self.cmd_vel.publish(self.move_cmd)
                             if self.valve_status == MARKER_DOWN:
@@ -682,6 +715,13 @@ class NavigationControl():
     def visualize_traj(self, _data):
         self.traj.points.append(Point(_data.x, _data.y, 0.0))
         self.pub_markers.publish(self.traj)
+
+        painting_x = _data.x - self.D*cos(self.heading.data)
+        painting_y = _data.y - self.D*sin(self.heading.data)
+
+        self.traj_painting.points.append(Point(painting_x, painting_y, 0.0))
+        self.pub_markers_painting.publish(self.traj_painting)
+
 
 
 
