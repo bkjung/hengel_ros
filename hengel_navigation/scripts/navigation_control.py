@@ -607,8 +607,22 @@ class NavigationControl():
 
                             delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                             delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
-                            delOmega1= (1/self.R)*(delS+self.L*delOmega)
-                            delOmega2= (1/self.R)*(delS-self.L*delOmega)
+                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega)
+                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega)
+
+                            if delOmega1 != delOmega2:
+                                delYrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*(1-cos(self.R*(delOmega2-delOmega1)/(2*self.L))
+                                delXrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*sin(self.R*(delOmega2-delOmega1)/(2*self.L))
+                            else:
+                                delXrobotLocal=self.R*delOmega1
+                                delYrobotLocal=0
+
+                            delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                            self.Point.x=self.Point.x+delXrobotGlobal
+                            self.Point.y=self.Point.y+delYrobotGlobal
+                            self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+
+
 
                             self.pub_delta_theta_1.publish(delOmega1)
                             self.pub_delta_theta_2.publish(delOmega2)
