@@ -250,6 +250,9 @@ class NavigationControl():
         self.pub_markers = rospy.Publisher('/robot_trajectory_visualization', Marker, queue_size=5)
         self.pub_markers_painting = rospy.Publisher('/painting_visualization', Marker, queue_size=5)
 
+        self.pub_delta_theta_1 = rospy.Publisher('/delta_theta_1', Float32, queue_size=5)
+        self.pub_delta_theta_2 = rospy.Publisher('/delta_theta_2', Float32, queue_size=5)
+
         self.real_globalmap = RealGlobalMap(self.arr_path)
         self.pi_cam_manager = PiCamManager(self.program_start_time)
         if self.local_option == 1:
@@ -607,12 +610,15 @@ class NavigationControl():
                             delOmega1= (1/self.R)*(delS+self.L*delOmega)
                             delOmega2= (1/self.R)*(delS-self.L*delOmega)
 
+                            self.pub_delta_theta_1.publish(delOmega1)
+                            self.pub_delta_theta_2.publish(delOmega2)
+
                             targetTh1=self.th1+delOmega1
                             targetTh2=self.th2+delOmega2
                             # print("target: "+str(targetTh1)+", current: "+str(self.th1))
 
-                            w1=1*(targetTh1- self.th1)
-                            w2=1*(targetTh2- self.th2)
+                            w1=2.0*(targetTh1- self.th1)
+                            w2=2.0*(targetTh2- self.th2)
                             # print("w1: "+str(w1)+", w2: "+str(w2))
 
                             self.th1=self.th1+w1*self.dt
