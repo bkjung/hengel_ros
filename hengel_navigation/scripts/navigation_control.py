@@ -121,6 +121,7 @@ class NavigationControl():
         self.L = 0.33/2 #half of distance btw two wheels
 
         self.point = Point()
+        self.point_encoder = Point()
         self.endPoint= Point()
         self.heading = Float32()
         self.move_cmd = Twist()
@@ -618,8 +619,10 @@ class NavigationControl():
                                 delYrobotLocal=0
 
                             delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
-                            self.Point.x=self.Point.x+delXrobotGlobal
-                            self.Point.y=self.Point.y+delYrobotGlobal
+                            self.point_encoder.x=self.point_encoder.x+delXrobotGlobal
+                            self.point_encoder.y=self.point_encoder.y+delYrobotGlobal
+
+                            print("Point Encoder x: " + str(self.point_encoder.x)+", y: "+str(self.point_encoder.y))
                             self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
 
 
@@ -668,7 +671,7 @@ class NavigationControl():
                                 self.move_cmd.angular.z=ang_vel
 
                             # print("PUBLISH- lin: "+str(self.move_cmd.linear.x)+", ang: "+str(self.move_cmd.angular.z))
-                            #print("CURRENT END POSITION- x: "+str(self.endPoint.x)+", y: "+str(self.endPoint.y))
+                            print("CURRENT SIMULATOR POSITION- x: "+str(self.point.x)+", y: "+str(self.point.y))
                             self.cmd_vel.publish(self.move_cmd)
                             if self.valve_status == MARKER_DOWN:
                                 self.visualize_traj(self.point)
