@@ -611,8 +611,8 @@ class NavigationControl():
                             targetTh2=self.th2+delOmega2
                             # print("target: "+str(targetTh1)+", current: "+str(self.th1))
 
-                            w1=(targetTh1- self.th1)
-                            w2=(targetTh2- self.th2)
+                            w1=1*(targetTh1- self.th1)
+                            w2=1*(targetTh2- self.th2)
                             # print("w1: "+str(w1)+", w2: "+str(w2))
 
                             self.th1=self.th1+w1*self.dt

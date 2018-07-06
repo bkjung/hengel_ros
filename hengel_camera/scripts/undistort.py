@@ -29,14 +29,14 @@ class Undistort():
 
 
     def callback_undistort(self,_img):
-        try:        
+        try:
             self.rawimg=self.bridge.imgmsg_to_cv2(_img, "bgr8")
         except CvBridgeError as e:
             print(e)
 
         ############ 1st Trial ################################
         # self.mtx=[[814.518716, 0, 307.439908],[0,773.806237, 228.559015],[0,0,1]]
-        # se    lf.mtx=np.array(self.mtx)
+        # self.mtx=np.array(self.mtx)
         # self.dst=[-1.277346, 1.545611, -0.022366, -0.002066]
         # self.dst=np.array(self.dst)
         ############ 2nd Trial (Current Version) ###############
@@ -45,7 +45,11 @@ class Undistort():
         # self.dst=[-0.299195,0.074445,0.000095, -0.000103]
         # self.dst=np.array(self.dst)
         #######################################################
-
+        # self.mtx=[[334.573338, 0, 313.382623],[0, 335.061739, 243.157640], [0,0,1]]
+        # self.mtx=np.array(self.mtx)
+        # self.dst=[-0.252637, 0.042737, -0.000955, -0.002136]
+        # self.dst=np.array(self.dst)
+        ########################################################
         if len(self.mtx)!=0 and len(self.dst)!=0 and self.rawimg is not None:
             self.undistImg=cv2.undistort(self.rawimg, self.mtx, self.dst, None, self.mtx)
             cv2.imshow('raw_img', self.rawimg)
