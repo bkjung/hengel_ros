@@ -642,6 +642,18 @@ class NavigationControl():
                             delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1/10
                             delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1/10
 
+                            
+                            sign = lambda x: math.copysign(1, x)    #return sign of number x
+                            if abs(delOmega1)>0.15 or abs(delOmega2)>0.15:
+                                if(abs(delOmega1)>abs(delOmega2): #abs(delOmega1) should not be zero, according to this inequality
+                                    delOmega2=0.15*abs(delOmega2/delOmega1)*sign(delOmega2)
+                                    delOmega1=0.15*sign(delOmega1)
+                                else:   #abs(delOmega2) should not be zero, according to this inequality
+                                    delOmega1=0.15*abs(delOmega1/delOmega2)*sign(delOmega1)
+                                    delOmega2=0.15*sign(delOmega2)
+
+                                    
+
                             if delOmega1 != delOmega2:
                                 delYrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*(1-cos(self.R*(delOmega2-delOmega1)/(2*self.L)))
                                 delXrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*sin(self.R*(delOmega2-delOmega1)/(2*self.L))
