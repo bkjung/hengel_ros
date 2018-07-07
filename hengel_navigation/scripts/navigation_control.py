@@ -249,7 +249,7 @@ class NavigationControl():
         #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
 
-        self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
+        # self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
 
         self.valve_angle_publisher = rospy.Publisher(
                 '/valve_input', ValveInput, queue_size=5)
@@ -291,6 +291,7 @@ class NavigationControl():
 
     def runOffset(self):
         self.wait_for_seconds(2)
+        print("initial sleep done")
         # go through path array
         rospy.loginfo("number of letters = " + str(len(self.arr_path)))
         for idx_letter in range(len(self.arr_path)):
@@ -464,7 +465,7 @@ class NavigationControl():
                             # print("PUBLISH- lin: "+str(self.move_cmd.linear.x)+", ang: "+str(self.move_cmd.angular.z))
                             print("CURRENT SIMULATOR POSITION- x: "+str(self.point.x)+", y: "+str(self.point.y))
                             print("CURRENT HEADING: " + str(self.heading.data))
-                            self.cmd_vel.publish(self.move_cmd)
+                            # self.cmd_vel.publish(self.move_cmd)
                             if self.valve_status == MARKER_DOWN:
                                 self.visualize_traj(self.point)
 
@@ -472,7 +473,7 @@ class NavigationControl():
 
                         except KeyboardInterrupt:
                             print("Got KeyboardInterrupt")
-                            self.cmd_vel.publish(Twist())
+                            # self.cmd_vel.publish(Twist())
 
                             rospy.signal_shutdown("KeyboardInterrupt")
                             break
@@ -486,7 +487,7 @@ class NavigationControl():
 
                     if self.pi_cam_save_option==1:
                         #stop the robot
-                        self.cmd_vel.publish(Twist())
+                        # self.cmd_vel.publish(Twist())
                         #take picam floor photo
                         self.wait_for_seconds(0.5)
                         self.pi_cam_manager.save("picam_letter-" +
@@ -515,7 +516,7 @@ class NavigationControl():
         #turn to view letters at the final global map view point
         #self.look_opposite_side()
         #stop the robot
-        self.cmd_vel.publish(Twist())
+        # self.cmd_vel.publish(Twist())
 
     def vel_update(self, a):
         self.current_speed = self.current_speed + a*self.dt
@@ -654,7 +655,9 @@ class NavigationControl():
             self.r.sleep()
 
     def shutdown(self):
-        self.cmd_vel.publish(Twist())
+        # self.cmd_vel.publish(Twist())
+        self.pub_delta_theta_1.publish(0.0)
+        self.pub_delta_theta_2.publish(0.0) 
         rospy.sleep(1)
 
     def look_opposite_side(self):
@@ -674,16 +677,18 @@ class NavigationControl():
             else:
                 self.move_cmd.linear.x = 0
                 self.move_cmd.angular.z = 0
-                self.cmd_vel.publish(self.move_cmd)
+                # self.cmd_vel.publish(self.move_cmd)
                 self.r.sleep()
                 break
-            self.cmd_vel.publish(self.move_cmd)
+            # self.cmd_vel.publish(self.move_cmd)
             self.r.sleep()
 
     def wait_for_seconds(self, _input):
         cnt_loop = (int)(_input * 50.0)
         for i in range(cnt_loop):
-            self.cmd_vel.publish(Twist())
+            # self.cmd_vel.publish(Twist())
+            self.pub_delta_theta_1.publish(0.0)
+            self.pub_delta_theta_2.publish(0.0)
             self.r.sleep()
 
 #    def real_globalmap_run(self):
