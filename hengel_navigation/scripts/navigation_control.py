@@ -117,13 +117,18 @@ class NavigationControl():
         print('----Initial Center Point----')
         print(self.center_point_list)
 
-        self.R = 0.115/2 #radius of wheel
-        self.L = 0.33/2 #half of distance btw two wheels
+        #self.R = 0.115/2 #radius of wheel
+        #self.L = 0.33/2 #half of distance btw two wheels
+
+        #test flag bot
+        self.R = 0.11/2 #radius of wheel
+        self.L = 0.355/2 #half of distance btw two wheels
 
         self.point = Point()
         self.point_encoder = Point()
         self.endPoint= Point()
         self.heading = Float32()
+        self.heading_encoder = Float32()
         self.move_cmd = Twist()
 
         self.valve_operation_mode = OperationMode()
@@ -200,6 +205,26 @@ class NavigationControl():
 
         self.traj_painting.points = []
 
+
+
+        self.traj_encoder = Marker()
+        self.traj_encoder.header.frame_id = '/base_footprint'
+        self.traj_encoder.header.stamp = rospy.get_rostime()
+        self.traj_encoder.ns = "hengel_traj_encoder"
+        self.traj_encoder.action = Marker.ADD
+        self.traj_encoder.pose.orientation.w = 1.0
+        self.traj_encoder.type = Marker.LINE_STRIP
+        self.traj_encoder.scale.x = 0.01 # line width
+        self.traj_encoder.color.r = 1.0
+        self.traj_encoder.color.b = 1.0
+        self.traj_encoder.color.a = 1.0
+        self.traj_encoder.id = 0; #overwrite any existing shapes
+        self.traj_encoder.lifetime.secs = 1; #timeout for display
+        self.traj_encoder.points = []
+        self.traj_encoder.id = 0; #overwrite any existing shapes
+        self.traj_encoder.lifetime.secs = 1; #timeout for display
+        self.traj_encoder.points = []
+
         self.thres1 = np.deg2rad(30)
         self.thres2 = np.deg2rad(15)
         self.thres3 = np.deg2rad(4)
@@ -243,13 +268,17 @@ class NavigationControl():
         self.offset_change_theta_publisher = rospy.Publisher(
                 '/offset_change_theta', Float32, queue_size=5)
 
-        self.position_subscriber = rospy.Subscriber('/current_position', Point,
-                self.callback_position)
-        self.heading_subscriber = rospy.Subscriber('/current_heading', Float32,
-                self.callback_heading)
+
+        # Stop Subscribing position & heading data
+
+        # self.position_subscriber = rospy.Subscriber('/current_position', Point,
+                # self.callback_position)
+        # self.heading_subscriber = rospy.Subscriber('/current_heading', Float32,
+                # self.callback_heading)
 
         self.pub_markers = rospy.Publisher('/robot_trajectory_visualization', Marker, queue_size=5)
         self.pub_markers_painting = rospy.Publisher('/painting_visualization', Marker, queue_size=5)
+        self.pub_markers_encoder = rospy.Publisher('/robot_trajectory_encoder_visualization', Marker, queue_size=5)
 
         self.pub_delta_theta_1 = rospy.Publisher('/delta_theta_1', Float32, queue_size=5)
         self.pub_delta_theta_2 = rospy.Publisher('/delta_theta_2', Float32, queue_size=5)
@@ -608,22 +637,29 @@ class NavigationControl():
 
                             delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                             delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
-                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega)
-                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega)
+
+                            #10 times slower
+                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1/10
+                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1/10
 
                             if delOmega1 != delOmega2:
-                                delYrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*(1-cos(self.R*(delOmega2-delOmega1)/(2*self.L))
+                                delYrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*(1-cos(self.R*(delOmega2-delOmega1)/(2*self.L)))
                                 delXrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*sin(self.R*(delOmega2-delOmega1)/(2*self.L))
                             else:
                                 delXrobotLocal=self.R*delOmega1
                                 delYrobotLocal=0
 
                             delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
-                            self.point_encoder.x=self.point_encoder.x+delXrobotGlobal
-                            self.point_encoder.y=self.point_encoder.y+delYrobotGlobal
-
-                            print("Point Encoder x: " + str(self.point_encoder.x)+", y: "+str(self.point_encoder.y))
+                            self.point.x=self.point.x+delXrobotGlobal
+                            self.point.y=self.point.y+delYrobotGlobal
                             self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+
+                            print("Point Encoder x: " + str(self.point.x)+", y: "+str(self.point.y))
+                            print("Heading Encoder: " + str(self.heading.data))
+
+
+                            # if self.valve_status == MARKER_DOWN:
+                            #     self.visualize_traj_encoder(self.point_encoder)
 
 
 
@@ -634,8 +670,8 @@ class NavigationControl():
                             targetTh2=self.th2+delOmega2
                             # print("target: "+str(targetTh1)+", current: "+str(self.th1))
 
-                            w1=2.0*(targetTh1- self.th1)
-                            w2=2.0*(targetTh2- self.th2)
+                            w1=1.0*(targetTh1- self.th1)
+                            w2=1.0*(targetTh2- self.th2)
                             # print("w1: "+str(w1)+", w2: "+str(w2))
 
                             self.th1=self.th1+w1*self.dt
@@ -672,6 +708,7 @@ class NavigationControl():
 
                             # print("PUBLISH- lin: "+str(self.move_cmd.linear.x)+", ang: "+str(self.move_cmd.angular.z))
                             print("CURRENT SIMULATOR POSITION- x: "+str(self.point.x)+", y: "+str(self.point.y))
+                            print("CURRENT HEADING: " + str(self.heading.data))
                             self.cmd_vel.publish(self.move_cmd)
                             if self.valve_status == MARKER_DOWN:
                                 self.visualize_traj(self.point)
@@ -744,6 +781,12 @@ class NavigationControl():
 
         self.traj_painting.points.append(Point(painting_x, painting_y, 0.0))
         self.pub_markers_painting.publish(self.traj_painting)
+
+
+    def visualize_traj_encoder(self, _data):
+        self.traj_encoder.points.append(Point(_data.x, _data.y, 0.0))
+        self.pub_markers_encoder.publish(self.traj_encoder)
+
 
 
 
