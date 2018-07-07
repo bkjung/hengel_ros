@@ -284,6 +284,9 @@ class NavigationControl():
         self.pub_delta_theta_2 = rospy.Publisher('/delta_theta_2', Float32, queue_size=5)
 
 
+        print("Initialize Done")
+
+
 
     def runOffset(self):
         self.wait_for_seconds(2)
