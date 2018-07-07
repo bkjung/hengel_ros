@@ -104,6 +104,7 @@ class NavigationControl():
         self.initial_setting()
 
         if self.isPositionControl:
+            print("runOffset start")
             self.runOffset()
         else:
             self.run()
