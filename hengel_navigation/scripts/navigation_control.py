@@ -155,7 +155,7 @@ class NavigationControl():
         self.cnt_waypoints_in_current_segment = 0
 
         self.traj = Marker()
-        self.traj.header.frame_id = '/base_footprint'
+        self.traj.header.frame_id = '/odom'
         self.traj.header.stamp = rospy.get_rostime()
         self.traj.ns = "hengel_traj"
         self.traj.action = Marker.ADD
@@ -184,7 +184,7 @@ class NavigationControl():
 
 
         self.traj_painting = Marker()
-        self.traj_painting.header.frame_id = '/base_footprint'
+        self.traj_painting.header.frame_id = '/odom'
         self.traj_painting.header.stamp = rospy.get_rostime()
         self.traj_painting.ns = "painting_traj"
         self.traj_painting.action = Marker.ADD
@@ -208,7 +208,7 @@ class NavigationControl():
 
 
         self.traj_encoder = Marker()
-        self.traj_encoder.header.frame_id = '/base_footprint'
+        self.traj_encoder.header.frame_id = '/odom'
         self.traj_encoder.header.stamp = rospy.get_rostime()
         self.traj_encoder.ns = "hengel_traj_encoder"
         self.traj_encoder.action = Marker.ADD
