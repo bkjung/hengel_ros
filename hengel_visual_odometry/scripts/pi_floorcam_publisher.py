@@ -11,8 +11,6 @@ if __name__ == '__main__':
     cap = cv2.VideoCapture(0)
     pub = rospy.Publisher(
         '/pi_floorcam/image_raw/compressed', CompressedImage, queue_size=3)
-    pub_box = rospy.Publisher(
-        '/pi_floorcam_box/image_raw/compressed', CompressedImage, queue_size=3)
     rate = rospy.Rate(10)
 
     bridge = CvBridge()
