@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>hengel_navigation</name>
+  <name>hengel_camera</name>
   <version>0.2.1</version>
   <description>
     Provides teleoperation using keyboard for TurtleBot3.
@@ -13,8 +13,5 @@
   <depend>rospy</depend>
   <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>
-  <depend>nav_msgs</depend>
-  <depend>visualization_msgs</depend>
-  <build_depend>message_generation</build_depend>
-  <exec_depend>message_runtime</exec_depend>
+  <depend>sensor_msgs</depend>
 </package>

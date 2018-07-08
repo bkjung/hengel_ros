@@ -1,0 +1,4 @@
+<launch>
+  <!-- <include file="$(find hengel_bringup)/launch/hengel_core.launch"/> -->
+  <include file="$(find hengel_navigation)/launch/hengel_navigation.launch"/>
+</launch>
