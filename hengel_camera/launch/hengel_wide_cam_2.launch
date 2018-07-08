@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="hengel_camera" type="wide_camera_publisher_2.py" name="wide_cam_node_2"  output="screen" />
+</launch>

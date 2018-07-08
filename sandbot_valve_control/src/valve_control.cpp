@@ -52,8 +52,9 @@
 #define CONTINUOUS_MODE                 0
 #define DISCRETE_MODE                   1
 
-#define VALVE_OPEN                      2430
-int GOAL_POSITION = 2000;
+#define VALVE_OPEN                      3900
+//int GOAL_POSITION = 3200;
+int GOAL_POSITION = 3270;
 int MODE = 1;
 int SHUTDOWN = 0;
 bool RECEIVED_MSG = false;
@@ -215,7 +216,7 @@ int main(int argc, char **argv)
     if (SHUTDOWN != 0)
     {
       // Close valve
-      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 2000, &dxl_error);
+      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 3200, &dxl_error);
       do
       {
         dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
@@ -316,8 +317,8 @@ int main(int argc, char **argv)
   }
 
   // Close valve
-  dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 2000, &dxl_error);
-  do
+  dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 3200, &dxl_error);
+  
   {
     dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
     printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);

@@ -12,7 +12,8 @@ length_side = 1000
 size_x = 1000
 size_y = 1080
 
-dist = 0.02415
+#CANVAS_LENGTH=6
+dist = 4 #dist= 24/CANVAS_LENGTH
 radius = 2
 
 package_base_path = os.path.abspath(
