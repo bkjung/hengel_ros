@@ -77,8 +77,8 @@ class PaintLetter():
                 for i in range(1, 5):
                     subletter_path = []
                     if i==1:
-                        #subletter_path.append([-self.D, 0])
-                        subletter_path.append([0, 0])
+                        subletter_path.append([-self.D, 0])
+                        # subletter_path.append([0, 0])
                     else:
                         pass
                     path_str = dir_str + letter.capitalize() + "_" + str(i) + ".txt"

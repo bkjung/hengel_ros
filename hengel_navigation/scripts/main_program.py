@@ -48,10 +48,13 @@ class HengelMain():
             sys.exit()
 
     def initialOptionSelect(self):
-        word = raw_input(
-            "HENGEL ROBOT Made By NAVER LABS Robotics 5th Intern.\nThere are two options of painting.\n[1] Print Letters.\n[2] Print Drawing of Yours.\nType 1 or 2 :"
-        )
-        self.runningOption = int(word)
+        while True:
+            word = raw_input(
+                "HENGEL ROBOT Made By NAVER LABS Robotics 5th Intern.\n[1] Print Letters.\n[2] Print Drawing of Yours.\n[3] OPTION_TEST\n[4] OPTION_LIEUL\n[5]OPTION_KOREA\nType :"
+            )
+            self.runningOption = int(word)
+            if self.runningOption >= 1 and self.runningOption <=5:
+                break
 
 
 if __name__ == '__main__':
