@@ -104,7 +104,6 @@ class NavigationControl():
         self.initial_setting()
 
         if self.isPositionControl:
-            print("runOffset start")
             self.runOffset()
         else:
             self.run()
@@ -139,7 +138,7 @@ class NavigationControl():
         self.valve_status = MARKER_UP
 
         self.dt = 0.02  # [s]
-        self.r = rospy.Rate(1.0/self.dt)  #50hz
+        self.r = rospy.Rate(1.0/self.dt)
 
         #It SHOULD BE 1 for current code.
         #If it's not 1, then self.check_whether_moving_to_next_start() should be modified
@@ -290,8 +289,8 @@ class NavigationControl():
 
 
     def runOffset(self):
-        self.wait_for_seconds(2)
-        print("initial sleep done")
+	print("--runOffset begin--")
+	self.wait_for_seconds(5.0)
         # go through path array
         rospy.loginfo("number of letters = " + str(len(self.arr_path)))
         for idx_letter in range(len(self.arr_path)):
@@ -302,6 +301,9 @@ class NavigationControl():
                 for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
                     self.cnt_total_waypoints = self.cnt_total_waypoints + 1
                 #self.waypoints.append(waypoints_in_segment)
+
+
+        print("Total Number of Waypoints : "+str(self.cnt_total_waypoints))
 
         self.cnt_letter = len(self.arr_path)
         self.th1=0
@@ -344,8 +346,6 @@ class NavigationControl():
                         self.is_moving_between_letters = False
 
 
-                    print("Heading : "+str(self.heading.data))
-
                     self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                     self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
                     distance = sqrt(
@@ -362,17 +362,22 @@ class NavigationControl():
                         try:
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
+                            #self.endPoint.x=self.point.x+self.D*cos(self.heading.data)
+                            #self.endPoint.y=self.point.y+self.D*sin(self.heading.data)
 
                             distance = sqrt(
                                     pow(self.current_waypoint[0] - self.endPoint.x, 2) +
                                     pow(self.current_waypoint[1] - self.endPoint.y, 2))
 
-                            # print("waypoint: ", self.current_waypoint, " endpoint: ", self.endPoint)
+		            print("distance: ", distance)
+                            print("waypoint: ", self.current_waypoint)
+                            print("endpoint: ", self.endPoint)
 
-                            if distance < 0.03 * 0.58:
+                            #if distance < 0.03 * 0.58:
+                            if distance < 0.01:
                                 break
 
-                            self.valve_status = MARKER_DOWN
+                            #self.valve_status = MARKER_DOWN
                             th = self.heading.data
                             delX= self.current_waypoint[0]-self.endPoint.x
                             delY= self.current_waypoint[1]-self.endPoint.y
@@ -386,17 +391,16 @@ class NavigationControl():
                             delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1/10
                             delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1/10
 
-                            
-                            sign = lambda x: math.copysign(1, x)    #return sign of number x
+
                             if abs(delOmega1)>0.15 or abs(delOmega2)>0.15:
                                 if abs(delOmega1)>abs(delOmega2): #abs(delOmega1) should not be zero, according to this inequality
-                                    delOmega2=0.15*abs(delOmega2/delOmega1)*sign(delOmega2)
-                                    delOmega1=0.15*sign(delOmega1)
+                                    delOmega2=copysign(0.15*delOmega2/delOmega1, delOmega2)
+                                    delOmega1=copysign(0.15, delOmega1)
                                 else:   #abs(delOmega2) should not be zero, according to this inequality
-                                    delOmega1=0.15*abs(delOmega1/delOmega2)*sign(delOmega1)
-                                    delOmega2=0.15*sign(delOmega2)
+                                    delOmega1=copysign(delOmega1/delOmega2, delOmega1)
+                                    delOmega2=copysign(0.15, delOmega2)
 
-                                    
+
 
                             if delOmega1 != delOmega2:
                                 delYrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*(1-cos(self.R*(delOmega2-delOmega1)/(2*self.L)))
@@ -410,8 +414,8 @@ class NavigationControl():
                             self.point.y=self.point.y+delYrobotGlobal
                             self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
 
-                            print("Point Encoder x: " + str(self.point.x)+", y: "+str(self.point.y))
-                            print("Heading Encoder: " + str(self.heading.data))
+                            #print("Point Encoder ", self.point)
+                            #print("Heading Encoder: " + str(self.heading.data))
 
 
                             # if self.valve_status == MARKER_DOWN:
@@ -463,11 +467,11 @@ class NavigationControl():
                                 self.move_cmd.angular.z=ang_vel
 
                             # print("PUBLISH- lin: "+str(self.move_cmd.linear.x)+", ang: "+str(self.move_cmd.angular.z))
-                            print("CURRENT SIMULATOR POSITION- x: "+str(self.point.x)+", y: "+str(self.point.y))
-                            print("CURRENT HEADING: " + str(self.heading.data))
+                            #print("CURRENT SIMULATOR POSITION- x: "+str(self.point.x)+", y: "+str(self.point.y))
+                            #print("CURRENT HEADING: " + str(self.heading.data))
                             # self.cmd_vel.publish(self.move_cmd)
-                            if self.valve_status == MARKER_DOWN:
-                                self.visualize_traj(self.point)
+                            #if self.valve_status == MARKER_DOWN:
+                            #    self.visualize_traj(self.point)
 
                             self.r.sleep()
 
@@ -510,6 +514,8 @@ class NavigationControl():
             self.segment_index = 0
             self.waypoint_index_in_current_segment = 0
 
+
+	self.wait_for_seconds(2.0)
         rospy.loginfo("Stopping the robot at the final destination")
         #Wait for 1 second to close valve
         self.quit_valve()
@@ -657,7 +663,7 @@ class NavigationControl():
     def shutdown(self):
         # self.cmd_vel.publish(Twist())
         self.pub_delta_theta_1.publish(0.0)
-        self.pub_delta_theta_2.publish(0.0) 
+        self.pub_delta_theta_2.publish(0.0)
         rospy.sleep(1)
 
     def look_opposite_side(self):
@@ -684,7 +690,7 @@ class NavigationControl():
             self.r.sleep()
 
     def wait_for_seconds(self, _input):
-        cnt_loop = (int)(_input * 50.0)
+        cnt_loop = (int)(_input / self.dt)
         for i in range(cnt_loop):
             # self.cmd_vel.publish(Twist())
             self.pub_delta_theta_1.publish(0.0)
