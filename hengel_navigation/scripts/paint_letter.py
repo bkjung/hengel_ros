@@ -77,7 +77,8 @@ class PaintLetter():
                 for i in range(1, 5):
                     subletter_path = []
                     if i==1:
-                        subletter_path.append([-self.D,0])
+                        #subletter_path.append([-self.D, 0])
+                        subletter_path.append([0, 0])
                     else:
                         pass
                     path_str = dir_str + letter.capitalize() + "_" + str(i) + ".txt"
@@ -129,13 +130,13 @@ class PaintLetter():
 
 
                         #Stop point for global view photo
-            subletter_path = []
-            subletter_path.append([
-                CANVAS_SIDE_LENGTH + VIEWPOINT_DISTANCE +
-                (float)(letter_index) * (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
-                (0.5) * CANVAS_SIDE_LENGTH + row_index * CANVAS_SIDE_LENGTH
-                ])
-            letter_path.append(subletter_path)
+           # subletter_path = []
+           # subletter_path.append([
+           #     CANVAS_SIDE_LENGTH + VIEWPOINT_DISTANCE +
+           #     (float)(letter_index) * (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
+           #     (0.5) * CANVAS_SIDE_LENGTH + row_index * CANVAS_SIDE_LENGTH
+           #     ])
+           # letter_path.append(subletter_path)
             self.arr_path.append(letter_path)
 
             #Keypoint Calculation
