@@ -283,6 +283,8 @@ class NavigationControl():
         self.pub_delta_theta_1 = rospy.Publisher('/delta_theta_1', Float32, queue_size=5)
         self.pub_delta_theta_2 = rospy.Publisher('/delta_theta_2', Float32, queue_size=5)
 
+        self.pub_distance = rospy.Publisher('/distance', Float32, queue_size=5)
+        self.pub_endpoint = rospy.Publisher('/endpoint', Point, queue_size=5)
 
         print("Initialize Done")
 
@@ -367,6 +369,8 @@ class NavigationControl():
                             print("distance: ", distance)
                             print("waypoint: ", self.current_waypoint)
                             print("endpoint: ", self.endPoint)
+                            self.pub_distance.publish(distance)
+                            self.pub_endpoint.publish(self.endPoint)
 
                             #if distance < 0.03 * 0.58:
                             if distance < 0.01:
