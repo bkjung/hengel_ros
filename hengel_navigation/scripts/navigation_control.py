@@ -351,6 +351,9 @@ class NavigationControl():
 
                     docking_buffer_cnt = 0
 
+                    pubDelta1=0
+                    pubDelta2=0
+                    pubIter=0
 
                     # Motion Control
                     while True:
@@ -373,8 +376,8 @@ class NavigationControl():
                             self.pub_endpoint.publish(self.endPoint)
 
                             # if distance < 0.01:
-                            if distance < 0.002:
-                                break
+                            # if distance < 0.002:
+                            #     break
 
                             #self.valve_status = MARKER_DOWN
                             th = self.heading.data
@@ -418,56 +421,15 @@ class NavigationControl():
 
                             # if self.valve_status == MARKER_DOWN:
                             #     self.visualize_traj_encoder(self.point_encoder)
+                            pubDelta1 += delOmega1
+                            pubDelta2 += delOmega2
 
-                            self.pub_delta_theta_1.publish(delOmega1)
-                            self.pub_delta_theta_2.publish(delOmega2)
 
-                            targetTh1=self.th1+delOmega1
-                            targetTh2=self.th2+delOmega2
-                            # print("target: "+str(targetTh1)+", current: "+str(self.th1))
-
-                            w1=1.0*(targetTh1- self.th1)
-                            w2=1.0*(targetTh2- self.th2)
-                            # print("w1: "+str(w1)+", w2: "+str(w2))
-
-                            self.th1=self.th1+w1*self.dt
-                            self.th2=self.th2+w2*self.dt
-
-                            mat=[[self.R/2, self.R/2],[self.R/(2*self.L), -self.R/(2*self.L)]]
-                            v,w=np.matmul(mat, [w1, w2])
-                            # print("v: "+str(v)+", w: "+str(w))
-
-                            if self.is_moving_between_letters:
-                                self.valve_status = MARKER_UP
-                            else:
-                                pass
-                            self.valve_angle_input.goal_position = self.valve_status
-                            self.valve_angle_publisher.publish(
-                                    self.valve_angle_input)
-
-                            feedback=pid_control(v, self.current_speed)
-                            self.vel_update(feedback)
-                            self.move_cmd.linear.x=self.current_speed
-                            if(v!=0):
-                                ratio=w/v
-                                ang_vel=ratio*self.move_cmd.linear.x
-                            else:
-                                ang_vel=w
-                            if abs(ang_vel)>0.05:
-                                if ang_vel>0:
-                                    self.move_cmd.angular.z=0.05
-                                else:
-                                    self.move_cmd.angular.z=-0.05
-                                self.move_cmd.linear.x=self.move_cmd.linear.x/ang_vel*self.move_cmd.angular.z
-                            else:
-                                self.move_cmd.angular.z=ang_vel
-
-                            # print("PUBLISH- lin: "+str(self.move_cmd.linear.x)+", ang: "+str(self.move_cmd.angular.z))
-                            #print("CURRENT SIMULATOR POSITION- x: "+str(self.point.x)+", y: "+str(self.point.y))
-                            #print("CURRENT HEADING: " + str(self.heading.data))
-                            # self.cmd_vel.publish(self.move_cmd)
-                            #if self.valve_status == MARKER_DOWN:
-                            #    self.visualize_traj(self.point)
+                            if pubIter==4:
+                                self.pub_delta_theta_1.publish(pubDelta1)
+                                self.pub_delta_theta_2.publish(pubDelta2)
+                                break
+                            pubIter += 1
 
                             self.r.sleep()
 
