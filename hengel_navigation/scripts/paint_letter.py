@@ -61,6 +61,13 @@ class PaintLetter():
 
         self.get_path()
         print("path creation completed")
+        print("-----------------------------------------------")
+        # print(self.arr_path)
+        for i in range(len(self.arr_path)):
+            for j in range(len(self.arr_path[i])):
+                for k in range(len(self.arr_path[i][j])):
+                    print(str(self.arr_path[i][j][k][0])+" "+str(self.arr_path[i][j][k][1]))
+        print("-----------------------------------------------")
         self.run()
 
     def get_path(self):
@@ -110,8 +117,8 @@ class PaintLetter():
                                             x=x_last+(k+1)/float(div)*(x_curr-x_last)
                                             y=y_last+(k+1)/float(div)*(y_curr-y_last)
                                             subletter_path.append([x,y])
-                                            x_last=x
-                                            y_last=y
+                                        x_last=x
+                                        y_last=y
                                     else:
                                         subletter_path.append([x_curr, y_curr])
                                         x_last=x_curr
