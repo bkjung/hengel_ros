@@ -18,7 +18,8 @@ CANVAS_SIDE_LENGTH = 1.0
 #CANVAS_SIDE_LENGTH = 1.5 * 0.58
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #PADDING_LENGTH = 0.0
-PADDING_LENGTH = -0.65
+#PADDING_LENGTH = -0.65
+PADDING_LENGTH = -0.30
 VIEWPOINT_DISTANCE = 0.3
 
 package_base_path = os.path.abspath(
@@ -59,6 +60,7 @@ class PaintLetter():
                     break
 
         self.get_path()
+        print("path creation completed")
         self.run()
 
     def get_path(self):
@@ -66,8 +68,22 @@ class PaintLetter():
         dir_str = package_base_path + "/hengel_path_manager/alphabet_path/path_"
         letter_index = 0
         row_index = 0
+        initial_letter = 1
+        x_last = 0.0
+        y_last = 0.0
         for letter in self.word:
+            print(letter)
             letter_path = []
+
+            if initial_letter == 1:
+                subletter_path=[]
+                x_last = -self.D
+                #x_last = 0.0
+                y_last = 0.0
+                subletter_path.append([x_last, y_last])
+                letter_path.append(subletter_path)
+                initial_letter = 0
+
             if letter == ' ':
                 pass
             elif letter == '^':
@@ -76,11 +92,6 @@ class PaintLetter():
             else:
                 for i in range(1, 5):
                     subletter_path = []
-                    if i==1:
-                        subletter_path.append([-self.D, 0])
-                        # subletter_path.append([0, 0])
-                    else:
-                        pass
                     path_str = dir_str + letter.capitalize() + "_" + str(i) + ".txt"
                     #path_str = dir_str
                     if os.path.isfile(path_str):
@@ -89,43 +100,36 @@ class PaintLetter():
                                 _str = line.split()
                                 if not len(_str) == 0:
                                     #letter_path.append([(float)(_str[0])+(float)(letter_index)-(2*(float)(letter_index)-1)*250/1632, 1.0-(float)(_str[1])])
-                                    x_curr=float(_str[0])*CANVAS_SIDE_LENGTH+float(letter_index)*(CANVAS_SIDE_LENGTH+PADDING_LENGTH)
+                                    x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH+float(letter_index)*(CANVAS_SIDE_LENGTH+PADDING_LENGTH))*-1.0
                                     y_curr=(1-float(_str[1]))*CANVAS_SIDE_LENGTH+row_index*CANVAS_SIDE_LENGTH
-                                    if self.isPositionControl:
-                                        if len(subletter_path)==0:
-                                            x_last=letter_path[-1][-1][0]
-                                            y_last=letter_path[-1][-1][1]
-                                        else:
-                                            x_last=subletter_path[-1][0]
-                                            y_last=subletter_path[-1][1]
-                                        x_last=subletter_path[-1][0]
-                                        y_last=subletter_path[-1][1]
 
-                                        if len(subletter_path)!=0 or len(letter_path)!=0:
-                                            dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
-                                            if dist>0.001:
-                                                div=int(ceil(dist/0.001))
-                                                for k in range(div-1):
+                                    dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
+                                    if dist>0.001:
+                                        div=int(ceil(dist/0.001))
+                                        for k in range(div):
+                                            x=x_last+(k+1)/float(div)*(x_curr-x_last)
+                                            y=y_last+(k+1)/float(div)*(y_curr-y_last)
+                                            subletter_path.append([x,y])
+                                            x_last=x
+                                            y_last=y
+                                    else:
+                                        subletter_path.append([x_curr, y_curr])
+                                        x_last=x_curr
+                                        y_last=y_curr
 
-                                                    x=x_last+(k+1)/float(div)*(x_curr-x_last)
-                                                    y=y_last+(k+1)/float(div)*(y_curr-y_last)
-                                                    subletter_path.append([x,y])
-                                        else:
-                                            pass
-                                    subletter_path.append([x_curr, y_curr])
                                     if len(_str)>2:
                                         if _str[2]=="docking_line" or _str[2]=="docking_point_list":
                                             #letter_index, segment_index, waypoint_index
                                             self.docking_point_list.append([letter_index, i-1, idx])
                                     else:
                                         pass
-                        letter_path.append(subletter_path)
-                        self.center_point_list.append([
-                            0.5 * CANVAS_SIDE_LENGTH +
-                            (float)(letter_index) *
-                            (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
-                            0.5 * CANVAS_SIDE_LENGTH + row_index * CANVAS_SIDE_LENGTH
-                            ])
+                            letter_path.append(subletter_path)
+                            self.center_point_list.append([
+                                0.5 * CANVAS_SIDE_LENGTH +
+                                (float)(letter_index) *
+                                (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
+                                0.5 * CANVAS_SIDE_LENGTH + row_index * CANVAS_SIDE_LENGTH
+                                ])
 
 
 

@@ -291,238 +291,230 @@ class NavigationControl():
     def runOffset(self):
         print("--runOffset begin--")
         self.wait_for_seconds(5.0)
-            # go through path array
-            rospy.loginfo("number of letters = " + str(len(self.arr_path)))
-            for idx_letter in range(len(self.arr_path)):
-                rospy.loginfo("number of letter segments in letter no." + str(idx_letter) +
-                        " = " + str(len(self.arr_path[idx_letter])))
-                for idx_segment in range(len(self.arr_path[idx_letter])):
-                    #waypoints_in_segment = []
-                    for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
-                        self.cnt_total_waypoints = self.cnt_total_waypoints + 1
-                    #self.waypoints.append(waypoints_in_segment)
+        # go through path array
+        rospy.loginfo("number of letters = " + str(len(self.arr_path)))
+        for idx_letter in range(len(self.arr_path)):
+            rospy.loginfo("number of letter segments in letter no." + str(idx_letter) +
+                    " = " + str(len(self.arr_path[idx_letter])))
+            for idx_segment in range(len(self.arr_path[idx_letter])):
+                #waypoints_in_segment = []
+                for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
+                    self.cnt_total_waypoints = self.cnt_total_waypoints + 1
+                #self.waypoints.append(waypoints_in_segment)
 
 
-            print("Total Number of Waypoints : "+str(self.cnt_total_waypoints))
+        print("Total Number of Waypoints : "+str(self.cnt_total_waypoints))
 
-            self.cnt_letter = len(self.arr_path)
-            self.th1=0
-            self.th2=0
+        self.cnt_letter = len(self.arr_path)
+        self.th1=0
+        self.th2=0
 
-            while self.letter_index < self.cnt_letter:
+        while self.letter_index < self.cnt_letter:
+            if rospy.is_shutdown():
+                break
+            self.cnt_segments_in_current_letter = len(
+                    self.arr_path[self.letter_index])
+            while self.segment_index < self.cnt_segments_in_current_letter:
                 if rospy.is_shutdown():
                     break
-                self.cnt_segments_in_current_letter = len(
-                        self.arr_path[self.letter_index])
-                while self.segment_index < self.cnt_segments_in_current_letter:
+                self.cnt_waypoints_in_current_segment = len(
+                        self.arr_path[self.letter_index][self.segment_index])
+                while self.waypoint_index_in_current_segment < self.cnt_waypoints_in_current_segment:
                     if rospy.is_shutdown():
                         break
-                    self.cnt_waypoints_in_current_segment = len(
-                            self.arr_path[self.letter_index][self.segment_index])
-                    while self.waypoint_index_in_current_segment < self.cnt_waypoints_in_current_segment:
+                    # rospy.loginfo("\n\nwaypoint index : " +
+                    #         str(self.waypoint_index_in_current_segment) +
+                    #         " in segment no. " + str(self.segment_index) +
+                    #         " in letter no. " + str(self.letter_index))
+
+                    self.current_waypoint = [
+                            self.arr_path[self.letter_index][self.segment_index][
+                                self.waypoint_index_in_current_segment][0],
+                            self.arr_path[self.letter_index][self.segment_index][
+                                self.waypoint_index_in_current_segment][1]
+                            ]
+
+                    if self.waypoint_index_in_current_segment == 0:
+                        #print("moving to FIRST waypoint")
+                        rospy.loginfo("moving to FIRST waypoint in segment")
+                        self.is_moving_between_letters = True
+                    elif self.global_option==1 and self.segment_index == self.cnt_segments_in_current_letter - 1:
+                        #print("moving to GLOBAL VIEW POINT")
+                        rospy.loginfo("moving to GLOBAL VIEW POINT")
+                        self.is_moving_between_letters = True
+                    else:
+                        self.is_moving_between_letters = False
+
+
+
+                    docking_buffer_cnt = 0
+
+
+                    # Motion Control
+                    while True:
                         if rospy.is_shutdown():
                             break
-                        # rospy.loginfo("\n\nwaypoint index : " +
-                        #         str(self.waypoint_index_in_current_segment) +
-                        #         " in segment no. " + str(self.segment_index) +
-                        #         " in letter no. " + str(self.letter_index))
+                        try:
+                            self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
+                            self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
+                            #self.endPoint.x=self.point.x+self.D*cos(self.heading.data)
+                            #self.endPoint.y=self.point.y+self.D*sin(self.heading.data)
 
-                        self.current_waypoint = [
-                                self.arr_path[self.letter_index][self.segment_index][
-                                    self.waypoint_index_in_current_segment][0],
-                                self.arr_path[self.letter_index][self.segment_index][
-                                    self.waypoint_index_in_current_segment][1]
-                                ]
+                            distance = sqrt(
+                                    pow(self.current_waypoint[0] - self.endPoint.x, 2) +
+                                    pow(self.current_waypoint[1] - self.endPoint.y, 2))
 
-                        if self.waypoint_index_in_current_segment == 0:
-                            #print("moving to FIRST waypoint")
-                            rospy.loginfo("moving to FIRST waypoint in segment")
-                            self.is_moving_between_letters = True
-                        elif self.global_option==1 and self.segment_index == self.cnt_segments_in_current_letter - 1:
-                            #print("moving to GLOBAL VIEW POINT")
-                            rospy.loginfo("moving to GLOBAL VIEW POINT")
-                            self.is_moving_between_letters = True
-                        else:
-                            self.is_moving_between_letters = False
+                            print("distance: ", distance)
+                            print("waypoint: ", self.current_waypoint)
+                            print("endpoint: ", self.endPoint)
 
-
-                        self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
-                        self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
-                        distance = sqrt(
-                                pow(self.current_waypoint[0] - self.endPoint.x, 2) +
-                                pow(self.current_waypoint[1] - self.endPoint.y, 2))
-
-                        docking_buffer_cnt = 0
-
-
-                        # Motion Control
-                        while True:
-                            if rospy.is_shutdown():
-                                break
-                            try:
-                                self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
-                                self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
-                                #self.endPoint.x=self.point.x+self.D*cos(self.heading.data)
-                                #self.endPoint.y=self.point.y+self.D*sin(self.heading.data)
-
-                                distance = sqrt(
-                                        pow(self.current_waypoint[0] - self.endPoint.x, 2) +
-                                        pow(self.current_waypoint[1] - self.endPoint.y, 2))
-
-                        print("distance: ", distance)
-                                print("waypoint: ", self.current_waypoint)
-                                print("endpoint: ", self.endPoint)
-
-                                #if distance < 0.03 * 0.58:
-                                if distance < 0.01:
-                                    break
-
-                                #self.valve_status = MARKER_DOWN
-                                th = self.heading.data
-                                delX= self.current_waypoint[0]-self.endPoint.x
-                                delY= self.current_waypoint[1]-self.endPoint.y
-
-                                # print("delx: "+str(delX)+", dely: "+str(delY))
-
-                                delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
-                                delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
-
-                                #10 times slower
-                                delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1/10
-                                delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1/10
-
-
-                                if abs(delOmega1)>0.15 or abs(delOmega2)>0.15:
-                                    if abs(delOmega1)>abs(delOmega2): #abs(delOmega1) should not be zero, according to this inequality
-                                        delOmega2=copysign(0.15*delOmega2/delOmega1, delOmega2)
-                                        delOmega1=copysign(0.15, delOmega1)
-                                    else:   #abs(delOmega2) should not be zero, according to this inequality
-                                        delOmega1=copysign(delOmega1/delOmega2, delOmega1)
-                                        delOmega2=copysign(0.15, delOmega2)
-
-
-
-                                if delOmega1 != delOmega2:
-                                    delYrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*(1-cos(self.R*(delOmega2-delOmega1)/(2*self.L)))
-                                    delXrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*sin(self.R*(delOmega2-delOmega1)/(2*self.L))
-                                else:
-                                    delXrobotLocal=self.R*delOmega1
-                                    delYrobotLocal=0
-
-                                delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
-                                self.point.x=self.point.x+delXrobotGlobal
-                                self.point.y=self.point.y+delYrobotGlobal
-                                self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
-
-                                #print("Point Encoder ", self.point)
-                                #print("Heading Encoder: " + str(self.heading.data))
-
-
-                                # if self.valve_status == MARKER_DOWN:
-                                #     self.visualize_traj_encoder(self.point_encoder)
-
-
-
-                                self.pub_delta_theta_1.publish(delOmega1)
-                                self.pub_delta_theta_2.publish(delOmega2)
-
-                                targetTh1=self.th1+delOmega1
-                                targetTh2=self.th2+delOmega2
-                                # print("target: "+str(targetTh1)+", current: "+str(self.th1))
-
-                                w1=1.0*(targetTh1- self.th1)
-                                w2=1.0*(targetTh2- self.th2)
-                                # print("w1: "+str(w1)+", w2: "+str(w2))
-
-                                self.th1=self.th1+w1*self.dt
-                                self.th2=self.th2+w2*self.dt
-
-                                mat=[[self.R/2, self.R/2],[self.R/(2*self.L), -self.R/(2*self.L)]]
-                                v,w=np.matmul(mat, [w1, w2])
-                                # print("v: "+str(v)+", w: "+str(w))
-
-                                if self.is_moving_between_letters:
-                                    self.valve_status = MARKER_UP
-                                else:
-                                    pass
-                                self.valve_angle_input.goal_position = self.valve_status
-                                self.valve_angle_publisher.publish(
-                                        self.valve_angle_input)
-
-                                feedback=pid_control(v, self.current_speed)
-                                self.vel_update(feedback)
-                                self.move_cmd.linear.x=self.current_speed
-                                if(v!=0):
-                                    ratio=w/v
-                                    ang_vel=ratio*self.move_cmd.linear.x
-                                else:
-                                    ang_vel=w
-                                if abs(ang_vel)>0.05:
-                                    if ang_vel>0:
-                                        self.move_cmd.angular.z=0.05
-                                    else:
-                                        self.move_cmd.angular.z=-0.05
-                                    self.move_cmd.linear.x=self.move_cmd.linear.x/ang_vel*self.move_cmd.angular.z
-                                else:
-                                    self.move_cmd.angular.z=ang_vel
-
-                                # print("PUBLISH- lin: "+str(self.move_cmd.linear.x)+", ang: "+str(self.move_cmd.angular.z))
-                                #print("CURRENT SIMULATOR POSITION- x: "+str(self.point.x)+", y: "+str(self.point.y))
-                                #print("CURRENT HEADING: " + str(self.heading.data))
-                                # self.cmd_vel.publish(self.move_cmd)
-                                #if self.valve_status == MARKER_DOWN:
-                                #    self.visualize_traj(self.point)
-
-                                self.r.sleep()
-
-                            except KeyboardInterrupt:
-                                print("Got KeyboardInterrupt")
-                                # self.cmd_vel.publish(Twist())
-
-                                rospy.signal_shutdown("KeyboardInterrupt")
+                            #if distance < 0.03 * 0.58:
+                            if distance < 0.01:
                                 break
 
-                        #Arrived at the waypoint
-                        rospy.loginfo("CURRENT: " + str(self.point.x) + ", " +
-                                str(self.point.y) + " \t\t WAYPOINT: " +
-                                str(self.current_waypoint[0]) + ", " +
-                                str(self.current_waypoint[1]))
+                            #self.valve_status = MARKER_DOWN
+                            th = self.heading.data
+                            delX= self.current_waypoint[0]-self.endPoint.x
+                            delY= self.current_waypoint[1]-self.endPoint.y
+
+                            # print("delx: "+str(delX)+", dely: "+str(delY))
+
+                            delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
+                            delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
+
+                            #1/26 times slower
+                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1/26
+                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1/26
 
 
-                        if self.pi_cam_save_option==1:
-                            #stop the robot
+                            #if abs(delOmega1)>0.04 or abs(delOmega2)>0.04:
+                            #    if abs(delOmega1)>abs(delOmega2): #abs(delOmega1) should not be zero, according to this inequality
+                            #        delOmega2=copysign(0.04*delOmega2/delOmega1, delOmega2)
+                            #        delOmega1=copysign(0.04, delOmega1)
+                            #    else:   #abs(delOmega2) should not be zero, according to this inequality
+                            #        delOmega1=copysign(delOmega1/delOmega2, delOmega1)
+                            #        delOmega2=copysign(0.04, delOmega2)
+
+
+
+                            if delOmega1 != delOmega2:
+                                delYrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*(1-cos(self.R*(delOmega2-delOmega1)/(2*self.L)))
+                                delXrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*sin(self.R*(delOmega2-delOmega1)/(2*self.L))
+                            else:
+                                delXrobotLocal=self.R*delOmega1
+                                delYrobotLocal=0
+
+                            delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                            self.point.x=self.point.x+delXrobotGlobal
+                            self.point.y=self.point.y+delYrobotGlobal
+                            self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+
+                            #print("Point Encoder ", self.point)
+                            #print("Heading Encoder: " + str(self.heading.data))
+
+                            # if self.valve_status == MARKER_DOWN:
+                            #     self.visualize_traj_encoder(self.point_encoder)
+
+                            self.pub_delta_theta_1.publish(delOmega1)
+                            self.pub_delta_theta_2.publish(delOmega2)
+
+                            targetTh1=self.th1+delOmega1
+                            targetTh2=self.th2+delOmega2
+                            # print("target: "+str(targetTh1)+", current: "+str(self.th1))
+
+                            w1=1.0*(targetTh1- self.th1)
+                            w2=1.0*(targetTh2- self.th2)
+                            # print("w1: "+str(w1)+", w2: "+str(w2))
+
+                            self.th1=self.th1+w1*self.dt
+                            self.th2=self.th2+w2*self.dt
+
+                            mat=[[self.R/2, self.R/2],[self.R/(2*self.L), -self.R/(2*self.L)]]
+                            v,w=np.matmul(mat, [w1, w2])
+                            # print("v: "+str(v)+", w: "+str(w))
+
+                            if self.is_moving_between_letters:
+                                self.valve_status = MARKER_UP
+                            else:
+                                pass
+                            self.valve_angle_input.goal_position = self.valve_status
+                            self.valve_angle_publisher.publish(
+                                    self.valve_angle_input)
+
+                            feedback=pid_control(v, self.current_speed)
+                            self.vel_update(feedback)
+                            self.move_cmd.linear.x=self.current_speed
+                            if(v!=0):
+                                ratio=w/v
+                                ang_vel=ratio*self.move_cmd.linear.x
+                            else:
+                                ang_vel=w
+                            if abs(ang_vel)>0.05:
+                                if ang_vel>0:
+                                    self.move_cmd.angular.z=0.05
+                                else:
+                                    self.move_cmd.angular.z=-0.05
+                                self.move_cmd.linear.x=self.move_cmd.linear.x/ang_vel*self.move_cmd.angular.z
+                            else:
+                                self.move_cmd.angular.z=ang_vel
+
+                            # print("PUBLISH- lin: "+str(self.move_cmd.linear.x)+", ang: "+str(self.move_cmd.angular.z))
+                            #print("CURRENT SIMULATOR POSITION- x: "+str(self.point.x)+", y: "+str(self.point.y))
+                            #print("CURRENT HEADING: " + str(self.heading.data))
+                            # self.cmd_vel.publish(self.move_cmd)
+                            #if self.valve_status == MARKER_DOWN:
+                            #    self.visualize_traj(self.point)
+
+                            self.r.sleep()
+
+                        except KeyboardInterrupt:
+                            print("Got KeyboardInterrupt")
                             # self.cmd_vel.publish(Twist())
-                            #take picam floor photo
-                            self.wait_for_seconds(0.5)
-                            self.pi_cam_manager.save("picam_letter-" +
-                                    str(self.letter_index) + "_segment-" +
-                                    str(self.segment_index) + "_waypoint-" +
-                                    str(self.waypoint_index_in_current_segment))
-                            print("Pi Cam Saved")
-                            rospy.loginfo("Pi Cam Saved")
-                        else:
-                            pass
 
-                        self.waypoint_index_in_current_segment = self.waypoint_index_in_current_segment + 1
-                    self.segment_index = self.segment_index + 1
-                    self.waypoint_index_in_current_segment = 0
+                            rospy.signal_shutdown("KeyboardInterrupt")
+                            break
 
-                #End of current letter.
+                    #Arrived at the waypoint
+                    rospy.loginfo("CURRENT: " + str(self.point.x) + ", " +
+                            str(self.point.y) + " \t\t WAYPOINT: " +
+                            str(self.current_waypoint[0]) + ", " +
+                            str(self.current_waypoint[1]))
 
-                #it's time for next letter
-                self.letter_index = self.letter_index + 1
-                self.segment_index = 0
+
+                    if self.pi_cam_save_option==1:
+                        #stop the robot
+                        # self.cmd_vel.publish(Twist())
+                        #take picam floor photo
+                        self.wait_for_seconds(0.5)
+                        self.pi_cam_manager.save("picam_letter-" +
+                                str(self.letter_index) + "_segment-" +
+                                str(self.segment_index) + "_waypoint-" +
+                                str(self.waypoint_index_in_current_segment))
+                        print("Pi Cam Saved")
+                        rospy.loginfo("Pi Cam Saved")
+                    else:
+                        pass
+
+                    self.waypoint_index_in_current_segment = self.waypoint_index_in_current_segment + 1
+                self.segment_index = self.segment_index + 1
                 self.waypoint_index_in_current_segment = 0
+
+            #End of current letter.
+
+            #it's time for next letter
+            self.letter_index = self.letter_index + 1
+            self.segment_index = 0
+            self.waypoint_index_in_current_segment = 0
 
 
         self.wait_for_seconds(2.0)
-            rospy.loginfo("Stopping the robot at the final destination")
-            #Wait for 1 second to close valve
-            self.quit_valve()
-            #turn to view letters at the final global map view point
-            #self.look_opposite_side()
-            #stop the robot
-            # self.cmd_vel.publish(Twist())
+        rospy.loginfo("Stopping the robot at the final destination")
+        #Wait for 1 second to close valve
+        self.quit_valve()
+        #turn to view letters at the final global map view point
+        #self.look_opposite_side()
+        #stop the robot
+        # self.cmd_vel.publish(Twist())
 
     def vel_update(self, a):
         self.current_speed = self.current_speed + a*self.dt
@@ -534,15 +526,9 @@ class NavigationControl():
     def callback_heading(self, _data):
         self.heading.data = _data.data
 
-    def visualize_traj(self, _data):
-        self.traj.points.append(Point(_data.x, _data.y, 0.0))
-        self.pub_markers.publish(self.traj)
-
-        painting_x = _data.x - self.D*cos(self.heading.data)
-        painting_y = _data.y - self.D*sin(self.heading.data)
-
-        self.traj_painting.points.append(Point(painting_x, painting_y, 0.0))
-        self.pub_markers_painting.publish(self.traj_painting)
+    def visualize_traj(self):
+        self.pub_markers.publish(self.point)
+        self.pub_markers_painting.publish(self.endPoint)
 
 
     def visualize_traj_encoder(self, _data):
