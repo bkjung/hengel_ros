@@ -376,8 +376,8 @@ class NavigationControl():
                             self.pub_endpoint.publish(self.endPoint)
 
                             # if distance < 0.01:
-                            if distance < 0.002:
-                                break
+                            # if distance < 0.002:
+                            #     break
 
                             #self.valve_status = MARKER_DOWN
                             th = self.heading.data
