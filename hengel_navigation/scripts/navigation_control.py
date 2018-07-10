@@ -424,18 +424,12 @@ class NavigationControl():
                             pubDelta1 += delOmega1
                             pubDelta2 += delOmega2
 
+
                             if pubIter==4:
                                 self.pub_delta_theta_1.publish(pubDelta1)
                                 self.pub_delta_theta_2.publish(pubDelta2)
+                                break
                             pubIter += 1
-
-                            if self.is_moving_between_letters:
-                                self.valve_status = MARKER_UP
-                            else:
-                                pass
-                            self.valve_angle_input.goal_position = self.valve_status
-                            self.valve_angle_publisher.publish(
-                                    self.valve_angle_input)
 
                             self.r.sleep()
 
