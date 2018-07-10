@@ -7,6 +7,7 @@ from paint_drawing import PaintDrawing
 from paint_letter import PaintLetter
 from paint_lieul import PaintLieul
 from paint_korea import PaintKorea
+from paint_square import PaintSquare
 from test_code import GoToPoint
 
 OPTION_LETTERS = 1
@@ -14,6 +15,7 @@ OPTION_DRAWING = 2
 OPTION_TEST = 3
 OPTION_LIEUL = 4
 OPTION_KOREA = 5
+OPTION_SQUARE = 6
 
 
 class HengelMain():
@@ -38,7 +40,8 @@ class HengelMain():
                 PaintLieul()
             elif self.runningOption == OPTION_KOREA:
                 PaintKorea()
-
+            elif self.runningOption == OPTION_SQUARE:
+                PaintSquare()
             else:
                 raise Exception(
                     "WRONG INPUT OPTION FOR PAINTING (Neither 1 nor 2)")
@@ -50,10 +53,10 @@ class HengelMain():
     def initialOptionSelect(self):
         while True:
             word = raw_input(
-                "HENGEL ROBOT Made By NAVER LABS Robotics 5th Intern.\n[1] Print Letters.\n[2] Print Drawing of Yours.\n[3] OPTION_TEST\n[4] OPTION_LIEUL\n[5]OPTION_KOREA\nType :"
+                "HENGEL ROBOT Made By NAVER LABS Robotics 5th Intern.\n[1] Print Letters.\n[2] Print Drawing of Yours.\n[3] OPTION_TEST\n[4] OPTION_LIEUL\n[5]OPTION_KOREA\n[6]OPTION_SQUARE\nType :"
             )
             self.runningOption = int(word)
-            if self.runningOption >= 1 and self.runningOption <=5:
+            if self.runningOption >= OPTION_LETTERS and self.runningOption <=OPTION_SQUARE:
                 break
 
 
