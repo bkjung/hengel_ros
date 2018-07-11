@@ -121,7 +121,8 @@ class NavigationControl():
         #self.L = 0.33/2 #half of distance btw two wheels
 
         #test flag bot
-        self.R = 0.11/2 #radius of wheel
+        #self.R = 0.11/2 #radius of wheel
+        self.R = 0.12475/2 #radius of wheel
         self.L = 0.355/2 #half of distance btw two wheels
 
         self.point = Point()
@@ -389,11 +390,8 @@ class NavigationControl():
                             delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                             delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
 
-                            #1/26 times slower
-                            #delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1/26
-                            #delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1/26
-                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1/10
-                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1/10
+                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
+                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
 
 
                             #if abs(delOmega1)>0.04 or abs(delOmega2)>0.04:
@@ -418,22 +416,17 @@ class NavigationControl():
                             self.point.y=self.point.y+delYrobotGlobal
                             self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
 
-                            #print("Point Encoder ", self.point)
-                            #print("Heading Encoder: " + str(self.heading.data))
-
-                            # if self.valve_status == MARKER_DOWN:
-                            #     self.visualize_traj_encoder(self.point_encoder)
                             pubDelta1 += delOmega1
                             pubDelta2 += delOmega2
 
 
+                            pubIter += 1
                             if pubIter==1:
                                 self.pub_delta_theta_1.publish(pubDelta1)
                                 self.pub_delta_theta_2.publish(pubDelta2)
+                                self.r.sleep()
                                 break
-                            pubIter += 1
 
-                            self.r.sleep()
 
                         except KeyboardInterrupt:
                             print("Got KeyboardInterrupt")
