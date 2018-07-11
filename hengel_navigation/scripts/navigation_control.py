@@ -392,6 +392,8 @@ class NavigationControl():
 
                             delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
                             delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
+                            #delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1.0
+                            #delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1.0
 
 
                             #if abs(delOmega1)>0.04 or abs(delOmega2)>0.04:

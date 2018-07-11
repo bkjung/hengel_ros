@@ -17,7 +17,7 @@ import cv2
 from Tkinter import *
 import tkFileDialog
 
-CANVAS_SIDE_LENGTH = 3.0
+CANVAS_SIDE_LENGTH = 6.0
 #CANVAS_SIDE_LENGTH = 1.5 * 0.58
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #PADDING_LENGTH = 0.0
@@ -86,7 +86,7 @@ class PaintSelectfile():
                 for idx, line in enumerate(file_path):
                     _str = line.split()
                     if not len(_str) == 0:
-                        x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH)
+                        x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH)*(-1.0)
                         y_curr=(1-float(_str[1]))*CANVAS_SIDE_LENGTH
 
                         dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
