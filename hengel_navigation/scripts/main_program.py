@@ -32,7 +32,8 @@ class HengelMain():
                 PaintLetter()
 
             elif self.runningOption == OPTION_DRAWING:
-                PaintDrawing()
+                app = PaintDrawing()
+                app.run()
 
             elif self.runningOption == OPTION_TEST:
                 GoToPoint()
