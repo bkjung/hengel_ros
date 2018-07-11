@@ -390,11 +390,8 @@ class NavigationControl():
                             delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                             delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
 
-                            ##1/26 times slower
-                            #delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1/26
-                            #delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1/26
-                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.5
-                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.5
+                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
+                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
 
 
                             #if abs(delOmega1)>0.04 or abs(delOmega2)>0.04:
