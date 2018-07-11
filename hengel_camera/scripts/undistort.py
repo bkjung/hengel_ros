@@ -2,68 +2,107 @@
 
 import rospy
 import numpy as np
-from sensor_msgs.msg import Image, CameraInfo
+from sensor_msgs.msg import Image, CameraInfo, CompressedImage
 import cv2
-from cv_bridge import CvBridge
+from cv_bridge import CvBridge, CvBridgeError
 
 class Undistort():
     def __init__(self):
-        self.dst=np.array([])
-        self.mtx=np.array([])
-        self.rawimg=np.ndarray([])
-        self.undistImg=np.ndarray([])
+        rospy.init_node('undistortion', anonymous=True)
 
-        self.bridge=CvBridge()
-        self.rawImgSubscriber=rospy.Subscriber('/usb_cam/image_raw', Image, self.callback_undistort)
-        self.cameraInfoSubscriber=rospy.Subscriber('/usb_cam/camera_info',CameraInfo, self.callback_info)
+        rospy.Subscriber('/wide_cam_1/image_raw/compressed', CompressedImage, self.callback_undistort1)
+        rospy.Subscriber('/wide_cam_2/image_raw/compressed', CompressedImage, self.callback_undistort2)
+        rospy.Subscriber('/wide_cam_3/image_raw/compressed', CompressedImage, self.callback_undistort3)
+        rospy.Subscriber('/wide_cam_4/image_raw/compressed', CompressedImage, self.callback_undistort4)
+        rospy.spin()
+        # self.cameraInfoSubscriber=rospy.Subscriber('/usb_cam/camera_info',CameraInfo, self.callback_info)
     #    self.undistImgPublisher=rospy.Publisher('/undist_img/image_raw',Image, queue_size=3)
-        rate=rospy.Rate(10)
+        self.rate=rospy.Rate(10)
 
-    def callback_info(self, _info):
-        self.mtx=[]
-        self.dst=np.array(_info.D)
-        for i in [0,3,6]:
-            self.mtx.append(list(_info.K)[i:i+3])
-        self.mtx=np.array(self.mtx)
-
-
-
-    def callback_undistort(self,_img):
+    def callback_undistort1(self,_img):
+        print("callback")
         try:
-            self.rawimg=self.bridge.imgmsg_to_cv2(_img, "bgr8")
+            bridge=CvBridge()
+            rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
         except CvBridgeError as e:
             print(e)
+        print("DEBUG-1")
+        mtx=[[329.446963, 0, 315.383397],[0, 328.784203, 239.504433], [0,0,1]]
+        mtx=np.array(mtx)
+        dst=[-0.282543, 0.0585483, 0.00022407, -0.00044064]
+        dst=np.array(dst)
+        if len(mtx)!=0 and len(dst)!=0:
+            if rawimg is not None:
+                print("DEBUG-2")
+                print(type(rawimg))
+                undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                print(undistImg)
+                # cv2.imshow('raw_img', rawimg)
+                cv2.imshow('undist_img_1', undistImg)
+                cv2.imwrite('undist_img_1_1.png', undistImg)
+                cv2.waitKey(3)
+            else:
+                print("Image1 is None")
 
-        ############ 1st Trial ################################
-        # self.mtx=[[814.518716, 0, 307.439908],[0,773.806237, 228.559015],[0,0,1]]
-        # self.mtx=np.array(self.mtx)
-        # self.dst=[-1.277346, 1.545611, -0.022366, -0.002066]
-        # self.dst=np.array(self.dst)
-        ############ 2nd Trial (Current Version) ###############
-        # self.mtx=[[331.350552, 0, 297.584603],[0,331.407182, 227.861193],[0,0,1]]
-        # self.mtx=np.array(self.mtx)
-        # self.dst=[-0.299195,0.074445,0.000095, -0.000103]
-        # self.dst=np.array(self.dst)
-        #######################################################
-        # self.mtx=[[334.573338, 0, 313.382623],[0, 335.061739, 243.157640], [0,0,1]]
-        # self.mtx=np.array(self.mtx)
-        # self.dst=[-0.252637, 0.042737, -0.000955, -0.002136]
-        # self.dst=np.array(self.dst)
-        ########################################################
-        if len(self.mtx)!=0 and len(self.dst)!=0 and self.rawimg is not None:
-            self.undistImg=cv2.undistort(self.rawimg, self.mtx, self.dst, None, self.mtx)
-            cv2.imshow('raw_img', self.rawimg)
-            cv2.imshow('undist_img', self.undistImg)
-            cv2.waitKey(3)
+    def callback_undistort2(self,_img):
+        try:
+            bridge=CvBridge()
+            rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
+        except CvBridgeError as e:
+            print(e)
+        mtx=[[334.573338, 0, 313.382623],[0, 335.061739, 243.157640], [0,0,1]]
+        mtx=np.array(mtx)
+        dst=[-0.252637, 0.042737, -0.000955, -0.002136]
+        dst=np.array(dst)
+        if len(mtx)!=0 and len(dst)!=0:
+            if rawimg is not None:
+                undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                # cv2.imshow('raw_img', rawimg)
+                # cv2.imshow('undist_img_2', undistImg)
+                cv2.waitKey(3)
+            else:
+                print("Image2 is None")
+
+    def callback_undistort3(self,_img):
+        try:
+            bridge=CvBridge()
+            rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
+        except CvBridgeError as e:
+            print(e)
+        mtx=[[329.799706, 0, 317.902481], [0, 328.339702, 232.650023], [0,0,1]]
+        mtx=np.array(mtx)
+        dst=[-0.276948, 0.054472, -0.001206, -0.000234]
+        dst=np.array(dst)
+        if len(mtx)!=0 and len(dst)!=0:
+            if rawimg is not None:
+                undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                # cv2.imshow('raw_img', rawimg)
+                # cv2.imshow('undist_img_3', undistImg)
+                cv2.waitKey(3)
+            else:
+                print("Image3 is None")
+
+    def callback_undistort4(self,_img):
+        try:
+            bridge=CvBridge()
+            rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
+        except CvBridgeError as e:
+            print(e)
+        mtx=[[329.825798, 0, 312.223260],[0, 328.056018, 243.581446], [0,0,1]]
+        mtx=np.array(mtx)
+        dst=[-0.279630, 0.058004, -0.000491, -0.000337]
+        dst=np.array(dst)
+        if len(mtx)!=0 and len(dst)!=0:
+            if rawimg is not None:
+                undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                # cv2.imshow('raw_img', rawimg)
+                # cv2.imshow('undist_img_4', undistImg)
+                cv2.waitKey(3)
+            else:
+                print("Image4 is None")
 
 
 if __name__=="__main__":
-    rospy.init_node('undistortion', anonymous=True)
     Undistort()
-    try:
-        rospy.spin()
-    except KeyboardInterrupt:
-        print("Shutting Down")
     cv2.destroyAllWindows()
-
 

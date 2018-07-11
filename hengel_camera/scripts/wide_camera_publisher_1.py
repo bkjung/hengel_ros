@@ -9,8 +9,9 @@ from cv_bridge import CvBridge
 if __name__ == '__main__':
     rospy.init_node('wide_cam_node_1', anonymous=True)
     cap = cv2.VideoCapture(0)
+    pub_raw=rospy.Publisher('/wide_cam_1/image_raw', Image, queue_size=3)
     pub = rospy.Publisher(
-        '/wide_cam_1/image_raw/compressed', CompressedImage, queue_size=3)
+        '/wide_cam_1/compressed', CompressedImage, queue_size=3)
     rate = rospy.Rate(10)
 
     bridge = CvBridge()
