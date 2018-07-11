@@ -13,7 +13,7 @@ size_x = 1000
 size_y = 1080
 
 #CANVAS_LENGTH=6
-dist = 4 #dist= 24/CANVAS_LENGTH
+dist_threshold = 4/length_side #dist= 24/CANVAS_LENGTH
 radius = 2
 
 package_base_path = os.path.abspath(
@@ -95,12 +95,15 @@ class PathMaker():
     def path_append(self, x, y):
         if self.isFirst == True:
             self.path_drawing.append([x, y])
+            print("first point added")
             self.isFirst = False
         else:
             last_x, last_y = self.path_drawing[-1]
-            if sqrt(pow(last_x - x, 2) + pow(last_y - y, 2)) > dist:
+            dist = sqrt(pow(last_x - x, 2) + pow(last_y - y, 2))
+            # print(dist)
+            if dist > dist_threshold:
                 self.path_drawing.append([x, y])
-                print(x, y)
+                print(str(x)+" "+str(y))
 
     def command_drawing(self):
         if self.button_draw.config('relief')[-1] == 'sunken':
