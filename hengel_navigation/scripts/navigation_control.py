@@ -425,7 +425,7 @@ class NavigationControl():
                             pubDelta2 += delOmega2
 
 
-                            if pubIter==4:
+                            if pubIter==1:
                                 self.pub_delta_theta_1.publish(pubDelta1)
                                 self.pub_delta_theta_2.publish(pubDelta2)
                                 break
