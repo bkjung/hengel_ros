@@ -123,7 +123,7 @@ class NavigationControl():
         #test flag bot
         #self.R = 0.11/2 #radius of wheel
         self.R = 0.12475/2 #radius of wheel
-        self.L = 0.355/2 #half of distance btw two wheels
+        self.L = 0.3537/2 #half of distance btw two wheels
 
         self.point = Point()
         self.point_encoder = Point()
