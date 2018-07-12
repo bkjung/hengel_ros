@@ -17,7 +17,7 @@ import cv2
 from Tkinter import *
 import tkFileDialog
 
-CANVAS_SIDE_LENGTH = 6.0
+CANVAS_SIDE_LENGTH = 4.0
 #CANVAS_SIDE_LENGTH = 1.5 * 0.58
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #PADDING_LENGTH = 0.0
