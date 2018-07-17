@@ -111,8 +111,9 @@ class PaintLetter():
                                     y_curr=(1-float(_str[1]))*CANVAS_SIDE_LENGTH+row_index*CANVAS_SIDE_LENGTH
 
                                     dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
-                                    if dist>0.001:
-                                        div=int(ceil(dist/0.001))
+                                    #if dist>0.001:
+                                    if dist>0.003:
+                                        div=int(ceil(dist/0.003))
                                         #div=int(ceil(dist/0.001))
                                         for k in range(div):
                                             x=x_last+(k+1)/float(div)*(x_curr-x_last)
