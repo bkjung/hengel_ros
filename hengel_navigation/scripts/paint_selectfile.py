@@ -17,7 +17,7 @@ import cv2
 from Tkinter import *
 import tkFileDialog
 
-CANVAS_SIDE_LENGTH = 4.0
+CANVAS_SIDE_LENGTH = 5.0
 #CANVAS_SIDE_LENGTH = 1.5 * 0.58
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #PADDING_LENGTH = 0.0
@@ -67,7 +67,8 @@ class PaintSelectfile():
         for i in range(len(self.arr_path)):
             for j in range(len(self.arr_path[i])):
                 for k in range(len(self.arr_path[i][j])):
-                    print(str(self.arr_path[i][j][k][0])+" "+str(self.arr_path[i][j][k][1]))
+		    pass
+                    #print(str(self.arr_path[i][j][k][0])+" "+str(self.arr_path[i][j][k][1]))
         print("-----------------------------------------------")
         self.run()
 
