@@ -449,11 +449,12 @@ class NavigationControl():
                             else:
                                 pubDelta1 = delOmega1
                                 pubDelta2 = delOmega2
-
+                                                                
                                 self.pub_delta_theta_1.publish(pubDelta1)
                                 self.pub_delta_theta_2.publish(pubDelta2)
                                 print(str(pubDelta1)+"  "+str(pubDelta2))
                                 self.r.sleep()
+                                
                                 break
 
 
