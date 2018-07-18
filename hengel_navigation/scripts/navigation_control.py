@@ -339,11 +339,11 @@ class NavigationControl():
 
                     if self.waypoint_index_in_current_segment == 0:
                         #print("moving to FIRST waypoint")
-                        rospy.loginfo("moving to FIRST waypoint in segment")
+                        #rospy.loginfo("moving to FIRST waypoint in segment")
                         self.is_moving_between_letters = True
                     elif self.global_option==1 and self.segment_index == self.cnt_segments_in_current_letter - 1:
                         #print("moving to GLOBAL VIEW POINT")
-                        rospy.loginfo("moving to GLOBAL VIEW POINT")
+                        #rospy.loginfo("moving to GLOBAL VIEW POINT")
                         self.is_moving_between_letters = True
                     else:
                         self.is_moving_between_letters = False
@@ -370,9 +370,9 @@ class NavigationControl():
                                     pow(self.current_waypoint[0] - self.endPoint.x, 2) +
                                     pow(self.current_waypoint[1] - self.endPoint.y, 2))
 
-                            print("distance: ", distance)
-                            print("waypoint: ", self.current_waypoint)
-                            print("endpoint: ", self.endPoint)
+                            #print("distance: ", distance)
+                            #print("waypoint: ", self.current_waypoint)
+                            #print("endpoint: ", self.endPoint)
                             self.pub_distance.publish(distance)
                             self.pub_endpoint.publish(self.endPoint)
 
@@ -428,6 +428,7 @@ class NavigationControl():
                             if pubIter==1:
                                 self.pub_delta_theta_1.publish(pubDelta1)
                                 self.pub_delta_theta_2.publish(pubDelta2)
+                                print(str(pubDelta1)+"  "+str(pubDelta2))
                                 self.r.sleep()
                                 break
 
@@ -440,10 +441,10 @@ class NavigationControl():
                             break
 
                     #Arrived at the waypoint
-                    rospy.loginfo("CURRENT: " + str(self.point.x) + ", " +
-                            str(self.point.y) + " \t\t WAYPOINT: " +
-                            str(self.current_waypoint[0]) + ", " +
-                            str(self.current_waypoint[1]))
+                    #rospy.loginfo("CURRENT: " + str(self.point.x) + ", " +
+                    #        str(self.point.y) + " \t\t WAYPOINT: " +
+                    #        str(self.current_waypoint[0]) + ", " +
+                    #        str(self.current_waypoint[1]))
 
 
                     if self.pi_cam_save_option==1:
@@ -456,7 +457,7 @@ class NavigationControl():
                                 str(self.segment_index) + "_waypoint-" +
                                 str(self.waypoint_index_in_current_segment))
                         print("Pi Cam Saved")
-                        rospy.loginfo("Pi Cam Saved")
+                        #rospy.loginfo("Pi Cam Saved")
                     else:
                         pass
 
