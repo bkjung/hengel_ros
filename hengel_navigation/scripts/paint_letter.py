@@ -51,7 +51,7 @@ class PaintLetter():
 
         if self.isPositionControl:
             while True:
-                word1=raw_input("Type the offset of the applicator (0.18 for test flag bot): ")
+                word1=raw_input("Type the offset of the applicator (0.20 for test flag bot): ")
 
                 self.D=float(word1)
                 if self.D==0:
