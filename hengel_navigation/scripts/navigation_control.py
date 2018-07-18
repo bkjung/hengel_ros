@@ -316,6 +316,8 @@ class NavigationControl():
         pubDelta2=0         #previously published delta_2
         pubIter=0
 
+        cnt_delta_buffer = 0
+
         while self.letter_index < self.cnt_letter:
             if rospy.is_shutdown():
                 break
@@ -425,9 +427,18 @@ class NavigationControl():
                             self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
 
 
-                            if abs(delOmega1 - pubDelta1) > 0.02:
+                            if abs(delOmega1 - pubDelta1) > 0.02 and abs(delOmega2 - pubDelta2) > 0.02:
+                                pubIter = max((int)(abs(delOmega1 - pubDelta1)/0.02), (int)(abs(delOmega2 - pubDelta2)/0.02))
+                                cnt_delta_buffer += pubIter
+                                print("---------ITERATION(0/%d)--------- " % (pubIter))
+                            elif abs(delOmega1 - pubDelta1) > 0.02:
                                 pubIter = (int)(abs(delOmega1 - pubDelta1)/0.02)
                                 print("---------ITERATION(0/%d)--------- " % (pubIter))
+                                cnt_delta_buffer += pubIter
+                            elif abs(delOmega2 - pubDelta2) > 0.02:
+                                pubIter = (int)(abs(delOmega2 - pubDelta2)/0.02)
+                                print("---------ITERATION(0/%d)--------- " % (pubIter))
+                                cnt_delta_buffer += pubIter
                             else:
                                 pubIter = 1
                             
@@ -437,7 +448,8 @@ class NavigationControl():
                                 self.pub_delta_theta_2.publish(pubDelta2 + (delOmega2-pubDelta2)/pubIter*(iteration+1))
                                 
                                 print(str(pubDelta1)+"  "+str(pubDelta2))
-                                print("---------ITERATION(%d/%d)--------- " % (iteration+1,pubIter))
+                                if pubIter != 1:
+                                    print("---------ITERATION(%d/%d)--------- " % (iteration+1,pubIter))
                                 self.r.sleep()
                                 break
 
@@ -484,6 +496,7 @@ class NavigationControl():
 
         self.wait_for_seconds(2.0)
         rospy.loginfo("Stopping the robot at the final destination")
+        print("Total Stiff Delta_Theta Change BUFFER = %d" % (cnt_delta_buffer))
         #Wait for 1 second to close valve
         self.quit_valve()
         #turn to view letters at the final global map view point
