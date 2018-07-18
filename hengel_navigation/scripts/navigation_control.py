@@ -403,6 +403,10 @@ class NavigationControl():
                             #delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1.0
                             #delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1.0
 
+                            #print("delOmega=%f" % (delOmega))
+                            #print("delOmega1=%f" % (delOmega1))
+                            #print("delOmega2=%f" % (delOmega2))
+
 
                             #if abs(delOmega1)>0.04 or abs(delOmega2)>0.04:
                             #    if abs(delOmega1)>abs(delOmega2): #abs(delOmega1) should not be zero, according to this inequality
@@ -427,35 +431,36 @@ class NavigationControl():
                             self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
 
 
-                            if abs(delOmega1 - pubDelta1) > 0.02 and abs(delOmega2 - pubDelta2) > 0.02:
-                                pubIter = max((int)(abs(delOmega1 - pubDelta1)/0.02), (int)(abs(delOmega2 - pubDelta2)/0.02))
+                            if abs(delOmega1 - pubDelta1) > 0.01 and abs(delOmega2 - pubDelta2) > 0.01:
+                                pubIter = max(floor(abs(delOmega1 - pubDelta1)/0.01), floor(abs(delOmega2 - pubDelta2)/0.01))
                                 cnt_delta_buffer += pubIter
                                 print("---------ITERATION(0/%d)--------- " % (pubIter))
-                            elif abs(delOmega1 - pubDelta1) > 0.02:
-                                pubIter = (int)(abs(delOmega1 - pubDelta1)/0.02)
+                            elif abs(delOmega1 - pubDelta1) > 0.01:
+                                pubIter = floor(abs(delOmega1 - pubDelta1)/0.01)
                                 print("---------ITERATION(0/%d)--------- " % (pubIter))
                                 cnt_delta_buffer += pubIter
-                            elif abs(delOmega2 - pubDelta2) > 0.02:
-                                pubIter = (int)(abs(delOmega2 - pubDelta2)/0.02)
+                            elif abs(delOmega2 - pubDelta2) > 0.01:
+                                pubIter = floor(abs(delOmega2 - pubDelta2)/0.01)
                                 print("---------ITERATION(0/%d)--------- " % (pubIter))
                                 cnt_delta_buffer += pubIter
                             else:
                                 pubIter = 1
-                            
 
-                            for iteration in range(pubIter):
-                                control_input_1 = pubDelta1 + (delOmega1-pubDelta1)/pubIter*(iteration+1)
-                                control_input_2 = pubDelta2 + (delOmega2-pubDelta2)/pubIter*(iteration+1)
+                            for iteration in range(int(pubIter)):
+                                control_input_1 = pubDelta1 + (float)(delOmega1-pubDelta1)/pubIter*(iteration+1)
+                                control_input_2 = pubDelta2 + (float)(delOmega2-pubDelta2)/pubIter*(iteration+1)
                                 self.pub_delta_theta_1.publish(control_input_1)
                                 self.pub_delta_theta_2.publish(control_input_2)
-                                
+
                                 print(str(control_input_1)+"  "+str(control_input_2))
                                 if pubIter != 1:
                                     print("---------ITERATION(%d/%d)--------- " % (iteration+1,pubIter))
                                 self.r.sleep()
-                            
+
                             pubDelta1 = delOmega1
                             pubDelta2 = delOmega2
+
+                            break
 
 
                         except KeyboardInterrupt:
