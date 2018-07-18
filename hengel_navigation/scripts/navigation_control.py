@@ -444,14 +444,18 @@ class NavigationControl():
                             
 
                             for iteration in range(pubIter):
-                                self.pub_delta_theta_1.publish(pubDelta1 + (delOmega1-pubDelta1)/pubIter*(iteration+1))
-                                self.pub_delta_theta_2.publish(pubDelta2 + (delOmega2-pubDelta2)/pubIter*(iteration+1))
+                                control_input_1 = pubDelta1 + (delOmega1-pubDelta1)/pubIter*(iteration+1)
+                                control_input_2 = pubDelta2 + (delOmega2-pubDelta2)/pubIter*(iteration+1)
+                                self.pub_delta_theta_1.publish(control_input_1)
+                                self.pub_delta_theta_2.publish(control_input_2)
                                 
-                                print(str(pubDelta1)+"  "+str(pubDelta2))
+                                print(str(control_input_1)+"  "+str(control_input_2))
                                 if pubIter != 1:
                                     print("---------ITERATION(%d/%d)--------- " % (iteration+1,pubIter))
                                 self.r.sleep()
-                                break
+                            
+                            pubDelta1 = delOmega1
+                            pubDelta2 = delOmega2
 
 
                         except KeyboardInterrupt:
