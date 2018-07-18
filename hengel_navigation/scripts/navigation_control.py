@@ -46,25 +46,7 @@ os.system("mkdir -p " + package_base_path +
 Kp = 5.0  # speed proportional gain
 
 
-def calculate_robot_local_delta_from_omega(del1, del2):
-    delX = 0.0
-    delY = 0.0
-    if del1 != del2:
-        delY=-self.L*(del1+del2)/(del1-del2)*(1-cos(self.R*(del2-del1)/(2*self.L)))
-        delX=-self.L*(del1+del2)/(del1-del2)*sin(self.R*(del2-del1)/(2*self.L))
-    else:
-        delX=self.R*del1
-        delY=0
-    return delX, delY
 
-    delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
-    self.point.x=self.point.x+delXrobotGlobal
-    self.point.y=self.point.y+delYrobotGlobal
-    self.pen_distance_per_loop=sqrt(
-        pow(delXrobotGlobal, 2) +
-        pow(delYrobotGlobal, 2)
-        )
-    self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
 
 def pid_control(target, current):
     a = Kp * (target - current)
@@ -93,11 +75,13 @@ class NavigationControl():
     #     self.run()
 
     def __init__(self, _arr_path, _docking_point_list, _center_point_list, _isPositionControl,_D):
-        word = raw_input(
+        self.motor_buffer_option = 0
+        while True:
+            word = raw_input(
                     "There are two options for motor profile change smoothing buffer.\n[1] Enable Buffer.\n[2] Disable Buffer. \nType 1 or 2 :"
                     )
             self.motor_buffer_option = int(word)
-            if self.motor_buffer_option == 1 or self.motor_buffer_option ==2 :
+            if self.motor_buffer_option == 1 or self.motor_buffer_option == 2 :
                 break
 
         self.isPositionControl = _isPositionControl
@@ -352,7 +336,7 @@ class NavigationControl():
                         #print("moving to FIRST waypoint")
                         #rospy.loginfo("moving to FIRST waypoint in segment")
                         self.is_moving_between_letters = True
-                    elif self.global_option==1 and self.segment_index == self.cnt_segments_in_current_letter - 1:
+                    elif self.segment_index == self.cnt_segments_in_current_letter - 1:
                         #print("moving to GLOBAL VIEW POINT")
                         #rospy.loginfo("moving to GLOBAL VIEW POINT")
                         self.is_moving_between_letters = True
@@ -384,8 +368,8 @@ class NavigationControl():
                             #print("distance: ", distance)
                             #print("waypoint: ", self.current_waypoint)
                             #print("endpoint: ", self.endPoint)
-                            self.pub_distance.publish(distance)
-                            self.pub_endpoint.publish(self.endPoint)
+                            #self.pub_distance.publish(distance)
+                            #self.pub_endpoint.publish(self.endPoint)
 
                             # if distance < 0.01:
                             # if distance < 0.002:
@@ -442,26 +426,27 @@ class NavigationControl():
                                     control_input_2 = pubDelta2 + (float)(delOmega2-pubDelta2)/pubIter*(iteration+1)
                                     self.pub_delta_theta_1.publish(control_input_1)
                                     self.pub_delta_theta_2.publish(control_input_2)
-                                    # print(str(control_input_1)+"  "+str(control_input_2))
                                     if pubIter != 1:
                                         # print("---------ITERATION(%d/%d)--------- " % (iteration+1,pubIter))
-
-                                    delXrobotLocal, delYrobotLocal = calculate_robot_local_delta_from_omega(control_input_1, control_input_2)
-                                    delXrobotGlobal, delYrobotGlobal = np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
-                                    self.point.x=self.point.x+delXrobotGlobal
-                                    self.point.y=self.point.y+delYrobotGlobal
-                                    self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
-                                    self.pen_distance_per_loop=sqrt(
-                                        pow(delXrobotGlobal, 2) +
-                                        pow(delYrobotGlobal, 2)
-                                        )
-                                    print(self.pen_distance_per_loop)
+                                        pass
 
 
                                     self.r.sleep()
 
                                 pubDelta1 = delOmega1
                                 pubDelta2 = delOmega2
+
+                                delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+                                delXrobotGlobal, delYrobotGlobal = np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                                self.point.x=self.point.x+delXrobotGlobal
+                                self.point.y=self.point.y+delYrobotGlobal
+                                self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                                self.pen_distance_per_loop=sqrt(
+                                    pow(delXrobotGlobal, 2) +
+                                    pow(delYrobotGlobal, 2)
+                                    )
+                                print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
+
 
                                 break
 
@@ -470,21 +455,22 @@ class NavigationControl():
                                 pubDelta2 = delOmega2
                                 self.pub_delta_theta_1.publish(pubDelta1)
                                 self.pub_delta_theta_2.publish(pubDelta2)
-                                print(str(pubDelta1)+"  "+str(pubDelta2))
-                                
+                                #print(str(pubDelta1)+"  "+str(pubDelta2))
 
-                                delXrobotLocal, delYrobotLocal = calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+
+                                delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
                                 delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
                                 self.point.x=self.point.x+delXrobotGlobal
                                 self.point.y=self.point.y+delYrobotGlobal
                                 self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
                                 self.pen_distance_per_loop=sqrt(
-                                        pow(delXrobotGlobal, 2) +
-                                        pow(delYrobotGlobal, 2)
-                                        )
+                                    pow(delXrobotGlobal, 2) +
+                                    pow(delYrobotGlobal, 2)
+                                    )
+                                print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
 
                                 self.r.sleep()
-                                
+
                                 break
 
 
@@ -543,6 +529,16 @@ class NavigationControl():
         self.pub_markers_encoder.publish(self.traj_encoder)
 
 
+    def calculate_robot_local_delta_from_omega(self, del1, del2):
+        delX = 0.0
+        delY = 0.0
+        if del1 != del2:
+            delY=-self.L*(del1+del2)/(del1-del2)*(1-cos(self.R*(del2-del1)/(2*self.L)))
+            delX=-self.L*(del1+del2)/(del1-del2)*sin(self.R*(del2-del1)/(2*self.L))
+        else:
+            delX=self.R*del1
+            delY=0
+        return delX, delY
 
 
 
