@@ -32,7 +32,6 @@ class Undistort():
             print("SUBSCRIBE-1")
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
-            print(rawimg.shape)
         except CvBridgeError as e:
             print(e)
         mtx=[[657.340773, 0, 664.549143],[ 0, 661.426938, 469.186635], [0,0,1]]
@@ -42,9 +41,6 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
-                # cv2.imshow('raw_img', rawimg)
-                cv2.imshow('undist_img_1', undistImg)
-                cv2.imwrite('undist_img_1_1.png', undistImg)
                 cv2.waitKey(3)
             else:
                 print("Image1 is None")
