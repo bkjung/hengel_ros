@@ -45,6 +45,27 @@ os.system("mkdir -p " + package_base_path +
 
 Kp = 5.0  # speed proportional gain
 
+
+def calculate_robot_local_delta_from_omega(del1, del2):
+    delX = 0.0
+    delY = 0.0
+    if del1 != del2:
+        delY=-self.L*(del1+del2)/(del1-del2)*(1-cos(self.R*(del2-del1)/(2*self.L)))
+        delX=-self.L*(del1+del2)/(del1-del2)*sin(self.R*(del2-del1)/(2*self.L))
+    else:
+        delX=self.R*del1
+        delY=0
+    return delX, delY
+
+    delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+    self.point.x=self.point.x+delXrobotGlobal
+    self.point.y=self.point.y+delYrobotGlobal
+    self.pen_distance_per_loop=sqrt(
+        pow(delXrobotGlobal, 2) +
+        pow(delYrobotGlobal, 2)
+        )
+    self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+
 def pid_control(target, current):
     a = Kp * (target - current)
 
@@ -110,6 +131,7 @@ class NavigationControl():
 
         self.point = Point()
         self.point_encoder = Point()
+        self.pen_distance_per_loop = Float32()
         self.endPoint= Point()
         self.heading = Float32()
         self.heading_encoder = Float32()
@@ -399,33 +421,18 @@ class NavigationControl():
                             #        delOmega1=copysign(delOmega1/delOmega2, delOmega1)
                             #        delOmega2=copysign(0.04, delOmega2)
 
-
-
-                            if delOmega1 != delOmega2:
-                                delYrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*(1-cos(self.R*(delOmega2-delOmega1)/(2*self.L)))
-                                delXrobotLocal=-self.L*(delOmega1+delOmega2)/(delOmega1-delOmega2)*sin(self.R*(delOmega2-delOmega1)/(2*self.L))
-                            else:
-                                delXrobotLocal=self.R*delOmega1
-                                delYrobotLocal=0
-
-                            delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
-                            self.point.x=self.point.x+delXrobotGlobal
-                            self.point.y=self.point.y+delYrobotGlobal
-                            self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
-
-
-                            if self.motor_buffer_option == 1:
+                            if self.motor_buffer_option == 1:       #Motor Smoothing Buffer Enabled
                                 if abs(delOmega1 - pubDelta1) > 0.01 and abs(delOmega2 - pubDelta2) > 0.01:
                                     pubIter = max(floor(abs(delOmega1 - pubDelta1)/0.01), floor(abs(delOmega2 - pubDelta2)/0.01))
                                     cnt_delta_buffer += pubIter
-                                    print("---------ITERATION(0/%d)--------- " % (pubIter))
+                                    # print("---------ITERATION(0/%d)--------- " % (pubIter))
                                 elif abs(delOmega1 - pubDelta1) > 0.01:
                                     pubIter = floor(abs(delOmega1 - pubDelta1)/0.01)
-                                    print("---------ITERATION(0/%d)--------- " % (pubIter))
+                                    # print("---------ITERATION(0/%d)--------- " % (pubIter))
                                     cnt_delta_buffer += pubIter
                                 elif abs(delOmega2 - pubDelta2) > 0.01:
                                     pubIter = floor(abs(delOmega2 - pubDelta2)/0.01)
-                                    print("---------ITERATION(0/%d)--------- " % (pubIter))
+                                    # print("---------ITERATION(0/%d)--------- " % (pubIter))
                                     cnt_delta_buffer += pubIter
                                 else:
                                     pubIter = 1
@@ -435,10 +442,22 @@ class NavigationControl():
                                     control_input_2 = pubDelta2 + (float)(delOmega2-pubDelta2)/pubIter*(iteration+1)
                                     self.pub_delta_theta_1.publish(control_input_1)
                                     self.pub_delta_theta_2.publish(control_input_2)
-
-                                    print(str(control_input_1)+"  "+str(control_input_2))
+                                    # print(str(control_input_1)+"  "+str(control_input_2))
                                     if pubIter != 1:
-                                        print("---------ITERATION(%d/%d)--------- " % (iteration+1,pubIter))
+                                        # print("---------ITERATION(%d/%d)--------- " % (iteration+1,pubIter))
+
+                                    delXrobotLocal, delYrobotLocal = calculate_robot_local_delta_from_omega(control_input_1, control_input_2)
+                                    delXrobotGlobal, delYrobotGlobal = np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                                    self.point.x=self.point.x+delXrobotGlobal
+                                    self.point.y=self.point.y+delYrobotGlobal
+                                    self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                                    self.pen_distance_per_loop=sqrt(
+                                        pow(delXrobotGlobal, 2) +
+                                        pow(delYrobotGlobal, 2)
+                                        )
+                                    print(self.pen_distance_per_loop)
+
+
                                     self.r.sleep()
 
                                 pubDelta1 = delOmega1
@@ -446,13 +465,24 @@ class NavigationControl():
 
                                 break
 
-                            else:
+                            else:       #Motor Smoothing Buffer Disabled
                                 pubDelta1 = delOmega1
                                 pubDelta2 = delOmega2
-                                                                
                                 self.pub_delta_theta_1.publish(pubDelta1)
                                 self.pub_delta_theta_2.publish(pubDelta2)
                                 print(str(pubDelta1)+"  "+str(pubDelta2))
+                                
+
+                                delXrobotLocal, delYrobotLocal = calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+                                delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                                self.point.x=self.point.x+delXrobotGlobal
+                                self.point.y=self.point.y+delYrobotGlobal
+                                self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                                self.pen_distance_per_loop=sqrt(
+                                        pow(delXrobotGlobal, 2) +
+                                        pow(delYrobotGlobal, 2)
+                                        )
+
                                 self.r.sleep()
                                 
                                 break
