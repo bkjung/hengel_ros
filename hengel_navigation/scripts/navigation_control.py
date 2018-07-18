@@ -312,6 +312,10 @@ class NavigationControl():
         self.th1=0
         self.th2=0
 
+        pubDelta1=0         #previously published delta_1
+        pubDelta2=0         #previously published delta_2
+        pubIter=0
+
         while self.letter_index < self.cnt_letter:
             if rospy.is_shutdown():
                 break
@@ -352,9 +356,9 @@ class NavigationControl():
 
                     docking_buffer_cnt = 0
 
-                    pubDelta1=0
-                    pubDelta2=0
-                    pubIter=0
+                    # pubDelta1=0
+                    # pubDelta2=0
+                    # pubIter=0
 
                     # Motion Control
                     while True:
@@ -420,15 +424,20 @@ class NavigationControl():
                             self.point.y=self.point.y+delYrobotGlobal
                             self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
 
-                            pubDelta1 += delOmega1
-                            pubDelta2 += delOmega2
 
+                            if abs(delOmega1 - pubDelta1) > 0.02:
+                                pubIter = (int)(abs(delOmega1 - pubDelta1)/0.02)
+                                print("---------ITERATION(0/%d)--------- " % (pubIter))
+                            else:
+                                pubIter = 1
+                            
 
-                            pubIter += 1
-                            if pubIter==1:
-                                self.pub_delta_theta_1.publish(pubDelta1)
-                                self.pub_delta_theta_2.publish(pubDelta2)
+                            for iteration in range(pubIter):
+                                self.pub_delta_theta_1.publish(pubDelta1 + (delOmega1-pubDelta1)/pubIter*(iteration+1))
+                                self.pub_delta_theta_2.publish(pubDelta2 + (delOmega2-pubDelta2)/pubIter*(iteration+1))
+                                
                                 print(str(pubDelta1)+"  "+str(pubDelta2))
+                                print("---------ITERATION(%d/%d)--------- " % (iteration+1,pubIter))
                                 self.r.sleep()
                                 break
 
