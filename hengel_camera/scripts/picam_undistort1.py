@@ -4,6 +4,7 @@ import io
 import time
 import cv2
 import numpy as np
+from hengel_camera.msg import CmpImg
 from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
 
@@ -27,6 +28,7 @@ class Undistort():
         rate = rospy.Rate(10)
 
     def callback_undistort1(self,_img):
+        print("SUBSCRIBE-1")
         try:
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
@@ -39,11 +41,14 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                imgmsg=bridge.cv2_to_compressed_imgmsg(undistImg)
+                self.pub1.publish(imgmsg)
                 cv2.waitKey(3)
             else:
                 print("Image1 is None")
 
     def callback_undistort2(self,_img):
+        print("SUBSCRIBE-2")
         try:
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
@@ -56,6 +61,8 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                imgmsg=bridge.cv2_to_compressed_imgmsg(undistImg)
+                self.pub2.publish(imgmsg)
                 # cv2.imshow('raw_img', rawimg)
                 # cv2.imshow('undist_img_2', undistImg)
                 cv2.waitKey(3)
@@ -63,6 +70,7 @@ class Undistort():
                 print("Image2 is None")
 
     def callback_undistort3(self,_img):
+        print("SUBSCRIBE-3")
         try:
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
@@ -75,6 +83,8 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                imgmsg=bridge.cv2_to_compressed_imgmsg(undistImg)
+                self.pub3.publish(imgmsg)
                 # cv2.imshow('raw_img', rawimg)
                 # cv2.imshow('undist_img_3', undistImg)
                 cv2.waitKey(3)
@@ -82,6 +92,7 @@ class Undistort():
                 print("Image3 is None")
 
     def callback_undistort4(self,_img):
+        print("SUBSCRIBE-4")
         try:
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
@@ -94,6 +105,8 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                imgmsg=bridge.cv2_to_compressed_imgmsg(undistImg)
+                self.pub4.publish(imgmsg)
                 # cv2.imshow('raw_img', rawimg)
                 # cv2.imshow('undist_img_4', undistImg)
                 cv2.waitKey(3)
