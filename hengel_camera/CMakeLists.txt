@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   sensor_msgs
   geometry_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -63,10 +64,6 @@ catkin_python_setup()
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -97,16 +94,26 @@ catkin_python_setup()
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
- CATKIN_DEPENDS rospy std_msgs sensor_msgs geometry_msgs
-# CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs
-# DEPENDS system_lib
-)
 
 ###########
 ## Build ##
 ###########
 
+add_message_files(
+  FILES
+  CmpImg.msg
+)
+
+generate_messages(
+   DEPENDENCIES
+   std_msgs
+   sensor_msgs
+ )
+catkin_package(
+ CATKIN_DEPENDS rospy std_msgs sensor_msgs geometry_msgs message_runtime
+# CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs
+# DEPENDS system_lib
+)
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 #include_directories(
@@ -186,11 +193,8 @@ catkin_package(
 # )
 
 catkin_install_python(PROGRAMS
-  scripts/wide_camera_publisher_1.py
-  scripts/wide_camera_publisher_2.py
-  scripts/wide_camera_publisher_3.py
-  scripts/wide_camera_publisher_4.py
-  scripts/undistort.py
+  scripts/globalAlignment.py
+  scripts/picam_undistort1.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

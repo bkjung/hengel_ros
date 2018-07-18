@@ -2,10 +2,9 @@
 import rospy
 import io
 import time
-import picamera
-import picamera.array
 import cv2
-import numpy as numpy
+import numpy as np
+from hengel_camera.msg import CmpImg
 from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
 
@@ -19,17 +18,18 @@ class Undistort():
         self.pub3 = rospy.Publisher('/usb_cam3/undistort/compressed', CompressedImage, queue_size=3)
         self.pub4 = rospy.Publisher('/usb_cam4/undistort/compressed', CompressedImage, queue_size=3)
 
-        self.rospy.Subscriber('/usb_cam1/image_raw/compressed', CompressedImage, self.callback_undistort1)
-        self.rospy.Subscriber('/usb_cam2/image_raw/compressed', CompressedImage, self.callback_undistort2)
-        self.rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.callback_undistort3)
-        self.rospy.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage, self.callback_undistort4)
-        
-        
+        rospy.Subscriber('/usb_cam1/image_raw/compressed', CompressedImage, self.callback_undistort1)
+        rospy.Subscriber('/usb_cam2/image_raw/compressed', CompressedImage, self.callback_undistort2)
+        rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.callback_undistort3)
+        rospy.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage, self.callback_undistort4)
+
+        rospy.spin()
+
         rate = rospy.Rate(10)
 
     def callback_undistort1(self,_img):
+        print("SUBSCRIBE-1")
         try:
-            print("SUBSCRIBE-1")
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
         except CvBridgeError as e:
@@ -41,13 +41,15 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                imgmsg=bridge.cv2_to_compressed_imgmsg(undistImg)
+                self.pub1.publish(imgmsg)
                 cv2.waitKey(3)
             else:
                 print("Image1 is None")
 
     def callback_undistort2(self,_img):
+        print("SUBSCRIBE-2")
         try:
-            print("SUBSCRIBE-2")
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
         except CvBridgeError as e:
@@ -59,6 +61,8 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                imgmsg=bridge.cv2_to_compressed_imgmsg(undistImg)
+                self.pub2.publish(imgmsg)
                 # cv2.imshow('raw_img', rawimg)
                 # cv2.imshow('undist_img_2', undistImg)
                 cv2.waitKey(3)
@@ -66,8 +70,8 @@ class Undistort():
                 print("Image2 is None")
 
     def callback_undistort3(self,_img):
+        print("SUBSCRIBE-3")
         try:
-            print("SUBSCRIBE-3")
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
         except CvBridgeError as e:
@@ -79,6 +83,8 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                imgmsg=bridge.cv2_to_compressed_imgmsg(undistImg)
+                self.pub3.publish(imgmsg)
                 # cv2.imshow('raw_img', rawimg)
                 # cv2.imshow('undist_img_3', undistImg)
                 cv2.waitKey(3)
@@ -86,8 +92,8 @@ class Undistort():
                 print("Image3 is None")
 
     def callback_undistort4(self,_img):
+        print("SUBSCRIBE-4")
         try:
-            print("SUBSCRIBE-4")
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
         except CvBridgeError as e:
@@ -99,6 +105,8 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                imgmsg=bridge.cv2_to_compressed_imgmsg(undistImg)
+                self.pub4.publish(imgmsg)
                 # cv2.imshow('raw_img', rawimg)
                 # cv2.imshow('undist_img_4', undistImg)
                 cv2.waitKey(3)
