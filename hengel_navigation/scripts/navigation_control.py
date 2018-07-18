@@ -46,25 +46,6 @@ os.system("mkdir -p " + package_base_path +
 Kp = 5.0  # speed proportional gain
 
 
-def calculate_robot_local_delta_from_omega(del1, del2):
-    delX = 0.0
-    delY = 0.0
-    if del1 != del2:
-        delY=-self.L*(del1+del2)/(del1-del2)*(1-cos(self.R*(del2-del1)/(2*self.L)))
-        delX=-self.L*(del1+del2)/(del1-del2)*sin(self.R*(del2-del1)/(2*self.L))
-    else:
-        delX=self.R*del1
-        delY=0
-    return delX, delY
-
-    delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
-    self.point.x=self.point.x+delXrobotGlobal
-    self.point.y=self.point.y+delYrobotGlobal
-    self.pen_distance_per_loop=sqrt(
-        pow(delXrobotGlobal, 2) +
-        pow(delYrobotGlobal, 2)
-        )
-    self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
 
 def pid_control(target, current):
     a = Kp * (target - current)
@@ -93,11 +74,12 @@ class NavigationControl():
     #     self.run()
 
     def __init__(self, _arr_path, _docking_point_list, _center_point_list, _isPositionControl,_D):
-        word = raw_input(
-                    "There are two options for motor profile change smoothing buffer.\n[1] Enable Buffer.\n[2] Disable Buffer. \nType 1 or 2 :"
+        while True:
+            word = raw_input(
+                    "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType 1 or 2 :"
                     )
             self.motor_buffer_option = int(word)
-            if self.motor_buffer_option == 1 or self.motor_buffer_option ==2 :
+            if self.motor_buffer_option == 1 or self.motor_buffer_option ==2 or self.motor_buffer_option ==3:
                 break
 
         self.isPositionControl = _isPositionControl
@@ -153,8 +135,14 @@ class NavigationControl():
         self.letter_index = 0
         self.segment_index = 0
         self.waypoint_index_in_current_segment = 0
+
+        self.next_letter_index = 0
+        self.next_segment_index = 0
+        self.next_waypoint_index_in_current_segment = 0
+
         self.waypoints = []
         self.current_waypoint = []
+        self.next_waypoint = []
         self.cnt_letter = 0
         self.cnt_total_waypoints = 0
         self.cnt_segments_in_current_letter = 0
@@ -347,25 +335,38 @@ class NavigationControl():
                             self.arr_path[self.letter_index][self.segment_index][
                                 self.waypoint_index_in_current_segment][1]
                             ]
+                    if self.waypoint_index_in_current_segment+1 == self.cnt_waypoints_in_current_segment:
+                        if self.segment_index+1 == self.cnt_segments_in_current_letter:
+                            if self.letter_index+1 == self.cnt_letter:
+                                self.next_letter_index = -1
+                                self.next_segment_index = -1
+                                self.next_waypoint_index_in_current_segment = -1
+                            else:
+                                self.next_letter_index = self.letter_index+1
+                                self.next_segment_index = 0
+                                self.next_waypoint_index_in_current_segment = 0                                
+
+                        else:
+                            self.next_letter_index = self.letter_index
+                            self.next_segment_index = self.segment_index+1
+                            self.next_waypoint_index_in_current_segment = 0
+                    else:
+                        self.next_letter_index = self.letter_index
+                        self.next_segment_index = self.segment_index
+                        self.next_waypoint_index_in_current_segment = self.waypoint_index_in_current_segment+1
+
 
                     if self.waypoint_index_in_current_segment == 0:
                         #print("moving to FIRST waypoint")
                         #rospy.loginfo("moving to FIRST waypoint in segment")
                         self.is_moving_between_letters = True
-                    elif self.global_option==1 and self.segment_index == self.cnt_segments_in_current_letter - 1:
+                    elif self.segment_index == self.cnt_segments_in_current_letter - 1:
                         #print("moving to GLOBAL VIEW POINT")
                         #rospy.loginfo("moving to GLOBAL VIEW POINT")
                         self.is_moving_between_letters = True
                     else:
                         self.is_moving_between_letters = False
 
-
-
-                    docking_buffer_cnt = 0
-
-                    # pubDelta1=0
-                    # pubDelta2=0
-                    # pubIter=0
 
                     # Motion Control
                     while True:
@@ -374,63 +375,32 @@ class NavigationControl():
                         try:
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
-                            #self.endPoint.x=self.point.x+self.D*cos(self.heading.data)
-                            #self.endPoint.y=self.point.y+self.D*sin(self.heading.data)
-
-                            distance = sqrt(
-                                    pow(self.current_waypoint[0] - self.endPoint.x, 2) +
-                                    pow(self.current_waypoint[1] - self.endPoint.y, 2))
 
                             #print("distance: ", distance)
                             #print("waypoint: ", self.current_waypoint)
                             #print("endpoint: ", self.endPoint)
-                            self.pub_distance.publish(distance)
-                            self.pub_endpoint.publish(self.endPoint)
+                            # self.pub_endpoint.publish(self.endPoint)
 
-                            # if distance < 0.01:
-                            # if distance < 0.002:
-                            #     break
-
-                            #self.valve_status = MARKER_DOWN
                             th = self.heading.data
                             delX= self.current_waypoint[0]-self.endPoint.x
                             delY= self.current_waypoint[1]-self.endPoint.y
 
-                            # print("delx: "+str(delX)+", dely: "+str(delY))
-
                             delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                             delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
 
-                            #delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.6
-                            #delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.6
                             delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
                             delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
-                            #delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1.0
-                            #delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1.0
-
-                            #print("delOmega=%f" % (delOmega))
-                            #print("delOmega1=%f" % (delOmega1))
-                            #print("delOmega2=%f" % (delOmega2))
-
-
-                            #if abs(delOmega1)>0.04 or abs(delOmega2)>0.04:
-                            #    if abs(delOmega1)>abs(delOmega2): #abs(delOmega1) should not be zero, according to this inequality
-                            #        delOmega2=copysign(0.04*delOmega2/delOmega1, delOmega2)
-                            #        delOmega1=copysign(0.04, delOmega1)
-                            #    else:   #abs(delOmega2) should not be zero, according to this inequality
-                            #        delOmega1=copysign(delOmega1/delOmega2, delOmega1)
-                            #        delOmega2=copysign(0.04, delOmega2)
 
                             if self.motor_buffer_option == 1:       #Motor Smoothing Buffer Enabled
-                                if abs(delOmega1 - pubDelta1) > 0.01 and abs(delOmega2 - pubDelta2) > 0.01:
+                                if abs(delOmega1 - pubDelta1) >= 0.01 and abs(delOmega2 - pubDelta2) >= 0.01:
                                     pubIter = max(floor(abs(delOmega1 - pubDelta1)/0.01), floor(abs(delOmega2 - pubDelta2)/0.01))
                                     cnt_delta_buffer += pubIter
                                     # print("---------ITERATION(0/%d)--------- " % (pubIter))
-                                elif abs(delOmega1 - pubDelta1) > 0.01:
+                                elif abs(delOmega1 - pubDelta1) >= 0.01:
                                     pubIter = floor(abs(delOmega1 - pubDelta1)/0.01)
                                     # print("---------ITERATION(0/%d)--------- " % (pubIter))
                                     cnt_delta_buffer += pubIter
-                                elif abs(delOmega2 - pubDelta2) > 0.01:
+                                elif abs(delOmega2 - pubDelta2) >= 0.01:
                                     pubIter = floor(abs(delOmega2 - pubDelta2)/0.01)
                                     # print("---------ITERATION(0/%d)--------- " % (pubIter))
                                     cnt_delta_buffer += pubIter
@@ -445,17 +415,8 @@ class NavigationControl():
                                     # print(str(control_input_1)+"  "+str(control_input_2))
                                     if pubIter != 1:
                                         # print("---------ITERATION(%d/%d)--------- " % (iteration+1,pubIter))
+                                        pass
 
-                                    delXrobotLocal, delYrobotLocal = calculate_robot_local_delta_from_omega(control_input_1, control_input_2)
-                                    delXrobotGlobal, delYrobotGlobal = np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
-                                    self.point.x=self.point.x+delXrobotGlobal
-                                    self.point.y=self.point.y+delYrobotGlobal
-                                    self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
-                                    self.pen_distance_per_loop=sqrt(
-                                        pow(delXrobotGlobal, 2) +
-                                        pow(delYrobotGlobal, 2)
-                                        )
-                                    print(self.pen_distance_per_loop)
 
 
                                     self.r.sleep()
@@ -463,17 +424,130 @@ class NavigationControl():
                                 pubDelta1 = delOmega1
                                 pubDelta2 = delOmega2
 
+                                delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+                                delXrobotGlobal, delYrobotGlobal = np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                                self.point.x=self.point.x+delXrobotGlobal
+                                self.point.y=self.point.y+delYrobotGlobal
+                                self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                                self.pen_distance_per_loop=sqrt(
+                                    pow(delXrobotGlobal, 2) +
+                                    pow(delYrobotGlobal, 2)
+                                    )
+                                print(self.pen_distance_per_loop)
+
                                 break
+
+                            elif self.motor_buffer_option == 2:
+                                if self.next_letter_index != -1:  # if current waypoint is not the end
+                                    if abs(delOmega1 - pubDelta1) >= 0.01 and abs(delOmega2 - pubDelta2) >= 0.01:
+                                        pubIter = max(floor(abs(delOmega1 - pubDelta1)/0.01), floor(abs(delOmega2 - pubDelta2)/0.01))
+                                        cnt_delta_buffer += pubIter
+                                        # print("---------ITERATION(0/%d)--------- " % (pubIter))
+                                    elif abs(delOmega1 - pubDelta1) >= 0.01:
+                                        pubIter = floor(abs(delOmega1 - pubDelta1)/0.01)
+                                        # print("---------ITERATION(0/%d)--------- " % (pubIter))
+                                        cnt_delta_buffer += pubIter
+                                    elif abs(delOmega2 - pubDelta2) >= 0.01:
+                                        pubIter = floor(abs(delOmega2 - pubDelta2)/0.01)
+                                        # print("---------ITERATION(0/%d)--------- " % (pubIter))
+                                        cnt_delta_buffer += pubIter
+                                    else:
+                                        pubDelta1 = delOmega1
+                                        pubDelta2 = delOmega2
+                                        self.pub_delta_theta_1.publish(pubDelta1)
+                                        self.pub_delta_theta_2.publish(pubDelta2)
+                                        
+                                        delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+                                        delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                                        self.point.x=self.point.x+delXrobotGlobal
+                                        self.point.y=self.point.y+delYrobotGlobal
+                                        self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                                        self.pen_distance_per_loop=sqrt(
+                                                pow(delXrobotGlobal, 2) +
+                                                pow(delYrobotGlobal, 2)
+                                                )
+                                        print(str(pubDelta1)+"  "+str(pubDelta2)+"  "+str(self.pen_distance_per_loop))
+
+                                        self.r.sleep()
+                                        
+                                        break
+
+                                    delX_original= self.current_waypoint[0]-self.endPoint.x
+                                    delY_original= self.current_waypoint[1]-self.endPoint.y
+                                    delX=delX_original/pubIter
+                                    delY=delY_original/pubIter
+                                    for iteration in range(int(pubIter)):
+                                        self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
+                                        self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
+
+                                        self.next_waypoint = [
+                                                self.arr_path[self.next_letter_index][self.next_segment_index][
+                                                    self.next_waypoint_index_in_current_segment][0],
+                                                self.arr_path[self.next_letter_index][self.next_segment_index][
+                                                    self.next_waypoint_index_in_current_segment][1]
+                                                ]
+                                        # I realized that next_waypoint is freaking unnecessary FUCK
+
+                                        th = self.heading.data
+
+
+                                        delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
+                                        delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
+
+                                        delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
+                                        delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
+
+                                        self.pub_delta_theta_1.publish(delOmega1)
+                                        self.pub_delta_theta_2.publish(delOmega2)
+
+                                        # if pubIter != 1:
+                                        #     print("THIS SHOULD NOT HAPPEN :) IF THIS SHOWS UP, YOU'RE FUCKED UP")
+
+                                        delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+                                        delXrobotGlobal, delYrobotGlobal = np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                                        self.point.x=self.point.x+delXrobotGlobal
+                                        self.point.y=self.point.y+delYrobotGlobal
+                                        self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                                        self.pen_distance_per_loop=sqrt(
+                                            pow(delXrobotGlobal, 2) +
+                                            pow(delYrobotGlobal, 2)
+                                            )
+                                        print(str(delOmega1)+"  "+str(delOmega1)+"  "+str(self.pen_distance_per_loop))
+                                        pubDelta1 = delOmega1
+                                        pubDelta2 = delOmega2          
+                                        self.r.sleep()                                                                      
+
+                                    break
+
+                                else:
+                                    pubDelta1 = delOmega1
+                                    pubDelta2 = delOmega2
+                                    self.pub_delta_theta_1.publish(pubDelta1)
+                                    self.pub_delta_theta_2.publish(pubDelta2)
+                                    
+                                    delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+                                    delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                                    self.point.x=self.point.x+delXrobotGlobal
+                                    self.point.y=self.point.y+delYrobotGlobal
+                                    self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                                    self.pen_distance_per_loop=sqrt(
+                                            pow(delXrobotGlobal, 2) +
+                                            pow(delYrobotGlobal, 2)
+                                            )
+                                    print(str(pubDelta1)+"  "+str(pubDelta2)+"  "+str(self.pen_distance_per_loop))
+
+                                    self.r.sleep()
+                                    
+                                    break
+
 
                             else:       #Motor Smoothing Buffer Disabled
                                 pubDelta1 = delOmega1
                                 pubDelta2 = delOmega2
                                 self.pub_delta_theta_1.publish(pubDelta1)
                                 self.pub_delta_theta_2.publish(pubDelta2)
-                                print(str(pubDelta1)+"  "+str(pubDelta2))
-                                
 
-                                delXrobotLocal, delYrobotLocal = calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+                                delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
                                 delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
                                 self.point.x=self.point.x+delXrobotGlobal
                                 self.point.y=self.point.y+delYrobotGlobal
@@ -482,6 +556,7 @@ class NavigationControl():
                                         pow(delXrobotGlobal, 2) +
                                         pow(delYrobotGlobal, 2)
                                         )
+                                print(str(pubDelta1)+"  "+str(pubDelta2)+"  "+str(self.pen_distance_per_loop))
 
                                 self.r.sleep()
                                 
@@ -537,62 +612,21 @@ class NavigationControl():
         self.pub_markers.publish(self.point)
         self.pub_markers_painting.publish(self.endPoint)
 
-
     def visualize_traj_encoder(self, _data):
         self.traj_encoder.points.append(Point(_data.x, _data.y, 0.0))
         self.pub_markers_encoder.publish(self.traj_encoder)
 
+    def calculate_robot_local_delta_from_omega(self, del1, del2):
+        delX = 0.0
+        delY = 0.0
+        if del1 != del2:
+            delY=-self.L*(del1+del2)/(del1-del2)*(1-cos(self.R*(del2-del1)/(2*self.L)))
+            delX=-self.L*(del1+del2)/(del1-del2)*sin(self.R*(del2-del1)/(2*self.L))
+        else:
+            delX=self.R*del1
+            delY=0
+        return delX, delY
 
-
-
-
-    # def generate_pathmap(self):
-    #     scale = 10
-    #     pixel_size = 100  #1m*1m canvas of 1cm accuracy points (including boundary points)
-    #     # img = PIL.Image.new("RGB", ((100+pixel_size*self.cnt_letter)*scale, (100+pixel_size)*scale), (255, 255, 255))
-    #     pil_image = PIL.Image.new("RGB",
-    #                               ((pixel_size * self.cnt_letter) * scale,
-    #                                (pixel_size) * scale), (255, 255, 255))
-
-    #     print("loop_cnt_pathmap = ", self.loop_cnt_pathmap)
-    #     rospy.loginfo("loop_cnt_pathmap = ", self.loop_cnt_pathmap)
-
-    #     for i in range(self.loop_cnt_pathmap):
-    #         # print(self.path_points[i][0], self.path_points[i][1])
-    #         if self.path_points[i][0] < 0 or self.path_points[i][0] > 1.0 * self.cnt_letter:
-    #             continue
-    #         if (1.0 - self.path_points[i][1]) < 0 or (
-    #                 1.0 - self.path_points[i][1]) > 1.0:
-    #             continue
-
-    #         x = 0.99 if self.path_points[i][0] == 1.0 else self.path_points[i][
-    #             0]
-    #         y = 0.99 if (1.0 - self.path_points[i][1]) == 1.0 else (
-    #             1.0 - self.path_points[i][1])
-    #         x = (int)(floor(x * pixel_size))
-    #         y = (int)(floor(y * pixel_size))
-
-    #         # x=x+50
-    #         # y=y+50
-
-    #         for k in range(scale):
-    #             for t in range(scale):
-    #                 pil_image.putpixel((x * scale + t, y * scale + k),
-    #                                    (0, 0, 0))
-
-    #     image_save_path = package_base_path + "/hengel_path_manager/output_pathmap/" + self.program_start_time + ".png"
-    #     print("Pathmap image saved at " + image_save_path)
-    #     rospy.loginfo("Pathmap image saved at " + image_save_path)
-    #     pil_image.save(image_save_path, "PNG")
-    #     self.map_img = np.ndarray(pil_image)
-    #     #self.crop_image()
-    #     # Convert RGB to BGR
-    #     #cv2.cvtColor(open_cv_image, cv2.cv.CV_BGR2RGB)
-
-    #     bridge = CvBridge()
-    #     img_msg = bridge.cv2_to_imgmsg(open_cv_image, "rgb8")
-
-    #     # global map
 
     def crop_image(self):
         x_px = scale_factor * self.point.x
@@ -689,18 +723,3 @@ class NavigationControl():
             self.pub_delta_theta_1.publish(0.0)
             self.pub_delta_theta_2.publish(0.0)
             self.r.sleep()
-
-#    def real_globalmap_run(self):
-#        try:
-#            position = [self.point.x, self.point.y, self.heading.data]
-#            #print("input for real_globmap_run = " + str(position))
-#            return self.real_globalmap.run(self.letter_index, position)
-#
-#        #realign the frame position, according to calculated offset from global map
-#            #self.offset_change_x_publisher.publish(offset[0])   #add offset_x by offset[0]
-#            #self.offset_change_y_publisher.publish(offset[1])   #add offset_y by offset[1]
-#            #self.offset_change_theta_publisher.publish(offset[2])   #add offset_theta by offset[2]
-#
-#        except rospy.ServiceException, e:
-#            print("Service call failed")
-#            rospy.loginfo("Service call failed")
