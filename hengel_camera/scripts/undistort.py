@@ -20,23 +20,20 @@ class Undistort():
         self.rate=rospy.Rate(10)
 
     def callback_undistort1(self,_img):
-        print("callback")
         try:
+            print("SUBSCRIBE-1")
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
+            print(rawimg.shape)
         except CvBridgeError as e:
             print(e)
-        print("DEBUG-1")
         mtx=[[329.446963, 0, 315.383397],[0, 328.784203, 239.504433], [0,0,1]]
         mtx=np.array(mtx)
         dst=[-0.282543, 0.0585483, 0.00022407, -0.00044064]
         dst=np.array(dst)
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
-                print("DEBUG-2")
-                print(type(rawimg))
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
-                print(undistImg)
                 # cv2.imshow('raw_img', rawimg)
                 cv2.imshow('undist_img_1', undistImg)
                 cv2.imwrite('undist_img_1_1.png', undistImg)
@@ -46,6 +43,7 @@ class Undistort():
 
     def callback_undistort2(self,_img):
         try:
+            print("SUBSCRIBE-2")
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
         except CvBridgeError as e:
@@ -65,6 +63,7 @@ class Undistort():
 
     def callback_undistort3(self,_img):
         try:
+            print("SUBSCRIBE-3")
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
         except CvBridgeError as e:
@@ -84,6 +83,7 @@ class Undistort():
 
     def callback_undistort4(self,_img):
         try:
+            print("SUBSCRIBE-4")
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
         except CvBridgeError as e:
