@@ -72,28 +72,11 @@ class NavigationControl():
     #     self.run()
 
     def __init__(self, _arr_path, _docking_point_list, _center_point_list, _isPositionControl,_D):
-        while True:
-            word = raw_input(
-                    "There are two options for pi cam save.\n[1] Save Pi Cam - Floor Image.\n[2] Do not Save. \nType 1 or 2 :"
+        word = raw_input(
+                    "There are two options for motor profile change smoothing buffer.\n[1] Enable Buffer.\n[2] Disable Buffer. \nType 1 or 2 :"
                     )
-            self.pi_cam_save_option = int(word)
-            if self.pi_cam_save_option == 1 or self.pi_cam_save_option ==2 :
-                break
-
-        while True:
-            word2 = raw_input(
-                    "Do you want Local Compensation?\n[1] Yes.\n[2] No.\nType 1 or 2:"
-                    )
-            self.local_option = int(word2)
-            if self.local_option ==1 or self.local_option==2:
-                break
-
-        while True:
-            word3 = raw_input(
-                    "Do you want Global Compensation?\n[1] Yes.\n[2] No.\nType 1 or 2:"
-                    )
-            self.global_option = int(word3)
-            if self.global_option ==1 or self.global_option==2:
+            self.motor_buffer_option = int(word)
+            if self.motor_buffer_option == 1 or self.motor_buffer_option ==2 :
                 break
 
         self.isPositionControl = _isPositionControl
@@ -431,36 +414,47 @@ class NavigationControl():
                             self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
 
 
-                            if abs(delOmega1 - pubDelta1) > 0.01 and abs(delOmega2 - pubDelta2) > 0.01:
-                                pubIter = max(floor(abs(delOmega1 - pubDelta1)/0.01), floor(abs(delOmega2 - pubDelta2)/0.01))
-                                cnt_delta_buffer += pubIter
-                                print("---------ITERATION(0/%d)--------- " % (pubIter))
-                            elif abs(delOmega1 - pubDelta1) > 0.01:
-                                pubIter = floor(abs(delOmega1 - pubDelta1)/0.01)
-                                print("---------ITERATION(0/%d)--------- " % (pubIter))
-                                cnt_delta_buffer += pubIter
-                            elif abs(delOmega2 - pubDelta2) > 0.01:
-                                pubIter = floor(abs(delOmega2 - pubDelta2)/0.01)
-                                print("---------ITERATION(0/%d)--------- " % (pubIter))
-                                cnt_delta_buffer += pubIter
+                            if self.motor_buffer_option == 1:
+                                if abs(delOmega1 - pubDelta1) > 0.01 and abs(delOmega2 - pubDelta2) > 0.01:
+                                    pubIter = max(floor(abs(delOmega1 - pubDelta1)/0.01), floor(abs(delOmega2 - pubDelta2)/0.01))
+                                    cnt_delta_buffer += pubIter
+                                    print("---------ITERATION(0/%d)--------- " % (pubIter))
+                                elif abs(delOmega1 - pubDelta1) > 0.01:
+                                    pubIter = floor(abs(delOmega1 - pubDelta1)/0.01)
+                                    print("---------ITERATION(0/%d)--------- " % (pubIter))
+                                    cnt_delta_buffer += pubIter
+                                elif abs(delOmega2 - pubDelta2) > 0.01:
+                                    pubIter = floor(abs(delOmega2 - pubDelta2)/0.01)
+                                    print("---------ITERATION(0/%d)--------- " % (pubIter))
+                                    cnt_delta_buffer += pubIter
+                                else:
+                                    pubIter = 1
+
+                                for iteration in range(int(pubIter)):
+                                    control_input_1 = pubDelta1 + (float)(delOmega1-pubDelta1)/pubIter*(iteration+1)
+                                    control_input_2 = pubDelta2 + (float)(delOmega2-pubDelta2)/pubIter*(iteration+1)
+                                    self.pub_delta_theta_1.publish(control_input_1)
+                                    self.pub_delta_theta_2.publish(control_input_2)
+
+                                    print(str(control_input_1)+"  "+str(control_input_2))
+                                    if pubIter != 1:
+                                        print("---------ITERATION(%d/%d)--------- " % (iteration+1,pubIter))
+                                    self.r.sleep()
+
+                                pubDelta1 = delOmega1
+                                pubDelta2 = delOmega2
+
+                                break
+
                             else:
-                                pubIter = 1
+                                pubDelta1 = delOmega1
+                                pubDelta2 = delOmega2
 
-                            for iteration in range(int(pubIter)):
-                                control_input_1 = pubDelta1 + (float)(delOmega1-pubDelta1)/pubIter*(iteration+1)
-                                control_input_2 = pubDelta2 + (float)(delOmega2-pubDelta2)/pubIter*(iteration+1)
-                                self.pub_delta_theta_1.publish(control_input_1)
-                                self.pub_delta_theta_2.publish(control_input_2)
-
-                                print(str(control_input_1)+"  "+str(control_input_2))
-                                if pubIter != 1:
-                                    print("---------ITERATION(%d/%d)--------- " % (iteration+1,pubIter))
+                                self.pub_delta_theta_1.publish(pubDelta1)
+                                self.pub_delta_theta_2.publish(pubDelta2)
+                                print(str(pubDelta1)+"  "+str(pubDelta2))
                                 self.r.sleep()
-
-                            pubDelta1 = delOmega1
-                            pubDelta2 = delOmega2
-
-                            break
+                                break
 
 
                         except KeyboardInterrupt:
@@ -475,21 +469,6 @@ class NavigationControl():
                     #        str(self.point.y) + " \t\t WAYPOINT: " +
                     #        str(self.current_waypoint[0]) + ", " +
                     #        str(self.current_waypoint[1]))
-
-
-                    if self.pi_cam_save_option==1:
-                        #stop the robot
-                        # self.cmd_vel.publish(Twist())
-                        #take picam floor photo
-                        self.wait_for_seconds(0.5)
-                        self.pi_cam_manager.save("picam_letter-" +
-                                str(self.letter_index) + "_segment-" +
-                                str(self.segment_index) + "_waypoint-" +
-                                str(self.waypoint_index_in_current_segment))
-                        print("Pi Cam Saved")
-                        #rospy.loginfo("Pi Cam Saved")
-                    else:
-                        pass
 
                     self.waypoint_index_in_current_segment = self.waypoint_index_in_current_segment + 1
                 self.segment_index = self.segment_index + 1
