@@ -47,7 +47,7 @@ class globalAlignment():
         img_copy=copy.deepcopy(cv2.cvtColor(self.Img2, cv2.COLOR_BGR2GRAY))
         for i in xrange(len(self.Img2)):
             for j in xrange(len(self.Img2[i])):
-                if self.Img2[i][j][2]<100:
+                if self.Img2[i][j][3]<100 and self.connect(8,i,j)!=8:
                     img_copy[i][j]=0
                 else:
                     img_copy[i][j]=255
@@ -62,7 +62,7 @@ class globalAlignment():
         img_copy=copy.deepcopy(cv2.cvtColor(self.Img3, cv2.COLOR_BGR2GRAY))
         for i in xrange(len(self.Img3)):
             for j in xrange(len(self.Img3[i])):
-                if self.Img3[i][j][3]<100:
+                if self.Img3[i][j][3]<100 and self.connect(8,i,j)!=8:
                     img_copy[i][j]=0
                 else:
                     img_copy[i][j]=255
@@ -84,6 +84,23 @@ class globalAlignment():
 
         cv2.imshow("callback1", img_copy)
         cv2.waitKey(3)
+
+    def connect(self, num, i, j):
+        if i==0 or j==0 or i==self.y_size-1 or j==self.x_size-1:
+            return -1
+        else:
+            p = []
+            p.append(self.img_data[i-1][j])  #P1
+            p.append(self.img_data[i][j+1])  #P2
+            p.append(self.img_data[i+1][j])  #P3
+            p.append(self.img_data[i][j-1])  #P4
+            p.append(self.img_data[i-1][j+1])    #P5
+            p.append(self.img_data[i+1][j+1])    #P6
+            p.append(self.img_data[i+1][j-1])    #P7
+            p.append(self.img_data[i-1][j-1])    #P8
+
+        return sum(p[:num])
+
 if __name__=='__main__':
     globalAlignment()
     cv2.destroyAllWindows()
