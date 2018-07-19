@@ -232,7 +232,7 @@ class NavigationControl():
         self.target_speed = 0.0
         self.current_speed = 0.0
 
-        self.is_moving_between_letters = False
+        self.is_moving_between_segments = False
 
         self.loop_cnt_pathmap = 0
 
@@ -261,6 +261,9 @@ class NavigationControl():
                 '/offset_change_y', Float32, queue_size=5)
         self.offset_change_theta_publisher = rospy.Publisher(
                 '/offset_change_theta', Float32, queue_size=5)
+
+        self.spray_intensity_publisher = rospy.Publisher(
+                '/spray_intensity', Float32, queue_size=5)
 
 
         # Stop Subscribing position & heading data
@@ -359,13 +362,13 @@ class NavigationControl():
                     if self.waypoint_index_in_current_segment == 0:
                         #print("moving to FIRST waypoint")
                         #rospy.loginfo("moving to FIRST waypoint in segment")
-                        self.is_moving_between_letters = True
-                    elif self.segment_index == self.cnt_segments_in_current_letter - 1:
+                        self.is_moving_between_segments = True
+                    # elif self.segment_index == self.cnt_segments_in_current_letter - 1:
                         #print("moving to GLOBAL VIEW POINT")
                         #rospy.loginfo("moving to GLOBAL VIEW POINT")
-                        self.is_moving_between_letters = True
+                        # self.is_moving_between_segments = True
                     else:
-                        self.is_moving_between_letters = False
+                        self.is_moving_between_segments = False
 
 
                     # Motion Control
@@ -373,6 +376,11 @@ class NavigationControl():
                         if rospy.is_shutdown():
                             break
                         try:
+                            if self.is_moving_between_segments==True:
+                                self.spray_intensity_publisher.publish(1024.0)
+                            else:
+                                self.spray_intensity_publisher.publish(660.0)
+
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
 

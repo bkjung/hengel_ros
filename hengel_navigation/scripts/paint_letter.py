@@ -90,6 +90,8 @@ class PaintLetter():
                 y_last = 0.0
                 subletter_path.append([x_last, y_last])
                 letter_path.append(subletter_path)
+                self.arr_path.append(letter_path)
+                letter_path = []
                 initial_letter = 0
 
             if letter == ' ':
