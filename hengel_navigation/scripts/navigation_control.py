@@ -109,7 +109,7 @@ class NavigationControl():
         #test flag bot
         #self.R = 0.11/2 #radius of wheel
         self.R = 0.12475/2 #radius of wheel
-        self.L = 0.3537/2 #half of distance btw two wheels
+        self.L = 0.3544/2 #half of distance btw two wheels
 
         self.point = Point()
         self.point_encoder = Point()
@@ -379,10 +379,12 @@ class NavigationControl():
                             if self.is_moving_between_segments==True:
                                 self.spray_intensity_publisher.publish(1024.0)
                             else:
-                                self.spray_intensity_publisher.publish(660.0)
+                                #self.spray_intensity_publisher.publish(660.0)
+                                self.spray_intensity_publisher.publish(720.0)
 
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
+                            print(str(self.endPoint.x)+"  "+str(self.endPoint.y))
 
                             #print("distance: ", distance)
                             #print("waypoint: ", self.current_waypoint)
@@ -395,8 +397,10 @@ class NavigationControl():
                             delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                             delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
 
-                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
-                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
+                            #delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
+                            #delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
+                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.3
+                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.3
 
                             if self.motor_buffer_option == 1:       #Motor Smoothing Buffer Enabled
                                 if abs(delOmega1 - pubDelta1) >= 0.01 and abs(delOmega2 - pubDelta2) >= 0.01:
@@ -560,7 +564,7 @@ class NavigationControl():
                                     pow(delXrobotGlobal, 2) +
                                     pow(delYrobotGlobal, 2)
                                     )
-                                print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
+                                #print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
 
                                 self.r.sleep()
 
@@ -705,6 +709,7 @@ class NavigationControl():
         # self.cmd_vel.publish(Twist())
         self.pub_delta_theta_1.publish(0.0)
         self.pub_delta_theta_2.publish(0.0)
+        self.spray_intensity_publisher.publish(1024.0)
         rospy.sleep(1)
 
     def look_opposite_side(self):
