@@ -119,8 +119,12 @@ class PathMaker():
             "%y%m%d_%H%M%S") + ".txt"
         f = open(self.file_path, 'w')
         for i in range(1, len(self.path_drawing)):
-            data = str(self.path_drawing[i][0]) + "  " + str(
-                self.path_drawing[i][1]) + "\n"
+            if i in self.draw_start_index:
+                data = str(self.path_drawing[i][0]) + "  " + str(self.path_drawing[i][1]) + " " + str(1) + "\n"
+            elif (i+1) in self.draw_start_index:
+                data = str(self.path_drawing[i][0]) + "  " + str(self.path_drawing[i][1]) + " " + str(0) + "\n"
+            else:
+                data = str(self.path_drawing[i][0]) + "  " + str(self.path_drawing[i][1]) + "\n"
             f.write(data)
         f.close()
         print("path saved at " + self.file_path)
