@@ -808,6 +808,7 @@ class NavigationControl():
         self.plot_arr(arr_leftWheel, 'b')
         self.plot_arr(arr_rightWheel, 'k')
 
+        plt.axis([-0.5, 4.5, -0.5, 4.5])
         plt.show()
 
         self.wait_for_seconds(2.0)
