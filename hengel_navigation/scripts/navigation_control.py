@@ -73,10 +73,10 @@ class NavigationControl():
     #     self.initial_setting()
     #     self.run()
 
-    def __init__(self, _arr_path, _docking_point_list, _center_point_list, _isPositionControl,_D):
+    def __init__(self, _arr_path, _start_point_list, _center_point_list, _isPositionControl,_D):
         while True:
             word = raw_input(
-                    "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType 1 or 2 :"
+                    "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType :"
                     )
             self.motor_buffer_option = int(word)
             if self.motor_buffer_option == 1 or self.motor_buffer_option ==2 or self.motor_buffer_option ==3:
@@ -85,14 +85,28 @@ class NavigationControl():
         self.isPositionControl = _isPositionControl
         self.arr_path = _arr_path
         self.D=_D
-        self.docking_point_list = _docking_point_list
+        self.start_point_list = _start_point_list
         self.center_point_list = _center_point_list
         self.initial_setting()
 
+        while True:
+            word = raw_input(
+                    "There are options for real navigation or simulation.\n[1] Real Navigation (GO!!!!!!!!) \n[2] Simulated Result save :) \nType 1 or 2 :"
+                    )
+            self.simulation_option = int(word)
+            if self.simulation_option== 1 or self.simulation_option==2 :
+                break
+
         if self.isPositionControl:
-            self.runOffset()
+            if self.simulation_option==1:
+                self.runOffset()
+            else:
+                self.saveSimulation()
         else:
-            self.run()
+            if self.simulation_option==1:
+                self.run()
+            else:
+                print("This set of options cannot be executed. SORRY :(")
 
     def initial_setting(self):
         self.program_start_time = time.strftime("%y%m%d_%H%M%S")
@@ -316,6 +330,7 @@ class NavigationControl():
         pubIter=0
 
         cnt_delta_buffer = 0
+        cnt_waypoints = 0
 
         while self.letter_index < self.cnt_letter:
             if rospy.is_shutdown():
@@ -341,6 +356,9 @@ class NavigationControl():
                             self.arr_path[self.letter_index][self.segment_index][
                                 self.waypoint_index_in_current_segment][1]
                             ]
+                    cnt_waypoints += 1
+
+                    ###########################################################################################
                     if self.waypoint_index_in_current_segment+1 == self.cnt_waypoints_in_current_segment:
                         if self.segment_index+1 == self.cnt_segments_in_current_letter:
                             if self.letter_index+1 == self.cnt_letter:
@@ -360,18 +378,15 @@ class NavigationControl():
                         self.next_letter_index = self.letter_index
                         self.next_segment_index = self.segment_index
                         self.next_waypoint_index_in_current_segment = self.waypoint_index_in_current_segment+1
+                    ###########################################################################################
 
 
-                    if self.waypoint_index_in_current_segment == 0:
-                        #print("moving to FIRST waypoint")
-                        #rospy.loginfo("moving to FIRST waypoint in segment")
-                        self.is_moving_between_segments = True
-                    # elif self.segment_index == self.cnt_segments_in_current_letter - 1:
-                        #print("moving to GLOBAL VIEW POINT")
-                        #rospy.loginfo("moving to GLOBAL VIEW POINT")
-                        # self.is_moving_between_segments = True
-                    else:
+                    if (self.cnt_waypoints - 1) in self.start_point_list:
                         self.is_moving_between_segments = False
+                    elif (self.cnt_waypoints - 1) in self.end_point_list:
+                        self.is_moving_between_segments = True
+                    else:
+                        pass
 
 
                     # Motion Control
@@ -608,6 +623,16 @@ class NavigationControl():
         #self.look_opposite_side()
         #stop the robot
         # self.cmd_vel.publish(Twist())
+
+    def saveSimulation(self):
+
+
+
+
+
+
+
+
 
     def vel_update(self, a):
         self.current_speed = self.current_speed + a*self.dt

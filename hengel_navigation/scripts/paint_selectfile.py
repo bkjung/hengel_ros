@@ -38,8 +38,8 @@ class PaintSelectfile():
         print("Length of Padding = " + str(PADDING_LENGTH))
         print("Distance of Viewpoint = " + str(VIEWPOINT_DISTANCE))
         self.arr_path = []
-        self.docking_point_list = []
-        self.center_point_list = []
+        self.start_point_list = []
+        self.end_point_list = []
         # self.arr_keypoint=[]
 
         while True:
@@ -78,7 +78,9 @@ class PaintSelectfile():
         subletter_path=[]
         x_last = -self.D
         y_last = 0.0
+        cnt_points = 0
         subletter_path.append([x_last, y_last])
+        cnt_points += 1
 
         root = Tk()
         path_str = tkFileDialog.askopenfilename(parent=root,initialdir=package_base_path,title='Please select a path file to play')
@@ -98,12 +100,19 @@ class PaintSelectfile():
                                 x=x_last+(k+1)/float(div)*(x_curr-x_last)
                                 y=y_last+(k+1)/float(div)*(y_curr-y_last)
                                 subletter_path.append([x,y])
+                                cnt_points += 1
                             x_last=x
                             y_last=y
                         else:
                             subletter_path.append([x_curr, y_curr])
+                            cnt_points += 1
                             x_last=x_curr
                             y_last=y_curr
+                        if int(_str[2])==0:         #if the input waypoint is marked as end point
+                            self.end_point_list.append(cnt_points-1)
+                        elif int(_str[2])==1:         #if the input waypoint is marked as start point
+                            self.start_point_list.append(cnt_points-1)
+
 
                 letter_path.append(subletter_path)
 
@@ -111,7 +120,7 @@ class PaintSelectfile():
 
 
     def run(self):
-        NavigationControl(self.arr_path, self.docking_point_list, self.center_point_list, self.isPositionControl,self.D)
+        NavigationControl(self.arr_path, self.start_point_list, self.center_point_list, self.isPositionControl,self.D)
 
 
 if __name__ == '__main__':

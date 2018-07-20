@@ -35,8 +35,8 @@ class PaintLetter():
         print("Length of Padding = " + str(PADDING_LENGTH))
         print("Distance of Viewpoint = " + str(VIEWPOINT_DISTANCE))
         self.arr_path = []
-        self.docking_point_list = []
-        self.center_point_list = []
+        self.start_point_list = []
+        self.end_point_list = []
         # self.arr_keypoint=[]
         self.word = raw_input("Type letters to draw:")
 
@@ -79,6 +79,8 @@ class PaintLetter():
         initial_letter = 1
         x_last = 0.0
         y_last = 0.0
+        cnt_waypoints = 0
+
         for letter in self.word:
             print(letter)
             letter_path = []
@@ -89,6 +91,7 @@ class PaintLetter():
                 #x_last = 0.0
                 y_last = 0.0
                 subletter_path.append([x_last, y_last])
+                cnt_waypoints += 1
                 letter_path.append(subletter_path)
                 self.arr_path.append(letter_path)
                 letter_path = []
@@ -122,48 +125,29 @@ class PaintLetter():
                                             x=x_last+(k+1)/float(div)*(x_curr-x_last)
                                             y=y_last+(k+1)/float(div)*(y_curr-y_last)
                                             subletter_path.append([x,y])
+                                            cnt_waypoints += 1
                                         x_last=x
                                         y_last=y
                                     else:
                                         subletter_path.append([x_curr, y_curr])
+                                        cnt_waypoints += 1
                                         x_last=x_curr
                                         y_last=y_curr
 
-                                    if len(_str)>2:
-                                        if _str[2]=="docking_line" or _str[2]=="docking_point_list":
-                                            #letter_index, segment_index, waypoint_index
-                                            self.docking_point_list.append([letter_index, i-1, idx])
-                                    else:
-                                        pass
+                                    if idx==0:
+                                        self.start_point_list.append(cnt_waypoints-1)
+                            self.end_point_list.append(cnt_waypoints-1)
+
+
                             letter_path.append(subletter_path)
-                            self.center_point_list.append([
-                                0.5 * CANVAS_SIDE_LENGTH +
-                                (float)(letter_index) *
-                                (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
-                                0.5 * CANVAS_SIDE_LENGTH + row_index * CANVAS_SIDE_LENGTH
-                                ])
 
 
-
-                        #Stop point for global view photo
-           # subletter_path = []
-           # subletter_path.append([
-           #     CANVAS_SIDE_LENGTH + VIEWPOINT_DISTANCE +
-           #     (float)(letter_index) * (CANVAS_SIDE_LENGTH + PADDING_LENGTH),
-           #     (0.5) * CANVAS_SIDE_LENGTH + row_index * CANVAS_SIDE_LENGTH
-           #     ])
-           # letter_path.append(subletter_path)
             self.arr_path.append(letter_path)
-
-            #Keypoint Calculation
-            # cnt_waypoints_in_lettter = len(letter_path)
-            # for i in range(cnt_waypoints_in_letter):
-            #     letter_path[i]...
 
             letter_index = letter_index + 1
 
     def run(self):
-        NavigationControl(self.arr_path, self.docking_point_list, self.center_point_list, self.isPositionControl,self.D)
+        NavigationControl(self.arr_path, self.start_point_list, self.end_point_list, self.isPositionControl,self.D)
 
 
 if __name__ == '__main__':
