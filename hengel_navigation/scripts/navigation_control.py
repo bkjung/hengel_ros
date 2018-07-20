@@ -74,7 +74,7 @@ class NavigationControl():
     #     self.initial_setting()
     #     self.run()
 
-    def __init__(self, _arr_path, _start_point_list, _center_point_list, _isPositionControl,_D):
+    def __init__(self, _arr_path, _start_point_list, _end_point_list, _isPositionControl,_D):
         while True:
             word = raw_input(
                     "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType :"
@@ -87,7 +87,7 @@ class NavigationControl():
         self.arr_path = _arr_path
         self.D=_D
         self.start_point_list = _start_point_list
-        self.center_point_list = _center_point_list
+        self.end_point_list = _end_point_list
         self.initial_setting()
 
         while True:
@@ -115,8 +115,6 @@ class NavigationControl():
         #logging.basicConfig(filename='~/Dropbox/intern_share/experiment_data/Global_Alignment/log/'+self.program_start_time+'.txt', level=logging.DEBUG)
         #logging.debug('----Initial Center Point----')
         #logging.debug(self.center_point_list)
-        print('----Initial Center Point----')
-        print(self.center_point_list)
 
         #self.R = 0.115/2 #radius of wheel
         #self.L = 0.33/2 #half of distance btw two wheels
@@ -146,7 +144,7 @@ class NavigationControl():
         self.dt = 0.02  # [s]
         self.r = rospy.Rate(1.0/self.dt)
 
-        self.dt_sim= 0.001  # [s]
+        self.dt_sim= 0.00001  # [s]
         self.r_sim = rospy.Rate(1.0/self.dt)
 
         #It SHOULD BE 1 for current code.
@@ -385,9 +383,9 @@ class NavigationControl():
                     ###########################################################################################
 
 
-                    if (self.cnt_waypoints - 1) in self.start_point_list:
+                    if (cnt_waypoints - 1) in self.start_point_list:
                         self.is_moving_between_segments = False
-                    elif (self.cnt_waypoints - 1) in self.end_point_list:
+                    elif (cnt_waypoints - 1) in self.end_point_list:
                         self.is_moving_between_segments = True
                     else:
                         pass
@@ -629,7 +627,7 @@ class NavigationControl():
         # self.cmd_vel.publish(Twist())
 
     def saveSimulation(self):
-        print("--runOffset begin--")
+        print("--save simulation begin--")
         self.wait_for_seconds(5.0)
         # go through path array
         rospy.loginfo("number of letters = " + str(len(self.arr_path)))
@@ -656,6 +654,11 @@ class NavigationControl():
         cnt_delta_buffer = 0
         cnt_waypoints = 0
 
+        arr_endPoint = []
+        arr_robotPoint = []
+        arr_leftWheel = []
+        arr_rightWheel = []
+
         while self.letter_index < self.cnt_letter:
             if rospy.is_shutdown():
                 break
@@ -681,6 +684,7 @@ class NavigationControl():
                                 self.waypoint_index_in_current_segment][1]
                             ]
                     cnt_waypoints += 1
+                    # print("Waypoint Number : %d" % (cnt_waypoints))
 
                     ###########################################################################################
                     if self.waypoint_index_in_current_segment+1 == self.cnt_waypoints_in_current_segment:
@@ -705,9 +709,9 @@ class NavigationControl():
                     ###########################################################################################
 
 
-                    if (self.cnt_waypoints - 1) in self.start_point_list:
+                    if (cnt_waypoints - 1) in self.start_point_list:
                         self.is_moving_between_segments = False
-                    elif (self.cnt_waypoints - 1) in self.end_point_list:
+                    elif (cnt_waypoints - 1) in self.end_point_list:
                         self.is_moving_between_segments = True
                     else:
                         pass
@@ -735,7 +739,12 @@ class NavigationControl():
                             rightWheel.x=self.point.x+self.L*sin(self.heading.data)
                             rightWheel.y=self.point.y-self.L*cos(self.heading.data)
 
-                            print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.point.x)+"  "+str(self.point.y)+"  "+str(leftWheel.x)+"  "+str(leftWheel.y)+"  "+str(rightWheel.x)+"  "+str(rightWheel.y))
+                            arr_robotPoint.append((self.point.x, self.point.y))
+                            arr_endPoint.append((self.endPoint.x, self.endPoint.y))
+                            arr_leftWheel.append((leftWheel.x, leftWheel.y))
+                            arr_rightWheel.append((rightWheel.x, rightWheel.y))
+
+                            #print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.point.x)+"  "+str(self.point.y)+"  "+str(leftWheel.x)+"  "+str(leftWheel.y)+"  "+str(rightWheel.x)+"  "+str(rightWheel.y))
 
                             #print("distance: ", distance)
                             #print("waypoint: ", self.current_waypoint)
@@ -792,12 +801,25 @@ class NavigationControl():
             self.segment_index = 0
             self.waypoint_index_in_current_segment = 0
 
+
+        # plt.plot(item[0] for item in arr_robotPoint, item[1] for item in arr_robotPoint, option)
+        self.plot_arr(arr_robotPoint, 'r')
+        self.plot_arr(arr_endPoint, 'g')
+        self.plot_arr(arr_leftWheel, 'b')
+        self.plot_arr(arr_rightWheel, 'k')
+
+        plt.show()
+
         self.wait_for_seconds(2.0)
         rospy.loginfo("Stopping the robot at the final destination")
         print("Total Stiff Delta_Theta Change BUFFER = %d" % (cnt_delta_buffer))
         #Wait for 1 second to close valve
         self.quit_valve()
 
+    def plot_arr(self, arr, option):
+        arr_1 = list(-item[0] for item in arr)
+        arr_2 = list(item[1] for item in arr)
+        plt.plot(arr_1, arr_2, option)
 
     def vel_update(self, a):
         self.current_speed = self.current_speed + a*self.dt
