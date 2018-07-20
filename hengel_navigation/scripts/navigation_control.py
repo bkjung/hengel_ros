@@ -22,6 +22,7 @@ import cv_bridge
 #from pi_cam_manager import PiCamManager
 #from crosspoint_docking import CrosspointDocking
 import logging
+import matplotlib.pyplot as plt
 
 #2480 is too large, so that it hits the ground and the valve_control while loop does not end.
 #MARKER_DOWN = 2480
@@ -144,6 +145,9 @@ class NavigationControl():
 
         self.dt = 0.02  # [s]
         self.r = rospy.Rate(1.0/self.dt)
+
+        self.dt_sim= 0.001  # [s]
+        self.r_sim = rospy.Rate(1.0/self.dt)
 
         #It SHOULD BE 1 for current code.
         #If it's not 1, then self.check_whether_moving_to_next_start() should be modified
@@ -625,13 +629,174 @@ class NavigationControl():
         # self.cmd_vel.publish(Twist())
 
     def saveSimulation(self):
+        print("--runOffset begin--")
+        self.wait_for_seconds(5.0)
+        # go through path array
+        rospy.loginfo("number of letters = " + str(len(self.arr_path)))
+        for idx_letter in range(len(self.arr_path)):
+            rospy.loginfo("number of letter segments in letter no." + str(idx_letter) +
+                    " = " + str(len(self.arr_path[idx_letter])))
+            for idx_segment in range(len(self.arr_path[idx_letter])):
+                #waypoints_in_segment = []
+                for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
+                    self.cnt_total_waypoints = self.cnt_total_waypoints + 1
+                #self.waypoints.append(waypoints_in_segment)
 
 
+        print("Total Number of Waypoints : "+str(self.cnt_total_waypoints))
+
+        self.cnt_letter = len(self.arr_path)
+        self.th1=0
+        self.th2=0
+
+        pubDelta1=0         #previously published delta_1
+        pubDelta2=0         #previously published delta_2
+        pubIter=0
+
+        cnt_delta_buffer = 0
+        cnt_waypoints = 0
+
+        while self.letter_index < self.cnt_letter:
+            if rospy.is_shutdown():
+                break
+            self.cnt_segments_in_current_letter = len(
+                    self.arr_path[self.letter_index])
+            while self.segment_index < self.cnt_segments_in_current_letter:
+                if rospy.is_shutdown():
+                    break
+                self.cnt_waypoints_in_current_segment = len(
+                        self.arr_path[self.letter_index][self.segment_index])
+                while self.waypoint_index_in_current_segment < self.cnt_waypoints_in_current_segment:
+                    if rospy.is_shutdown():
+                        break
+                    # rospy.loginfo("\n\nwaypoint index : " +
+                    #         str(self.waypoint_index_in_current_segment) +
+                    #         " in segment no. " + str(self.segment_index) +
+                    #         " in letter no. " + str(self.letter_index))
+
+                    self.current_waypoint = [
+                            self.arr_path[self.letter_index][self.segment_index][
+                                self.waypoint_index_in_current_segment][0],
+                            self.arr_path[self.letter_index][self.segment_index][
+                                self.waypoint_index_in_current_segment][1]
+                            ]
+                    cnt_waypoints += 1
+
+                    ###########################################################################################
+                    if self.waypoint_index_in_current_segment+1 == self.cnt_waypoints_in_current_segment:
+                        if self.segment_index+1 == self.cnt_segments_in_current_letter:
+                            if self.letter_index+1 == self.cnt_letter:
+                                self.next_letter_index = -1
+                                self.next_segment_index = -1
+                                self.next_waypoint_index_in_current_segment = -1
+                            else:
+                                self.next_letter_index = self.letter_index+1
+                                self.next_segment_index = 0
+                                self.next_waypoint_index_in_current_segment = 0
+
+                        else:
+                            self.next_letter_index = self.letter_index
+                            self.next_segment_index = self.segment_index+1
+                            self.next_waypoint_index_in_current_segment = 0
+                    else:
+                        self.next_letter_index = self.letter_index
+                        self.next_segment_index = self.segment_index
+                        self.next_waypoint_index_in_current_segment = self.waypoint_index_in_current_segment+1
+                    ###########################################################################################
 
 
+                    if (self.cnt_waypoints - 1) in self.start_point_list:
+                        self.is_moving_between_segments = False
+                    elif (self.cnt_waypoints - 1) in self.end_point_list:
+                        self.is_moving_between_segments = True
+                    else:
+                        pass
 
 
+                    # Motion Control
+                    while True:
+                        if rospy.is_shutdown():
+                            break
+                        try:
+                            # if self.is_moving_between_segments==True:
+                            #     self.spray_intensity_publisher.publish(1024.0)
+                            # else:
+                            #     #self.spray_intensity_publisher.publish(660.0)
+                            #     self.spray_intensity_publisher.publish(740.0)
 
+                            self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
+                            self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
+
+                            leftWheel = Point()
+                            leftWheel.x=self.point.x-self.L*sin(self.heading.data)
+                            leftWheel.y=self.point.y+self.L*cos(self.heading.data)
+
+                            rightWheel = Point()
+                            rightWheel.x=self.point.x+self.L*sin(self.heading.data)
+                            rightWheel.y=self.point.y-self.L*cos(self.heading.data)
+
+                            print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.point.x)+"  "+str(self.point.y)+"  "+str(leftWheel.x)+"  "+str(leftWheel.y)+"  "+str(rightWheel.x)+"  "+str(rightWheel.y))
+
+                            #print("distance: ", distance)
+                            #print("waypoint: ", self.current_waypoint)
+                            #print("endpoint: ", self.endPoint)
+
+                            th = self.heading.data
+                            delX= self.current_waypoint[0]-self.endPoint.x
+                            delY= self.current_waypoint[1]-self.endPoint.y
+
+                            delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
+                            delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
+
+                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
+                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
+                            #delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.5
+                            #delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.5
+
+                            #Motor Smoothing Buffer Disabled
+                            pubDelta1 = delOmega1
+                            pubDelta2 = delOmega2
+                            # self.pub_delta_theta_1.publish(pubDelta1)
+                            # self.pub_delta_theta_2.publish(pubDelta2)
+                            delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+                            delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                            self.point.x=self.point.x+delXrobotGlobal
+                            self.point.y=self.point.y+delYrobotGlobal
+                            self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                            self.pen_distance_per_loop=sqrt(
+                                pow(delXrobotGlobal, 2) +
+                                pow(delYrobotGlobal, 2)
+                                )
+                            # print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
+
+                            self.r_sim.sleep()
+
+                            break
+
+
+                        except KeyboardInterrupt:
+                            print("Got KeyboardInterrupt")
+                            # self.cmd_vel.publish(Twist())
+
+                            rospy.signal_shutdown("KeyboardInterrupt")
+                            break
+
+                    self.waypoint_index_in_current_segment = self.waypoint_index_in_current_segment + 1
+                self.segment_index = self.segment_index + 1
+                self.waypoint_index_in_current_segment = 0
+
+            #End of current letter.
+
+            #it's time for next letter
+            self.letter_index = self.letter_index + 1
+            self.segment_index = 0
+            self.waypoint_index_in_current_segment = 0
+
+        self.wait_for_seconds(2.0)
+        rospy.loginfo("Stopping the robot at the final destination")
+        print("Total Stiff Delta_Theta Change BUFFER = %d" % (cnt_delta_buffer))
+        #Wait for 1 second to close valve
+        self.quit_valve()
 
 
     def vel_update(self, a):
@@ -769,4 +934,5 @@ class NavigationControl():
             # self.cmd_vel.publish(Twist())
             self.pub_delta_theta_1.publish(0.0)
             self.pub_delta_theta_2.publish(0.0)
+            self.spray_intensity_publisher.publish(1024.0)
             self.r.sleep()
