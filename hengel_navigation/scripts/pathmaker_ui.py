@@ -8,13 +8,14 @@ import os
 import time
 import rospy
 
-length_side = 1000
-size_x = 1000
-size_y = 1080
+# length_side = 1000
+length_side = 3000
+size_x = length_side
+size_y = length_side + 80
 
 #CANVAS_LENGTH=6
 dist_threshold = 1/length_side #dist= 24/CANVAS_LENGTH
-radius = 2
+radius = 1
 
 package_base_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../.."))
