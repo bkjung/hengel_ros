@@ -778,6 +778,16 @@ class NavigationControl():
                                 )
                             # print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
 
+                            
+                            # self.plot_arr(arr_robotPoint, 'r')
+                            # self.plot_arr(arr_endPoint, 'g')
+                            # self.plot_arr(arr_leftWheel, 'b')
+                            # self.plot_arr(arr_rightWheel, 'k')
+
+                            # plt.axis([-0.5, 4.5, -0.5, 4.5])
+                            # plt.draw()                            
+                            # plt.pause(0.00000001)
+
                             self.r_sim.sleep()
 
                             break
