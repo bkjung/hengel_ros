@@ -18,7 +18,7 @@ class ConcenctricPath():
         # r = np.arange(0, 1.0/2, 0.0000001)
         r = np.arange(0, CANVAS_SIZE/2, 0.0000001)
         list_size = len(r)
-        theta = 2 * np.pi * r * 20
+        theta = 2 * np.pi * r * 3
         # ax = plt.subplot(111, projection='polar')
         # ax.plot(theta, r)
         # ax.set_rmax(2)

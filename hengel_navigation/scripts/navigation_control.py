@@ -410,9 +410,12 @@ class NavigationControl():
                         try:
                             if intensity_option==1:
                                 #For this option, is_moving_between_segments does not work!!!!
-                                input_intensity = self.arr_intensity[cnt_waypoints-1]
+                                input_pixel_value = int(self.arr_intensity[cnt_waypoints-1])
+                                if input_pixel_value >=0 and input_pixel_value<256:   #if the input is alright, then
 
-                                if input_intensity >=660.0 and input_intensity<=1024.0:
+                                    #cut off value larger than 230 to 230.
+                                    input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
+                                    spray_input = 740.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
                                     self.spray_intensity_publisher.publish(input_intensity)
 
                             elif intensity_option==2:
