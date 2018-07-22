@@ -65,6 +65,7 @@ class PaintSelectfile():
             elif int(word)==3:
                 self.isPositionControl=True
                 self.isIntensityControl=True
+                break
 
         if self.isPositionControl:
             while True:
