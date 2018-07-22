@@ -408,7 +408,7 @@ class NavigationControl():
                         if rospy.is_shutdown():
                             break
                         try:
-                            if intensity_option==1:
+                            if self.intensity_option==1:
                                 #For this option, is_moving_between_segments does not work!!!!
                                 input_pixel_value = int(self.arr_intensity[cnt_waypoints-1])
                                 if input_pixel_value >=0 and input_pixel_value<256:   #if the input is alright, then
@@ -418,14 +418,14 @@ class NavigationControl():
                                     spray_input = 740.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
                                     self.spray_intensity_publisher.publish(input_intensity)
 
-                            elif intensity_option==2:
+                            elif self.intensity_option==2:
                                 if self.is_moving_between_segments==True:
                                     self.spray_intensity_publisher.publish(1024.0)
                                 else:
                                     #self.spray_intensity_publisher.publish(660.0)
                                     self.spray_intensity_publisher.publish(740.0)
 
-                            # elif intensity_option==3:
+                            # elif self.intensity_option==3:
 
 
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
