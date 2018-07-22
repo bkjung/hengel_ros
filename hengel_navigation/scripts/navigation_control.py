@@ -74,7 +74,7 @@ class NavigationControl():
     #     self.initial_setting()
     #     self.run()
 
-    def __init__(self, _arr_path, _start_point_list, _end_point_list, _isPositionControl,_D):
+    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _D):
         while True:
             word = raw_input(
                     "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType :"
@@ -83,11 +83,14 @@ class NavigationControl():
             if self.motor_buffer_option == 1 or self.motor_buffer_option ==2 or self.motor_buffer_option ==3:
                 break
 
-        self.isPositionControl = _isPositionControl
         self.arr_path = _arr_path
-        self.D=_D
+        self.arr_intensity = _arr_intensity
         self.start_point_list = _start_point_list
         self.end_point_list = _end_point_list
+        self.isPositionControl = _isPositionControl
+        self.isIntensityControl = _isIntensityControl
+        self.D=_D
+
         self.initial_setting()
 
         while True:
@@ -100,6 +103,15 @@ class NavigationControl():
 
         if self.isPositionControl:
             if self.simulation_option==1:
+                while True:
+                    word = raw_input(
+                            # "There are 3 options for spray intensity.\n[1] Input from waypoint file \n[2] Constant 740 \n[3] Sinusoidal Fluctuation \nType :"
+                            "There are 3 options for spray intensity.\n[1] Input from waypoint file \n[2] Constant 740 \nType :"
+                            )
+                    self.intensity_option = int(word)
+                    # if self.intensity_option==1 or self.intensity_option==2 or self.intensity_option==3:
+                    if self.intensity_option==1 or self.intensity_option==2:
+                        break                
                 self.runOffset()
             else:
                 self.saveSimulation()
@@ -251,7 +263,7 @@ class NavigationControl():
         self.target_speed = 0.0
         self.current_speed = 0.0
 
-        self.is_moving_between_segments = False
+        self.is_moving_between_segments = True
 
         self.loop_cnt_pathmap = 0
 
@@ -396,11 +408,22 @@ class NavigationControl():
                         if rospy.is_shutdown():
                             break
                         try:
-                            if self.is_moving_between_segments==True:
-                                self.spray_intensity_publisher.publish(1024.0)
-                            else:
-                                #self.spray_intensity_publisher.publish(660.0)
-                                self.spray_intensity_publisher.publish(740.0)
+                            if intensity_option==1:
+                                #For this option, is_moving_between_segments does not work!!!!
+                                input_intensity = self.arr_intensity[cnt_waypoints-1]
+
+                                if input_intensity >=660.0 and input_intensity<=1024.0:
+                                    self.spray_intensity_publisher.publish(input_intensity)
+
+                            elif intensity_option==2:
+                                if self.is_moving_between_segments==True:
+                                    self.spray_intensity_publisher.publish(1024.0)
+                                else:
+                                    #self.spray_intensity_publisher.publish(660.0)
+                                    self.spray_intensity_publisher.publish(740.0)
+
+                            # elif intensity_option==3:
+
 
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
@@ -744,7 +767,7 @@ class NavigationControl():
                             arr_leftWheel.append((leftWheel.x, leftWheel.y))
                             arr_rightWheel.append((rightWheel.x, rightWheel.y))
 
-                            #print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.point.x)+"  "+str(self.point.y)+"  "+str(leftWheel.x)+"  "+str(leftWheel.y)+"  "+str(rightWheel.x)+"  "+str(rightWheel.y))
+                            # print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.point.x)+"  "+str(self.point.y)+"  "+str(leftWheel.x)+"  "+str(leftWheel.y)+"  "+str(rightWheel.x)+"  "+str(rightWheel.y))
 
                             #print("distance: ", distance)
                             #print("waypoint: ", self.current_waypoint)
@@ -818,7 +841,7 @@ class NavigationControl():
         self.plot_arr(arr_leftWheel, 'b')
         self.plot_arr(arr_rightWheel, 'k')
 
-        plt.axis([-0.5, 4.5, -0.5, 4.5])
+        # plt.axis([-0.5, 6.0, -0.5, 6.0])
         plt.show()
 
         self.wait_for_seconds(2.0)
