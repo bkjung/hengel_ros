@@ -29,7 +29,7 @@ CANVAS_SIDE_LENGTH = 1.0
 package_base_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "../.."))
 home_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "../../../../.."))        
+        os.path.join(os.path.dirname(__file__), "../../../../.."))
 os.system("mkdir -p " + package_base_path +
         "/hengel_path_manager/output_pathmap")
 
@@ -77,25 +77,26 @@ class PaintSelectfile():
                 else:
                     break
 
+            #while True:
+            #    word=raw_input("Type the option for interval \n[1] Same as file input \n[2] Equal interval manipulation \nType: ")
+            #    self.option_interval=int(word)
+            #    if self.option_interval == 1 or self.option_interval == 2:
+            #        break
+            #
+            #if self.option_interval == 2:
             while True:
-                word=raw_input("Type the option for interval \n[1] Same as file input \n[2] Equal interval manipulation \nType: ")
-                self.option_interval=int(word)
-                if self.option_interval == 1 or self.option_interval == 2:
-                    break
-                
-            if self.option_interval == 2:
-                while True:
-                    word=raw_input("Type the interval(>=0.001) of waypoints: ")
+                word=raw_input("Type the interval(>=0.001) of waypoints: ")
 
-                    self.interval=float(word)
-                    if self.interval<0.001:
-                        print("Type value(>=0.001)")
-                    else:
-                        break
+                self.interval=float(word)
+                if self.interval<0.001:
+                    print("Type value(>=0.001)")
+                else:
+                    break
 
         self.get_path()
         print("path creation completed")
         print("-----------------------------------------------")
+        print("Total Waypoints = %d" %(self.cnt_points))
         # print(self.arr_path)
         for i in range(len(self.arr_path)):
             for j in range(len(self.arr_path[i])):
@@ -110,9 +111,9 @@ class PaintSelectfile():
         subletter_path=[]
         x_last = -self.D
         y_last = 0.0
-        cnt_points = 0
+        self.cnt_points = 0
         subletter_path.append([x_last, y_last])
-        cnt_points += 1
+        self.cnt_points += 1
 
         flag_start = True
         dist = 0
@@ -126,49 +127,58 @@ class PaintSelectfile():
                     _str = line.split()
                     if not len(_str) == 0:
                         x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH)*(-1.0)
-                        y_curr=(1-float(_str[1]))*CANVAS_SIDE_LENGTH
+                        y_curr=(4.0-float(_str[1]))*CANVAS_SIDE_LENGTH
 
-                        if self.option_interval==2:
-                            dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
-                            if dist>self.interval:
-                                div=int(ceil(dist/self.interval))
-                                for k in range(div):
-                                    x=x_last+(k+1)/float(div)*(x_curr-x_last)
-                                    y=y_last+(k+1)/float(div)*(y_curr-y_last)
-                                    subletter_path.append([x,y])
-                                    cnt_points += 1
-                                x_last=x
-                                y_last=y
-                                dist = 0
-                            else:
-                                continue
-
-                        elif self.option_interval==1:
-                            subletter_path.append([x_curr, y_curr])
-                            cnt_points += 1
-
+                        #if self.option_interval==2:
+                        dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
+                        if dist>self.interval:
+                            div=int(ceil(dist/self.interval))
+                            for k in range(div):
+                                x=x_last+(k+1)/float(div)*(x_curr-x_last)
+                                y=y_last+(k+1)/float(div)*(y_curr-y_last)
+                                subletter_path.append([x,y])
+                                if self.isIntensityControl:
+                                    if flag_start==True:
+                                        self.arr_intensity.append(255.0)
+                                    else:
+                                        if len(_str)>2:
+                                            self.arr_intensity.append(float(_str[2]))
+                                        else:
+                                            print("Spray intenstiy field empty!!!!!")
+                                            sys.exit("Spray intenstiy field empty!!!!!")
+                                            self.cnt_points += 1
+                            x_last=x
+                            y_last=y
+                            dist = 0
                         else:
-                            print("THIS SHOULD NOT HAPPENNNNNNNNNNNNN!!!!")
-                            sys.exit(":(:(:(:(:(:(:(")
+                            subletter_path.append([x_curr, y_curr])
+                            self.cnt_points += 1
+                            x_last=x_curr
+                            y_last=y_curr
+                            #continue
+
+                        #elif self.option_interval==1:
+                        #    subletter_path.append([x_curr, y_curr])
+                        #    self.cnt_points += 1
+
+                        #else:
+                        #    print("THIS SHOULD NOT HAPPENNNNNNNNNNNNN!!!!")
+                        #    sys.exit(":(:(:(:(:(:(:(")
 
                         if self.isIntensityControl:
-                            if len(_str)>2:
-                                self.arr_intensity.append(float(_str[2]))
-                            else:
-                                print("Spray intenstiy field empty!!!!!")
+                            pass
 
                         else:
                             if self.isStartEndIndexed:
                                 if len(_str)>2:
                                     if int(float(_str[2]))==0:         #if the input waypoint is marked as end point
-                                        self.end_point_list.append(cnt_points-1)
+                                        self.end_point_list.append(self.cnt_points-1)
                                     elif int(float(_str[2]))==1:         #if the input waypoint is marked as start point
-                                        self.start_point_list.append(cnt_points-1)
+                                        self.start_point_list.append(self.cnt_points-1)
                                 elif len(_str)==2:
                                     if flag_start==True:
-                                        self.start_point_list.append(cnt_points-1)  #if the input waypoint is the initial one.
-                                        flag_start  = False
-
+                                        self.start_point_list.append(self.cnt_points-1)  #if the input waypoint is the initial one.
+                    flag_start=False
                 letter_path.append(subletter_path)
         self.arr_path.append(letter_path)
 

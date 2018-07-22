@@ -111,7 +111,7 @@ class NavigationControl():
                     self.intensity_option = int(word)
                     # if self.intensity_option==1 or self.intensity_option==2 or self.intensity_option==3:
                     if self.intensity_option==1 or self.intensity_option==2:
-                        break                
+                        break
                 self.runOffset()
             else:
                 self.saveSimulation()
@@ -416,7 +416,7 @@ class NavigationControl():
                                     #cut off value larger than 230 to 230.
                                     input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
                                     spray_input = 740.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
-                                    self.spray_intensity_publisher.publish(input_intensity)
+                                    self.spray_intensity_publisher.publish(spray_input)
 
                             elif self.intensity_option==2:
                                 if self.is_moving_between_segments==True:
@@ -430,7 +430,7 @@ class NavigationControl():
 
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
-                            print(str(self.endPoint.x)+"  "+str(self.endPoint.y))
+                            print(str(cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
 
                             #print("distance: ", distance)
                             #print("waypoint: ", self.current_waypoint)
@@ -804,14 +804,14 @@ class NavigationControl():
                                 )
                             # print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
 
-                            
+
                             # self.plot_arr(arr_robotPoint, 'r')
                             # self.plot_arr(arr_endPoint, 'g')
                             # self.plot_arr(arr_leftWheel, 'b')
                             # self.plot_arr(arr_rightWheel, 'k')
 
                             # plt.axis([-0.5, 4.5, -0.5, 4.5])
-                            # plt.draw()                            
+                            # plt.draw()
                             # plt.pause(0.00000001)
 
                             self.r_sim.sleep()
