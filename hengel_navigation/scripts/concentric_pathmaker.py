@@ -12,13 +12,14 @@ class ConcenctricPath():
         pass
 
     def run(self):
-        CANVAS_SIZE = 6.0
-        INTERVAL = 0.003
+        CANVAS_SIZE = 4.0
+        WAYPOINT_INTERVAL = 0.003
+        THETA_INTERVAL = 25
         
         # r = np.arange(0, 1.0/2, 0.0000001)
         r = np.arange(0, CANVAS_SIZE/2, 0.0000001)
         list_size = len(r)
-        theta = 2 * np.pi * r * 3
+        theta = 2 * np.pi * r * THETA_INTERVAL
         # ax = plt.subplot(111, projection='polar')
         # ax.plot(theta, r)
         # ax.set_rmax(2)
@@ -38,7 +39,7 @@ class ConcenctricPath():
         for i in range(list_size):
             x_new = r[i]*cos(theta[i])
             y_new = r[i]*sin(theta[i])
-            if sqrt(pow((x_new-x_prev),2)+pow((y_new-y_prev),2))>=INTERVAL:
+            if sqrt(pow((x_new-x_prev),2)+pow((y_new-y_prev),2))>=WAYPOINT_INTERVAL:
                 x.append(x_new+CANVAS_SIZE/2.0)
                 y.append(y_new+CANVAS_SIZE/2.0)
                 x_prev = x_new
@@ -61,7 +62,7 @@ class ConcenctricPath():
             # print("%f  %f" % (x[i], y[i]))
 
         current_time = time.strftime("%y%m%d_%H%M%S")
-        with open("/home/bkjung/"+current_time+"_concentric.txt", "w") as f:
+        with open("/home/bkjung/"+current_time+"_"+str(WAYPOINT_INTERVAL)+"_"+str(THETA_INTERVAL)+"_concentric.txt", "w") as f:
             for i in range(len(x)):
                 x_in_canvas = int(floor(size[0]*x[i]/CANVAS_SIZE))
                 y_in_canvas = int(floor(size[1]*y[i]/CANVAS_SIZE))
@@ -73,7 +74,7 @@ class ConcenctricPath():
                 f.write("%f  %f  %f\n" % (x[i], y[i], pixel_value))
                 m[x_in_canvas][y_in_canvas] = pixel_value
 
-        cv2.imwrite("/home/bkjung/"+current_time+"_paint.jpg", m)
+        cv2.imwrite("/home/bkjung/"+current_time+"_"+str(WAYPOINT_INTERVAL)+"_"+str(THETA_INTERVAL)+"_concentric_paint.jpg", m)
         cv2.imshow("image", m);
         cv2.waitKey()
 
