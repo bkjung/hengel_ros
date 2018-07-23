@@ -32,8 +32,10 @@
 #define PROTOCOL_VERSION                2.0                 // See which protocol version is used in the Dynamixel
 
 // Default setting
-#define DXL_ID_10                       10                  // Dynamixel ID: 10
-#define DXL_ID_13                       13                  // Dynamixel ID: 10
+// #define DXL_ID_10                       10                  // Dynamixel ID: 10
+// #define DXL_ID_13                       13                  // Dynamixel ID: 10
+#define DXL_ID_10                       1                  // Dynamixel ID: 10
+#define DXL_ID_13                       2                  // Dynamixel ID: 10
 #define DXL_ID_254                      254
 #define BAUDRATE                        57600
 #define DEVICENAME                      "/dev/ttyUSB0"      // Check which port is being used on your controller
@@ -54,7 +56,8 @@
 
 #define VALVE_OPEN                      3900
 //int GOAL_POSITION = 3200;
-int GOAL_POSITION = 3270;
+// int GOAL_POSITION = 3270;
+int GOAL_POSITION = 1024;
 int MODE = 1;
 int SHUTDOWN = 0;
 bool RECEIVED_MSG = false;
@@ -216,7 +219,7 @@ int main(int argc, char **argv)
     if (SHUTDOWN != 0)
     {
       // Close valve
-      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 3200, &dxl_error);
+      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 1024, &dxl_error);
       do
       {
         dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
@@ -317,7 +320,7 @@ int main(int argc, char **argv)
   }
 
   // Close valve
-  dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 3200, &dxl_error);
+  dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 00, &dxl_error);
   
   {
     dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
