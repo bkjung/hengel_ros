@@ -133,7 +133,8 @@ class PaintSelectfile():
                         # x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH)*(-1.0)
                         # y_curr=(4.0-float(_str[1]))*CANVAS_SIDE_LENGTH
                         x_curr=(float(_str[0])*(-1.0))
-                        y_curr=(self.CANVAS_SIDE_LENGTH-float(_str[1]))
+                        # y_curr=(self.CANVAS_SIDE_LENGTH-float(_str[1]))
+                        y_curr=float(_str[1])
 
 
                         #if self.option_interval==2:
