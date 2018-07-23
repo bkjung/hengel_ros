@@ -293,8 +293,8 @@ class NavigationControl():
         self.offset_change_theta_publisher = rospy.Publisher(
                 '/offset_change_theta', Float32, queue_size=5)
 
-        self.spray_intensity_publisher = rospy.Publisher(
-                '/spray_intensity', Float32, queue_size=5)
+        # self.spray_intensity_publisher = rospy.Publisher(
+        #         '/spray_intensity', Float32, queue_size=5)
 
 
         # Stop Subscribing position & heading data
@@ -417,14 +417,20 @@ class NavigationControl():
                                     #cut off value larger than 230 to 230.
                                     input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
                                     spray_input = 660.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
-                                    self.spray_intensity_publisher.publish(spray_input)
+                                    # self.spray_intensity_publisher.publish(spray_input)
+                                    self.valve_angle_input.goal_position = int(spray_input)
+                                    self.valve_angle_publisher.publish(self.valve_angle_input)
 
                             elif self.intensity_option==2:
                                 if self.is_moving_between_segments==True:
-                                    self.spray_intensity_publisher.publish(1024.0)
+                                    # self.spray_intensity_publisher.publish(1024.0)
+                                    self.valve_angle_input.goal_position = 1024
+                                    self.valve_angle_publisher.publish(self.valve_angle_input)
                                 else:
                                     #self.spray_intensity_publisher.publish(660.0)
-                                    self.spray_intensity_publisher.publish(740.0)
+                                    # self.spray_intensity_publisher.publish(740.0)
+                                    self.valve_angle_input.goal_position = 740
+                                    self.valve_angle_publisher.publish(self.valve_angle_input)
 
                             # elif self.intensity_option==3:
 
@@ -967,7 +973,9 @@ class NavigationControl():
         # self.cmd_vel.publish(Twist())
         self.pub_delta_theta_1.publish(0.0)
         self.pub_delta_theta_2.publish(0.0)
-        self.spray_intensity_publisher.publish(1024.0)
+        # self.spray_intensity_publisher.publish(1024.0)
+        self.valve_angle_input.goal_position = 1024
+        self.valve_angle_publisher.publish(self.valve_angle_input)
         rospy.sleep(1)
 
     def look_opposite_side(self):
@@ -999,5 +1007,7 @@ class NavigationControl():
             # self.cmd_vel.publish(Twist())
             self.pub_delta_theta_1.publish(0.0)
             self.pub_delta_theta_2.publish(0.0)
-            self.spray_intensity_publisher.publish(1024.0)
+            # self.spray_intensity_publisher.publish(1024.0)
+            self.valve_angle_input.goal_position = 1024
+            self.valve_angle_publisher.publish(self.valve_angle_input)
             self.r.sleep()
