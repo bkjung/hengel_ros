@@ -135,6 +135,7 @@ class PaintSelectfile():
                         x_curr=(float(_str[0])*(-1.0)
                         y_curr=(self.CANVAS_SIDE_LENGTH-float(_str[1]))
 
+
                         #if self.option_interval==2:
                         dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
                         if dist>self.interval*2.0:
@@ -155,9 +156,19 @@ class PaintSelectfile():
                                             self.cnt_points += 1
                             x_last=x
                             y_last=y
-                            dist = 0
                         else:
                             subletter_path.append([x_curr, y_curr])
+
+                            if self.isIntensityControl:
+                                if flag_start==True:
+                                    self.arr_intensity.append(255.0)
+                                else:
+                                    if len(_str)>2:
+                                        self.arr_intensity.append(float(_str[2]))
+                                    else:
+                                        print("Spray intenstiy field empty!!!!!")
+                                        sys.exit("Spray intenstiy field empty!!!!!")
+
                             self.cnt_points += 1
                             x_last=x_curr
                             y_last=y_curr
