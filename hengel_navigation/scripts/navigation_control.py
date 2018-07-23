@@ -373,34 +373,35 @@ class NavigationControl():
                     cnt_waypoints += 1
 
                     ###########################################################################################
-                    if self.waypoint_index_in_current_segment+1 == self.cnt_waypoints_in_current_segment:
-                        if self.segment_index+1 == self.cnt_segments_in_current_letter:
-                            if self.letter_index+1 == self.cnt_letter:
-                                self.next_letter_index = -1
-                                self.next_segment_index = -1
-                                self.next_waypoint_index_in_current_segment = -1
-                            else:
-                                self.next_letter_index = self.letter_index+1
-                                self.next_segment_index = 0
-                                self.next_waypoint_index_in_current_segment = 0
+                   # if self.waypoint_index_in_current_segment+1 == self.cnt_waypoints_in_current_segment:
+                   #     if self.segment_index+1 == self.cnt_segments_in_current_letter:
+                   #         if self.letter_index+1 == self.cnt_letter:
+                   #             self.next_letter_index = -1
+                   #             self.next_segment_index = -1
+                   #             self.next_waypoint_index_in_current_segment = -1
+                   #         else:
+                   #             self.next_letter_index = self.letter_index+1
+                   #             self.next_segment_index = 0
+                   #             self.next_waypoint_index_in_current_segment = 0
 
+                   #     else:
+                   #         self.next_letter_index = self.letter_index
+                   #         self.next_segment_index = self.segment_index+1
+                   #         self.next_waypoint_index_in_current_segment = 0
+                   # else:
+                   #     self.next_letter_index = self.letter_index
+                   #     self.next_segment_index = self.segment_index
+                   #     self.next_waypoint_index_in_current_segment = self.waypoint_index_in_current_segment+1
+                   # ###########################################################################################
+
+
+                    if self.intensity_option == 2:
+                        if (cnt_waypoints - 1) in self.start_point_list:
+                            self.is_moving_between_segments = False
+                        elif (cnt_waypoints - 1) in self.end_point_list:
+                            self.is_moving_between_segments = True
                         else:
-                            self.next_letter_index = self.letter_index
-                            self.next_segment_index = self.segment_index+1
-                            self.next_waypoint_index_in_current_segment = 0
-                    else:
-                        self.next_letter_index = self.letter_index
-                        self.next_segment_index = self.segment_index
-                        self.next_waypoint_index_in_current_segment = self.waypoint_index_in_current_segment+1
-                    ###########################################################################################
-
-
-                    if (cnt_waypoints - 1) in self.start_point_list:
-                        self.is_moving_between_segments = False
-                    elif (cnt_waypoints - 1) in self.end_point_list:
-                        self.is_moving_between_segments = True
-                    else:
-                        pass
+                            pass
 
 
                     # Motion Control
@@ -430,7 +431,8 @@ class NavigationControl():
 
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
-                            print(str(cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
+                            #print(str(cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
+                            print(str(self.endPoint.x)+"  "+str(self.endPoint.y))
 
                             #print("distance: ", distance)
                             #print("waypoint: ", self.current_waypoint)
@@ -443,160 +445,164 @@ class NavigationControl():
                             delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                             delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
 
-                            #delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
-                            #delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
-                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.5
-                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.5
+                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
+                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
+                            #delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.5
+                            #delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.5
 
                             if self.motor_buffer_option == 1:       #Motor Smoothing Buffer Enabled
-                                if abs(delOmega1 - pubDelta1) >= 0.01 and abs(delOmega2 - pubDelta2) >= 0.01:
-                                    pubIter = max(floor(abs(delOmega1 - pubDelta1)/0.01), floor(abs(delOmega2 - pubDelta2)/0.01))
-                                    cnt_delta_buffer += pubIter
-                                    # print("---------ITERATION(0/%d)--------- " % (pubIter))
-                                elif abs(delOmega1 - pubDelta1) >= 0.01:
-                                    pubIter = floor(abs(delOmega1 - pubDelta1)/0.01)
-                                    # print("---------ITERATION(0/%d)--------- " % (pubIter))
-                                    cnt_delta_buffer += pubIter
-                                elif abs(delOmega2 - pubDelta2) >= 0.01:
-                                    pubIter = floor(abs(delOmega2 - pubDelta2)/0.01)
-                                    # print("---------ITERATION(0/%d)--------- " % (pubIter))
-                                    cnt_delta_buffer += pubIter
-                                else:
-                                    pubIter = 1
+                                pass
+                            #    if abs(delOmega1 - pubDelta1) >= 0.01 and abs(delOmega2 - pubDelta2) >= 0.01:
+                            #        pubIter = max(floor(abs(delOmega1 - pubDelta1)/0.01), floor(abs(delOmega2 - pubDelta2)/0.01))
+                            #        cnt_delta_buffer += pubIter
+                            #        # print("---------ITERATION(0/%d)--------- " % (pubIter))
+                            #    elif abs(delOmega1 - pubDelta1) >= 0.01:
+                            #        pubIter = floor(abs(delOmega1 - pubDelta1)/0.01)
+                            #        # print("---------ITERATION(0/%d)--------- " % (pubIter))
+                            #        cnt_delta_buffer += pubIter
+                            #    elif abs(delOmega2 - pubDelta2) >= 0.01:
+                            #        pubIter = floor(abs(delOmega2 - pubDelta2)/0.01)
+                            #        # print("---------ITERATION(0/%d)--------- " % (pubIter))
+                            #        cnt_delta_buffer += pubIter
+                            #    else:
+                            #        pubIter = 1
 
-                                for iteration in range(int(pubIter)):
-                                    control_input_1 = pubDelta1 + (float)(delOmega1-pubDelta1)/pubIter*(iteration+1)
-                                    control_input_2 = pubDelta2 + (float)(delOmega2-pubDelta2)/pubIter*(iteration+1)
-                                    self.pub_delta_theta_1.publish(control_input_1)
-                                    self.pub_delta_theta_2.publish(control_input_2)
-                                    if pubIter != 1:
-                                        # print("---------ITERATION(%d/%d)--------- " % (iteration+1,pubIter))
-                                        pass
+                            #    for iteration in range(int(pubIter)):
+                            #        control_input_1 = pubDelta1 + (float)(delOmega1-pubDelta1)/pubIter*(iteration+1)
+                            #        control_input_2 = pubDelta2 + (float)(delOmega2-pubDelta2)/pubIter*(iteration+1)
+                            #        self.pub_delta_theta_1.publish(control_input_1)
+                            #        self.pub_delta_theta_2.publish(control_input_2)
+                            #        if pubIter != 1:
+                            #            # print("---------ITERATION(%d/%d)--------- " % (iteration+1,pubIter))
+                            #            pass
 
 
-                                    self.r.sleep()
+                            #        self.r.sleep()
 
-                                pubDelta1 = delOmega1
-                                pubDelta2 = delOmega2
+                            #    pubDelta1 = delOmega1
+                            #    pubDelta2 = delOmega2
 
-                                delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
-                                delXrobotGlobal, delYrobotGlobal = np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
-                                self.point.x=self.point.x+delXrobotGlobal
-                                self.point.y=self.point.y+delYrobotGlobal
-                                self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
-                                self.pen_distance_per_loop=sqrt(
-                                    pow(delXrobotGlobal, 2) +
-                                    pow(delYrobotGlobal, 2)
-                                    )
-                                print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
+                            #    delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+                            #    delXrobotGlobal, delYrobotGlobal = np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                            #    self.point.x=self.point.x+delXrobotGlobal
+                            #    self.point.y=self.point.y+delYrobotGlobal
+                            #    self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                            #    self.pen_distance_per_loop=sqrt(
+                            #        pow(delXrobotGlobal, 2) +
+                            #        pow(delYrobotGlobal, 2)
+                            #        )
+                            #    print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
 
-                                break
+                            #    break
 
                             elif self.motor_buffer_option == 2:
-                                if self.next_letter_index != -1:  # if current waypoint is not the end
-                                    if abs(delOmega1 - pubDelta1) >= 0.01 and abs(delOmega2 - pubDelta2) >= 0.01:
-                                        pubIter = max(floor(abs(delOmega1 - pubDelta1)/0.01), floor(abs(delOmega2 - pubDelta2)/0.01))
-                                        cnt_delta_buffer += pubIter
-                                        # print("---------ITERATION(0/%d)--------- " % (pubIter))
-                                    elif abs(delOmega1 - pubDelta1) >= 0.01:
-                                        pubIter = floor(abs(delOmega1 - pubDelta1)/0.01)
-                                        # print("---------ITERATION(0/%d)--------- " % (pubIter))
-                                        cnt_delta_buffer += pubIter
-                                    elif abs(delOmega2 - pubDelta2) >= 0.01:
-                                        pubIter = floor(abs(delOmega2 - pubDelta2)/0.01)
-                                        # print("---------ITERATION(0/%d)--------- " % (pubIter))
-                                        cnt_delta_buffer += pubIter
-                                    else:
-                                        pubDelta1 = delOmega1
-                                        pubDelta2 = delOmega2
-                                        self.pub_delta_theta_1.publish(pubDelta1)
-                                        self.pub_delta_theta_2.publish(pubDelta2)
+                                pass
+                            #    if self.next_letter_index != -1:  # if current waypoint is not the end
+                            #        if abs(delOmega1 - pubDelta1) >= 0.01 and abs(delOmega2 - pubDelta2) >= 0.01:
+                            #            pubIter = max(floor(abs(delOmega1 - pubDelta1)/0.01), floor(abs(delOmega2 - pubDelta2)/0.01))
+                            #            cnt_delta_buffer += pubIter
+                            #            # print("---------ITERATION(0/%d)--------- " % (pubIter))
+                            #        elif abs(delOmega1 - pubDelta1) >= 0.01:
+                            #            pubIter = floor(abs(delOmega1 - pubDelta1)/0.01)
+                            #            # print("---------ITERATION(0/%d)--------- " % (pubIter))
+                            #            cnt_delta_buffer += pubIter
+                            #        elif abs(delOmega2 - pubDelta2) >= 0.01:
+                            #            pubIter = floor(abs(delOmega2 - pubDelta2)/0.01)
+                            #            # print("---------ITERATION(0/%d)--------- " % (pubIter))
+                            #            cnt_delta_buffer += pubIter
+                            #        else:
+                            #            pubDelta1 = delOmega1
+                            #            pubDelta2 = delOmega2
+                            #            self.pub_delta_theta_1.publish(pubDelta1)
+                            #            self.pub_delta_theta_2.publish(pubDelta2)
 
-                                        delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
-                                        delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
-                                        self.point.x=self.point.x+delXrobotGlobal
-                                        self.point.y=self.point.y+delYrobotGlobal
-                                        self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
-                                        self.pen_distance_per_loop=sqrt(
-                                                pow(delXrobotGlobal, 2) +
-                                                pow(delYrobotGlobal, 2)
-                                                )
-                                        print(str(pubDelta1)+"  "+str(pubDelta2)+"  "+str(self.pen_distance_per_loop))
+                            #            delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+                            #            delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                            #            self.point.x=self.point.x+delXrobotGlobal
+                            #            self.point.y=self.point.y+delYrobotGlobal
+                            #            self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                            #            self.pen_distance_per_loop=sqrt(
+                            #                    pow(delXrobotGlobal, 2) +
+                            #                    pow(delYrobotGlobal, 2)
+                            #                    )
+                            #            print(str(pubDelta1)+"  "+str(pubDelta2)+"  "+str(self.pen_distance_per_loop))
 
-                                        self.r.sleep()
+                            #            self.r.sleep()
 
-                                        break
+                            #            break
 
-                                    delX_original= self.current_waypoint[0]-self.endPoint.x
-                                    delY_original= self.current_waypoint[1]-self.endPoint.y
-                                    delX=delX_original/pubIter
-                                    delY=delY_original/pubIter
-                                    for iteration in range(int(pubIter)):
-                                        self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
-                                        self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
+                            #        delX_original= self.current_waypoint[0]-self.endPoint.x
+                            #        delY_original= self.current_waypoint[1]-self.endPoint.y
+                            #        delX=delX_original/pubIter
+                            #        delY=delY_original/pubIter
+                            #        for iteration in range(int(pubIter)):
+                            #            self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
+                            #            self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
 
-                                        self.next_waypoint = [
-                                                self.arr_path[self.next_letter_index][self.next_segment_index][
-                                                    self.next_waypoint_index_in_current_segment][0],
-                                                self.arr_path[self.next_letter_index][self.next_segment_index][
-                                                    self.next_waypoint_index_in_current_segment][1]
-                                                ]
-                                        # I realized that next_waypoint is freaking unnecessary FUCK
+                            #            self.next_waypoint = [
+                            #                    self.arr_path[self.next_letter_index][self.next_segment_index][
+                            #                        self.next_waypoint_index_in_current_segment][0],
+                            #                    self.arr_path[self.next_letter_index][self.next_segment_index][
+                            #                        self.next_waypoint_index_in_current_segment][1]
+                            #                    ]
+                            #            # I realized that next_waypoint is freaking unnecessary FUCK
 
-                                        th = self.heading.data
-
-
-                                        delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
-                                        delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
-
-                                        delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
-                                        delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
-
-                                        self.pub_delta_theta_1.publish(delOmega1)
-                                        self.pub_delta_theta_2.publish(delOmega2)
-
-                                        # if pubIter != 1:
-                                        #     print("THIS SHOULD NOT HAPPEN :) IF THIS SHOWS UP, YOU'RE FUCKED UP")
-
-                                        delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
-                                        delXrobotGlobal, delYrobotGlobal = np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
-                                        self.point.x=self.point.x+delXrobotGlobal
-                                        self.point.y=self.point.y+delYrobotGlobal
-                                        self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
-                                        self.pen_distance_per_loop=sqrt(
-                                            pow(delXrobotGlobal, 2) +
-                                            pow(delYrobotGlobal, 2)
-                                            )
-                                        print(str(delOmega1)+"  "+str(delOmega1)+"  "+str(self.pen_distance_per_loop))
-                                        pubDelta1 = delOmega1
-                                        pubDelta2 = delOmega2
-                                        self.r.sleep()
-
-                                    break
-
-                                else:
-                                    pubDelta1 = delOmega1
-                                    pubDelta2 = delOmega2
-                                    self.pub_delta_theta_1.publish(pubDelta1)
-                                    self.pub_delta_theta_2.publish(pubDelta2)
-
-                                    delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
-                                    delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
-                                    self.point.x=self.point.x+delXrobotGlobal
-                                    self.point.y=self.point.y+delYrobotGlobal
-                                    self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
-                                    self.pen_distance_per_loop=sqrt(
-                                            pow(delXrobotGlobal, 2) +
-                                            pow(delYrobotGlobal, 2)
-                                            )
-                                    print(str(pubDelta1)+"  "+str(pubDelta2)+"  "+str(self.pen_distance_per_loop))
-
-                                    self.r.sleep()
-
-                                    break
+                            #            th = self.heading.data
 
 
-                            else:       #Motor Smoothing Buffer Disabled
+                            #            delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
+                            #            delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
+
+                            #            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
+                            #            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
+
+                            #            self.pub_delta_theta_1.publish(delOmega1)
+                            #            self.pub_delta_theta_2.publish(delOmega2)
+
+                            #            # if pubIter != 1:
+                            #            #     print("THIS SHOULD NOT HAPPEN :) IF THIS SHOWS UP, YOU'RE FUCKED UP")
+
+                            #            delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+                            #            delXrobotGlobal, delYrobotGlobal = np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                            #            self.point.x=self.point.x+delXrobotGlobal
+                            #            self.point.y=self.point.y+delYrobotGlobal
+                            #            self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                            #            self.pen_distance_per_loop=sqrt(
+                            #                pow(delXrobotGlobal, 2) +
+                            #                pow(delYrobotGlobal, 2)
+                            #                )
+                            #            print(str(delOmega1)+"  "+str(delOmega1)+"  "+str(self.pen_distance_per_loop))
+                            #            pubDelta1 = delOmega1
+                            #            pubDelta2 = delOmega2
+                            #            self.r.sleep()
+
+                            #        break
+
+                            #    #if current waypoint is the end
+                            #    else:
+                            #        pubDelta1 = delOmega1
+                            #        pubDelta2 = delOmega2
+                            #        self.pub_delta_theta_1.publish(pubDelta1)
+                            #        self.pub_delta_theta_2.publish(pubDelta2)
+
+                            #        delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+                            #        delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                            #        self.point.x=self.point.x+delXrobotGlobal
+                            #        self.point.y=self.point.y+delYrobotGlobal
+                            #        self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                            #        self.pen_distance_per_loop=sqrt(
+                            #                pow(delXrobotGlobal, 2) +
+                            #                pow(delYrobotGlobal, 2)
+                            #                )
+                            #        print(str(pubDelta1)+"  "+str(pubDelta2)+"  "+str(self.pen_distance_per_loop))
+
+                            #        self.r.sleep()
+
+                            #        break
+
+
+                            #Motor Smoothing Buffer Disabled
+                            elif self.motor_buffer_option == 3:
                                 pubDelta1 = delOmega1
                                 pubDelta2 = delOmega2
                                 self.pub_delta_theta_1.publish(pubDelta1)
