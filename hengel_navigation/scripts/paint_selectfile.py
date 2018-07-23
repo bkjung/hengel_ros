@@ -18,7 +18,7 @@ from Tkinter import *
 import tkFileDialog
 
 #CANVAS_SIDE_LENGTH = 5.0
-CANVAS_SIDE_LENGTH = 1.0
+# CANVAS_SIDE_LENGTH = 1.0
 #CANVAS_SIDE_LENGTH = 1.5 * 0.58
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #PADDING_LENGTH = 0.0
@@ -36,7 +36,11 @@ os.system("mkdir -p " + package_base_path +
 
 class PaintSelectfile():
     def __init__(self):
-        print("Length of Canvas Side = " + str(CANVAS_SIDE_LENGTH))
+        while True:
+            word = raw_input("What is the LENGTH OF CANVAS SIDE in selected file?\n Type: ")
+            self.CANVAS_SIDE_LENGTH = float(word)
+            break
+        print("Length of Canvas Side = " + str(self.CANVAS_SIDE_LENGTH))
         # print("Length of Padding = " + str(PADDING_LENGTH))
         # print("Distance of Viewpoint = " + str(VIEWPOINT_DISTANCE))
         self.arr_path = []
@@ -126,8 +130,10 @@ class PaintSelectfile():
                 for idx, line in enumerate(file_path):
                     _str = line.split()
                     if not len(_str) == 0:
-                        x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH)*(-1.0)
-                        y_curr=(4.0-float(_str[1]))*CANVAS_SIDE_LENGTH
+                        # x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH)*(-1.0)
+                        # y_curr=(4.0-float(_str[1]))*CANVAS_SIDE_LENGTH
+                        x_curr=(float(_str[0])*(-1.0)
+                        y_curr=(self.CANVAS_SIDE_LENGTH-float(_str[1]))
 
                         #if self.option_interval==2:
                         dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
