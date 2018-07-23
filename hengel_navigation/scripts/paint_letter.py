@@ -14,13 +14,14 @@ import os
 from navigation_control import NavigationControl
 import cv2
 
-CANVAS_SIDE_LENGTH = 5.0
+INTERVAL = 0.0001
+CANVAS_SIDE_LENGTH = 1.0
 #CANVAS_SIDE_LENGTH = 1.5 * 0.58
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #PADDING_LENGTH = 0.0
 #PADDING_LENGTH = -0.65
-PADDING_LENGTH = -0.30
-VIEWPOINT_DISTANCE = 0.3
+#PADDING_LENGTH = -0.30
+#VIEWPOINT_DISTANCE = 0.3
 
 package_base_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "../.."))
@@ -32,11 +33,12 @@ os.system("mkdir -p " + package_base_path + "/hengel_path_manager/waypnts")
 class PaintLetter():
     def __init__(self):
         print("Length of Canvas Side = " + str(CANVAS_SIDE_LENGTH))
-        print("Length of Padding = " + str(PADDING_LENGTH))
-        print("Distance of Viewpoint = " + str(VIEWPOINT_DISTANCE))
+        #print("Length of Padding = " + str(PADDING_LENGTH))
+        #print("Distance of Viewpoint = " + str(VIEWPOINT_DISTANCE))
         self.arr_path = []
         self.start_point_list = []
         self.end_point_list = []
+        self.end_point_list.append(0)
         # self.arr_keypoint=[]
         self.word = raw_input("Type letters to draw:")
 
@@ -63,11 +65,19 @@ class PaintLetter():
         print("path creation completed")
         print("-----------------------------------------------")
         # print(self.arr_path)
+        cnt_waypoints = 0
         for i in range(len(self.arr_path)):
             for j in range(len(self.arr_path[i])):
+                # print("No. %d Letter" (i))
                 for k in range(len(self.arr_path[i][j])):
-                    pass
-                    #print(str(self.arr_path[i][j][k][0])+" "+str(self.arr_path[i][j][k][1]))
+                    # pass
+                    if cnt_waypoints in self.start_point_list:
+                        print(str(self.arr_path[i][j][k][0])+" "+str(self.arr_path[i][j][k][1])+" "+str(1))
+                    elif cnt_waypoints in self.end_point_list:
+                        print(str(self.arr_path[i][j][k][0])+" "+str(self.arr_path[i][j][k][1])+" "+str(0))
+                    else:
+                        print(str(self.arr_path[i][j][k][0])+" "+str(self.arr_path[i][j][k][1]))
+                    cnt_waypoints += 1
         print("-----------------------------------------------")
         self.run()
 
@@ -113,13 +123,14 @@ class PaintLetter():
                                 _str = line.split()
                                 if not len(_str) == 0:
                                     #letter_path.append([(float)(_str[0])+(float)(letter_index)-(2*(float)(letter_index)-1)*250/1632, 1.0-(float)(_str[1])])
-                                    x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH+float(letter_index)*(CANVAS_SIDE_LENGTH+PADDING_LENGTH))*-1.0
+                                    #x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH+float(letter_index)*(CANVAS_SIDE_LENGTH+PADDING_LENGTH))*-1.0
+                                    x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH+float(letter_index)*(CANVAS_SIDE_LENGTH))*-1.0
                                     y_curr=(1-float(_str[1]))*CANVAS_SIDE_LENGTH+row_index*CANVAS_SIDE_LENGTH
 
                                     dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
                                     #if dist>0.001:
-                                    if dist>0.003:
-                                        div=int(ceil(dist/0.003))
+                                    if dist>INTERVAL:
+                                        div=int(ceil(dist/INTERVAL))
                                         #div=int(ceil(dist/0.001))
                                         for k in range(div):
                                             x=x_last+(k+1)/float(div)*(x_curr-x_last)
@@ -147,7 +158,7 @@ class PaintLetter():
             letter_index = letter_index + 1
 
     def run(self):
-        NavigationControl(self.arr_path, self.start_point_list, self.end_point_list, self.isPositionControl,self.D)
+        NavigationControl(self.arr_path, [], self.start_point_list, self.end_point_list, self.isPositionControl, False, self.D)
 
 
 if __name__ == '__main__':

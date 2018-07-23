@@ -415,7 +415,7 @@ class NavigationControl():
 
                                     #cut off value larger than 230 to 230.
                                     input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
-                                    spray_input = 740.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
+                                    spray_input = 660.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
                                     self.spray_intensity_publisher.publish(spray_input)
 
                             elif self.intensity_option==2:

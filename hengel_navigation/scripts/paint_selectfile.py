@@ -131,7 +131,7 @@ class PaintSelectfile():
 
                         #if self.option_interval==2:
                         dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
-                        if dist>self.interval:
+                        if dist>self.interval*2.0:
                             div=int(ceil(dist/self.interval))
                             for k in range(div):
                                 x=x_last+(k+1)/float(div)*(x_curr-x_last)
