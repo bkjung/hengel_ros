@@ -35,7 +35,7 @@
 // #define DXL_ID_10                       10                  // Dynamixel ID: 10
 // #define DXL_ID_13                       13                  // Dynamixel ID: 10
 #define DXL_ID_10                       1                  // Dynamixel ID: 10
-#define DXL_ID_13                       2                  // Dynamixel ID: 10
+#define DXL_ID_13                       3                  // Dynamixel ID: 10
 #define DXL_ID_254                      254
 #define BAUDRATE                        57600
 #define DEVICENAME                      "/dev/ttyUSB0"      // Check which port is being used on your controller
