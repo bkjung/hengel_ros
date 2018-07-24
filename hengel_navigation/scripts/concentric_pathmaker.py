@@ -13,9 +13,9 @@ class ConcenctricPath():
 
     def run(self):
         CANVAS_SIZE = 4.0
-        WAYPOINT_INTERVAL = 0.003
+        WAYPOINT_INTERVAL = 0.005
         THETA_INTERVAL = 25
-        
+
         # r = np.arange(0, 1.0/2, 0.0000001)
         r = np.arange(0, CANVAS_SIZE/2, 0.0000001)
         list_size = len(r)
@@ -48,25 +48,25 @@ class ConcenctricPath():
 
         # plt.scatter(x,y, s=0.1)
         # # plt.show()
-        # plt.draw()                            
+        # plt.draw()
         # plt.pause(0.1)
 
 
-        img = cv2.imread('/home/bkjung/Dropbox/Path_Workspace/ambidex_gray.jpg',0)
+        img = cv2.imread('/home/hengel/Dropbox/Path_Workspace/ambidex_gray.jpg',0)
         size = img.shape[0], img.shape[1]
         m = np.zeros(size, dtype=np.uint8)
         m.fill(255)
-        
+
 
         # for i in range(len(x)):
             # print("%f  %f" % (x[i], y[i]))
 
         current_time = time.strftime("%y%m%d_%H%M%S")
-        with open("/home/bkjung/"+current_time+"_"+str(WAYPOINT_INTERVAL)+"_"+str(THETA_INTERVAL)+"_concentric.txt", "w") as f:
+        with open("/home/hengel/"+current_time+"_"+str(WAYPOINT_INTERVAL)+"_"+str(THETA_INTERVAL)+"_concentric.txt", "w") as f:
             for i in range(len(x)):
                 x_in_canvas = int(floor(size[0]*x[i]/CANVAS_SIZE))
                 y_in_canvas = int(floor(size[1]*y[i]/CANVAS_SIZE))
-                
+
                 x_in_canvas = int(size[0]) if x_in_canvas>int(size[0]) else x_in_canvas
                 y_in_canvas = int(size[1]) if y_in_canvas>int(size[1]) else y_in_canvas
 
@@ -74,7 +74,7 @@ class ConcenctricPath():
                 f.write("%f  %f  %f\n" % (x[i], y[i], pixel_value))
                 m[x_in_canvas][y_in_canvas] = pixel_value
 
-        cv2.imwrite("/home/bkjung/"+current_time+"_"+str(WAYPOINT_INTERVAL)+"_"+str(THETA_INTERVAL)+"_concentric_paint.jpg", m)
+        cv2.imwrite("/home/hengel/"+current_time+"_"+str(WAYPOINT_INTERVAL)+"_"+str(THETA_INTERVAL)+"_concentric_paint.jpg", m)
         cv2.imshow("image", m);
         cv2.waitKey()
 

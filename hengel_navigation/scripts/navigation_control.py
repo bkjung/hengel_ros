@@ -133,7 +133,8 @@ class NavigationControl():
 
         #test flag bot
         #self.R = 0.11/2 #radius of wheel
-        self.R = 0.12475/2 #radius of wheel
+        self.R = 0.1249/2 #radius of wheel
+        #self.R = 0.12475/2 #radius of wheel    #CORRECT ONE
         #self.R = 0.1237/2 #radius of wheel
         self.L = 0.3544/2 #half of distance btw two wheels
         #self.L = 0.347/2 #half of distance btw two wheels
