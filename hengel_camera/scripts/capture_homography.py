@@ -6,41 +6,77 @@ from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
 
 class Homography:
-    def __init__(self):
-        self.initialize()
-        rospy.Subscriber("/usb_cam1/undistort/compressed", CompressedImage, self.callback)
-        self.pub=rospy.Publisher("/usb_cam1/homography/compressed", CompressedImage, queue_size=1)
-        rospy.spin()
-    
-    def initialize(self):
+    def __init__(self, index, img):
         rospy.init_node('homography', anonymous=True)
         self.bridge=CvBridge()
+        self.pub=rospy.Publisher("/usb_cam1/homography/compressed", CompressedImage, queue_size=1)
+        rospy.spin()
 
-    def callback(self, _img):
+    def callback1(self, _img):
         cv_img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        cv_img=self.homography(cv_img)
+        cv_img=self.homography3(cv_img)
         imgmsg=self.bridge.cv2_to_compressed_imgmsg(cv_img)
         self.pub.publish(imgmsg)
         # cv2.imshow('homography', cv_img)
-        cv2.waitKey(3)        
+        cv2.waitKey(3)
 
+    def callback3(self, _img):
+        cv_img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        cv_img=self.homography3(cv_img)
+        imgmsg=self.bridge.cv2_to_compressed_imgmsg(cv_img)
+        self.pub.publish(imgmsg)
+        # cv2.imshow('homography', cv_img)
+        cv2.waitKey(3)
 
-    def homography(self, _img):
+    def homography1(self, _img):
         objPts=np.zeros((20,2), dtype=np.float32)
-        objPts=[[80,480],[240,480],[400,480],[560,480],[720,480],[880,480],
-        [1040,480],[240,640],[400,640],[560,640],[720,640],[880,640],[1040,640],[400,800],[560,800],[720,800],[880,800],[560,960],[720,960]]
+        objPts=[]
+        objPts=[point_r[1]objPts = [point_r[1]*(-5.0)+640.0, point_r[2]*(-5.0)+640.0] for point_r in robotPts ]
         objPts=np.array(objPts, np.float32)
 
         imgPts=np.zeros((20,2), dtype=np.float32)
-        imgPts=[[13,368],[202.8,351.2],[384.8,339.8],[566.3,323.6],[749.5,307.5],
-        [933,289],[1112,274],[61.4,436.6],[307,418.5],[545.5,397.5],[787.1,376.6],[1025,354],[1263,335],[157.5,570.5],[504.7,540],[855.8,501.9],[1199,481],[389.6,912.9],[1034, 865]]
+        imgPts=[]
         imgPts=np.array(imgPts, np.float32)
 
         homography, status=cv2.findHomography(imgPts, objPts)
-        
+
         return cv2.warpPerspective(_img, homography, (1280, 960))
 
+    def homography3(self, _img):
+        objPts=np.zeros((23,2), dtype=np.float32)
+        robotPts=[[15,-30], [5,-30],[-5,-30],[-15,-30],[-25,-30],[-35,-30],[-45,-30],
+                [35,-40],[25,-40],[15,-40],[5,-40],[-5,-40],[-15, -40],[-25,-40],[-35,-40],[-45,-40],
+                [25,-50],[15,-50],[5,-50],[-5,-50],[-45,-50]]
+        objPts = [point_r[1]*(-5.0)+640.0, point_r[2]*(-5.0)+640.0] for point_r in robotPts ]
+        objPts=np.array(objPts, np.float32)
 
+        imgPts=np.zeros((23,2), dtype=np.float32)
+        imgPts=[[199.8, 550.2], [297,549],[395.5,548],[495.7,548.1],[594.8,547.1],[692.9,545.1],[783.6,542.1],
+            [62,464],[142.2,463.8],[225.2,463.2],[308.2,462],[392.5,461.2],[476.9,459.6],[562, 460],[647, 459],[729.8, 457.8],
+            [171.2,399.2], [244,398],[316.5,398],[388.5, 345.7],[650.9,343.1]]
+        imgPts=np.array(imgPts, np.float32)
 
-if __name__=="__main__":
-    Homography()
+        homography, status=cv2.findHomography(imgPts, objPts)
+
+        return cv2.warpPerspective(_img, homography, (1280, 1280))
+
+    def homography4(self, _img):
+        objPts=np.zeros((23,2), dtype=np.float32)
+        robotPts=[[20,25],[20,15],
+                [25,20],[25,0],[25,-20],[25,-40],
+                [45,20],[45,0],[45,20],[45,40],[45,60],
+                [50,45]]
+        objPts = [point_r[1]*(-5.0)+640.0, point_r[2]*(-5.0)+640.0] for point_r in robotPts ]
+        objPts=np.array(objPts, np.float32)
+
+        imgPts=np.zeros((23,2), dtype=np.float32)
+        imgPts=[[96.2,522],[197,524],
+                [166,471], [357.4,473.4],[549,475.6],[733.7, 474.7],
+                [222,326],[366,327],[510,329],[652,330],[786,331],
+                [65.6,299]]
+        imgPts=np.array(imgPts, np.float32)
+
+        homography, status=cv2.findHomography(imgPts, objPts)
+
+        return cv2.warpPerspective(_img, homography, (1280, 1280))
+
