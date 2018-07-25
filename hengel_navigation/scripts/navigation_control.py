@@ -24,17 +24,7 @@ import cv_bridge
 import logging
 import matplotlib.pyplot as plt
 
-#2480 is too large, so that it hits the ground and the valve_control while loop does not end.
-#MARKER_DOWN = 2480
-#MARKER_DOWN = 2460
-#MARKER_DOWN = 2430
-
-#Due to wheel height change
-#MARKER_DOWN = 3790
-#MARKER_DOWN = 3700
-MARKER_DOWN = 3900
-#MARKER_UP = 3200
-MARKER_UP = 3270
+SPRAY_OFF = 1024
 
 scale_factor = 3  #[pixel/cm]
 robot_size = 15  #[cm]; diameter
@@ -152,7 +142,7 @@ class NavigationControl():
         self.valve_operation_mode.mode = 1
         self.valve_angle_input = ValveInput()
 
-        self.valve_status = MARKER_UP
+        self.valve_status = SPRAY_OFF
 
         self.dt = 0.02  # [s]
         self.r = rospy.Rate(1.0/self.dt)
@@ -966,7 +956,7 @@ class NavigationControl():
 
     def quit_valve(self):
         for ind_quit in range(50):
-            self.valve_angle_input.goal_position = MARKER_UP
+            self.valve_angle_input.goal_position = SPRAY_OFF
             self.valve_angle_publisher.publish(self.valve_angle_input)
 
             ind_quit = ind_quit + 1
