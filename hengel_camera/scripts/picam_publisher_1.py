@@ -2,14 +2,14 @@
 import rospy
 import io
 import time
-import picamera
-import picamera.array
+#import picamera
+#import picamera.array
 import cv2
 import numpy as numpy
 from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
 
-package="/home/turtleberry/catkin_ws/src/hengel_ros/hengel_camera/"
+package="/home/mjlee/catkin_ws/src/hengel_ros/hengel_camera/"
 if __name__=='__main__':
 	rospy.init_node('genius_publisher_2', anonymous=True)
 	pub = rospy.Publisher('/genius1/compressed', CompressedImage, queue_size=1)
@@ -34,13 +34,13 @@ if __name__=='__main__':
     	    ## camera.shutter_speed=6000000
     	    ## camera.exposure_mode='off'
     	    ## camera.iso=800
-    
+
     	    #	camera.start_preview()
     	    #	time.sleep(2)
     	    #	with picamera.array.PiRGBArray(camera) as stream:
     	    #		camera.capture(stream, format='bgr')
     	    #		image=stream.array
-    
+
     	    #		bridge=CvBridge()
     	    #		msg=bridge.cv2_to_compressed_imgmsg(image)
     	    #		pub.publish(msg)
