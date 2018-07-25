@@ -21,7 +21,7 @@ class Undistort():
 
         # self.ts=message_filters.TimeSynchronizer([self.callback_undistort1, self.callback_undistort2, self.callback_undistort3, self.callback_undistort4], 10)
         # ts.registerCallback(self.callback)
-            
+
     def callback_undistort1(self,_img):
         try:
             print("SUBSCRIBE-1")
@@ -99,7 +99,7 @@ class Undistort():
                 cv2.imwrite('homo4.png', homoImg)
             else:
                 print("Image4 is None")
-    
+
     def homography_matrix(self, _img, index):
         robotPtsArr=[]
         robotPtsArr.append([[0,25], [10,25], [20,25], [25,20], [-10,45], [-30,45], [-10,65], [-20,65], [-60,65], [20,45]])
@@ -111,11 +111,10 @@ class Undistort():
                 [25,20],[25,0],[25,-20],[25,-40],
                 [45,20],[45,0],[45,20],[45,40],[45,60],
                 [50,45]])
-        
-        objPts = [[[point_r[0]*(-5.0)+640.0, point_r[1]*(-5.0)+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
-        objPts=np.array(objPts, np.float32)
 
-        imgPtsArr.append([[419.5,478.5], [516.5,480.5], [614.4,482.6], [684.4, 535.8], [340.7,327.3], 
+        objPts = [[[point_r[0]*(-5.0)+640.0, point_r[1]*(-5.0)+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
+
+        imgPtsArr.append([[419.5,478.5], [516.5,480.5], [614.4,482.6], [684.4, 535.8], [340.7,327.3],
         [194.7,323.0], [351.0,236.7], [293.7,236.0], [61.7,232.0], [560.7,333.7]])
         imgPtsArr.append([[616.0,319.7], [598.0,278.0], [748.0, 320.2], [216.5,401.8], [65.8,401.8], [565.0, 370.0]])
         imgPtsArr.append([[199.8, 550.2], [297,549],[395.5,548],[495.7,548.1],[594.8,547.1],[692.9,545.1],[783.6,542.1],
@@ -125,9 +124,8 @@ class Undistort():
                 [166,471], [357.4,473.4],[549,475.6],[733.7, 474.7],
                 [222,326],[366,327],[510,329],[652,330],[786,331],
                 [65.6,299]])
-        imgPts=np.array(imgPtsArr, np.float32)
 
-        homography, status=cv2.findHomography(imgPts[index-1], objPts[index-1])
+        homography, status=cv2.findHomography(np.array(imgPtsArr[index-1]), np.array(objPts[index-1],np.float32))
 
         return cv2.warpPerspective(_img, homography, (1280, 1280))
 
