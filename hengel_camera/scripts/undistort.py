@@ -10,10 +10,10 @@ class Undistort():
     def __init__(self):
         rospy.init_node('undistortion', anonymous=True)
 
-        rospy.Subscriber('/wide_cam_1/image_raw/compressed', CompressedImage, self.callback_undistort1)
-        rospy.Subscriber('/wide_cam_2/image_raw/compressed', CompressedImage, self.callback_undistort2)
-        rospy.Subscriber('/wide_cam_3/image_raw/compressed', CompressedImage, self.callback_undistort3)
-        rospy.Subscriber('/wide_cam_4/image_raw/compressed', CompressedImage, self.callback_undistort4)
+        rospy.Subscriber('/genius1/compressed', CompressedImage, self.callback_undistort1)
+        rospy.Subscriber('/genius2/compressed', CompressedImage, self.callback_undistort2)
+        rospy.Subscriber('/genius3/compressed', CompressedImage, self.callback_undistort3)
+        rospy.Subscriber('/genius4/compressed', CompressedImage, self.callback_undistort4)
         rospy.spin()
         # self.cameraInfoSubscriber=rospy.Subscriber('/usb_cam/camera_info',CameraInfo, self.callback_info)
     #    self.undistImgPublisher=rospy.Publisher('/undist_img/image_raw',Image, queue_size=3)
@@ -27,9 +27,10 @@ class Undistort():
             print(rawimg.shape)
         except CvBridgeError as e:
             print(e)
-        mtx=[[329.446963, 0, 315.383397],[0, 328.784203, 239.504433], [0,0,1]]
+        mtx=[[392.457559, 0, 307.489055],[0, 393.146087, 314.555479], [0,0,1]]
+        #mtx=[[329.446963, 0, 315.383397],[0, 328.784203, 239.504433], [0,0,1]]
         mtx=np.array(mtx)
-        dst=[-0.282543, 0.0585483, 0.00022407, -0.00044064]
+        dst=[-0.005695, -0.017562, -0.000497, 0.001201]
         dst=np.array(dst)
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
@@ -48,9 +49,9 @@ class Undistort():
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
         except CvBridgeError as e:
             print(e)
-        mtx=[[334.573338, 0, 313.382623],[0, 335.061739, 243.157640], [0,0,1]]
+        mtx=[[397.515439, 0, 427.319496], [0, 396.393346, 359.074317],[0,0,1]]
         mtx=np.array(mtx)
-        dst=[-0.252637, 0.042737, -0.000955, -0.002136]
+        dst=[0.008050, -0.019082, 0.002712, 0.009123]
         dst=np.array(dst)
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
@@ -68,9 +69,9 @@ class Undistort():
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
         except CvBridgeError as e:
             print(e)
-        mtx=[[329.799706, 0, 317.902481], [0, 328.339702, 232.650023], [0,0,1]]
+        mtx=[[389.940243, 0, 366.042362],[0, 389.110547, 376.957547],[0,0,1]]
         mtx=np.array(mtx)
-        dst=[-0.276948, 0.054472, -0.001206, -0.000234]
+        dst=[0.001656, -0.022658, 0.005813, -0.003150]
         dst=np.array(dst)
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
@@ -88,9 +89,9 @@ class Undistort():
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
         except CvBridgeError as e:
             print(e)
-        mtx=[[329.825798, 0, 312.223260],[0, 328.056018, 243.581446], [0,0,1]]
+        mtx=[[373.550865, 0, 385.121920],[0, 373.744498, 317.403774], [0,0,1]]
         mtx=np.array(mtx)
-        dst=[-0.279630, 0.058004, -0.000491, -0.000337]
+        dst=[-0.018599, -0.009035, 0.001095, -0.004048]
         dst=np.array(dst)
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
