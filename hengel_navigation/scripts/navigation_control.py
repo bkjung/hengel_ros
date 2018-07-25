@@ -423,15 +423,17 @@ class NavigationControl():
                                     self.valve_angle_publisher.publish(self.valve_angle_input)
 
                             elif self.intensity_option==2:
-                                if self.is_moving_between_segments==True:
-                                    # self.spray_intensity_publisher.publish(1024.0)
-                                    self.valve_angle_input.goal_position = 1024
-                                    self.valve_angle_publisher.publish(self.valve_angle_input)
-                                else:
-                                    #self.spray_intensity_publisher.publish(660.0)
-                                    # self.spray_intensity_publisher.publish(740.0)
-                                    self.valve_angle_input.goal_position = 740
-                                    self.valve_angle_publisher.publish(self.valve_angle_input)
+                                self.valve_angle_input.goal_position = 740
+                                self.valve_angle_publisher.publish(self.valve_angle_input)
+                                #if self.is_moving_between_segments==True:
+                                #    # self.spray_intensity_publisher.publish(1024.0)
+                                #    self.valve_angle_input.goal_position = 1024
+                                #    self.valve_angle_publisher.publish(self.valve_angle_input)
+                                #else:
+                                #    #self.spray_intensity_publisher.publish(660.0)
+                                #    # self.spray_intensity_publisher.publish(740.0)
+                                #    self.valve_angle_input.goal_position = 740
+                                #    self.valve_angle_publisher.publish(self.valve_angle_input)
 
                             # elif self.intensity_option==3:
 
