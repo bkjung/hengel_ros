@@ -5,6 +5,8 @@ import numpy as np
 from sensor_msgs.msg import Image, CameraInfo, CompressedImage
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
+import message_filters
+
 
 class Undistort():
     def __init__(self):
@@ -15,10 +17,11 @@ class Undistort():
         rospy.Subscriber('/genius3/compressed', CompressedImage, self.callback_undistort3)
         rospy.Subscriber('/genius4/compressed', CompressedImage, self.callback_undistort4)
         rospy.spin()
-        # self.cameraInfoSubscriber=rospy.Subscriber('/usb_cam/camera_info',CameraInfo, self.callback_info)
-    #    self.undistImgPublisher=rospy.Publisher('/undist_img/image_raw',Image, queue_size=3)
         self.rate=rospy.Rate(10)
 
+        # self.ts=message_filters.TimeSynchronizer([self.callback_undistort1, self.callback_undistort2, self.callback_undistort3, self.callback_undistort4], 10)
+        # ts.registerCallback(self.callback)
+            
     def callback_undistort1(self,_img):
         try:
             print("SUBSCRIBE-1")
@@ -35,10 +38,8 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
-                # cv2.imshow('raw_img', rawimg)
-                cv2.imshow('undist_img_1', undistImg)
-                cv2.imwrite('undist_img_1_1.png', undistImg)
-                cv2.waitKey(3)
+                homoImg=self.homography_matrix(undistImg,1)
+                cv2.imwrite('homo1.png', homoImg)
             else:
                 print("Image1 is None")
 
@@ -56,9 +57,8 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
-                # cv2.imshow('raw_img', rawimg)
-                # cv2.imshow('undist_img_2', undistImg)
-                cv2.waitKey(3)
+                homoImg=self.homography_matrix(undistImg, 2)
+                cv2.imwrite('homo2.png', homoImg)
             else:
                 print("Image2 is None")
 
@@ -76,9 +76,8 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
-                # cv2.imshow('raw_img', rawimg)
-                # cv2.imshow('undist_img_3', undistImg)
-                cv2.waitKey(3)
+                homoImg=self.homography_matrix(undistImg, 3)
+                cv2.imwrite('homo3.png', homoImg)
             else:
                 print("Image3 is None")
 
@@ -96,11 +95,41 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
-                # cv2.imshow('raw_img', rawimg)
-                # cv2.imshow('undist_img_4', undistImg)
-                cv2.waitKey(3)
+                homoImg=self.homography_matrix(undistImg, 4)
+                cv2.imwrite('homo4.png', homoImg)
             else:
                 print("Image4 is None")
+    
+    def homography_matrix(self, _img, index):
+        robotPtsArr=[]
+        robotPtsArr.append([[0,25], [10,25], [20,25], [25,20], [-10,45], [-30,45], [-10,65], [-20,65], [-60,65], [20,45]])
+        robotPtsArr.append([[-60,25], [-70,25], [-60,45], [-45,-30], [-45,-50], [-50,15]])
+        robotPtsArr.append([[15,-30], [5,-30],[-5,-30],[-15,-30],[-25,-30],[-35,-30],[-45,-30],
+                [35,-40],[25,-40],[15,-40],[5,-40],[-5,-40],[-15, -40],[-25,-40],[-35,-40],[-45,-40],
+                [25,-50],[15,-50],[5,-50],[-5,-50],[-45,-50]])
+        robotPtsArr.append([[20,25],[20,15],
+                [25,20],[25,0],[25,-20],[25,-40],
+                [45,20],[45,0],[45,20],[45,40],[45,60],
+                [50,45]])
+        
+        objPts = [[[point_r[0]*(-5.0)+640.0, point_r[1]*(-5.0)+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
+        objPts=np.array(objPts, np.float32)
+
+        imgPtsArr.append([[419.5,478.5], [516.5,480.5], [614.4,482.6], [684.4, 535.8], [340.7,327.3], 
+        [194.7,323.0], [351.0,236.7], [293.7,236.0], [61.7,232.0], [560.7,333.7]])
+        imgPtsArr.append([[616.0,319.7], [598.0,278.0], [748.0, 320.2], [216.5,401.8], [65.8,401.8], [565.0, 370.0]])
+        imgPtsArr.append([[199.8, 550.2], [297,549],[395.5,548],[495.7,548.1],[594.8,547.1],[692.9,545.1],[783.6,542.1],
+            [62,464],[142.2,463.8],[225.2,463.2],[308.2,462],[392.5,461.2],[476.9,459.6],[562, 460],[647, 459],[729.8, 457.8],
+            [171.2,399.2], [244,398],[316.5,398],[388.5, 345.7],[650.9,343.1]])
+        imgPtsArr.append([[96.2,522],[197,524],
+                [166,471], [357.4,473.4],[549,475.6],[733.7, 474.7],
+                [222,326],[366,327],[510,329],[652,330],[786,331],
+                [65.6,299]])
+        imgPts=np.array(imgPtsArr, np.float32)
+
+        homography, status=cv2.findHomography(imgPts[index-1], objPts[index-1])
+
+        return cv2.warpPerspective(_img, homography, (1280, 1280))
 
 
 if __name__=="__main__":
