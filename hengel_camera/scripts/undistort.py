@@ -12,15 +12,28 @@ class Undistort():
     def __init__(self):
         rospy.init_node('undistortion', anonymous=True)
 
-        rospy.Subscriber('/genius1/compressed', CompressedImage, self.callback_undistort1)
-        rospy.Subscriber('/genius2/compressed', CompressedImage, self.callback_undistort2)
-        rospy.Subscriber('/genius3/compressed', CompressedImage, self.callback_undistort3)
-        rospy.Subscriber('/genius4/compressed', CompressedImage, self.callback_undistort4)
-        rospy.spin()
+        # rospy.Subscriber('/genius1/compressed', CompressedImage, self.callback_undistort1)
+        # rospy.Subscriber('/genius2/compressed', CompressedImage, self.callback_undistort2)
+        # rospy.Subscriber('/genius3/compressed', CompressedImage, self.callback_undistort3)
+        # rospy.Subscriber('/genius4/compressed', CompressedImage, self.callback_undistort4)
+        # rospy.spin()
+
         self.rate=rospy.Rate(10)
 
-        # self.ts=message_filters.TimeSynchronizer([self.callback_undistort1, self.callback_undistort2, self.callback_undistort3, self.callback_undistort4], 10)
-        # ts.registerCallback(self.callback)
+        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback_undistort1, self.callback_undistort2, self.callback_undistort3, self.callback_undistort4], 10, 0.1, allow_headerless=True)
+        self.ts.registerCallback(self.sync_callback)
+        rospy.spin()
+
+    def sync_callback(self, _img1, _img2, _img3, _img4):
+        img1=callback_undistort1(_img1)
+        img2=callback_undistort1(_img2)
+        img3=callback_undistort1(_img3)
+        img4=callback_undistort1(_img4)
+        cv2.imwrite('homo1.png',img1)
+        cv2.imwrite('homo2.png',img2)
+        cv2.imwrite('homo3.png',img3)
+        cv2.imwrite('homo4.png',img4)
+
 
     def callback_undistort1(self,_img):
         try:
@@ -39,7 +52,8 @@ class Undistort():
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
                 homoImg=self.homography_matrix(undistImg,1)
-                cv2.imwrite('homo1.png', homoImg)
+                # cv2.imwrite('homo1.png', homoImg)
+                return homoImg
             else:
                 print("Image1 is None")
 
@@ -58,7 +72,8 @@ class Undistort():
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
                 homoImg=self.homography_matrix(undistImg, 2)
-                cv2.imwrite('homo2.png', homoImg)
+                # cv2.imwrite('homo2.png', homoImg)
+                return homoImg
             else:
                 print("Image2 is None")
 
@@ -77,7 +92,8 @@ class Undistort():
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
                 homoImg=self.homography_matrix(undistImg, 3)
-                cv2.imwrite('homo3.png', homoImg)
+                # cv2.imwrite('homo3.png', homoImg)
+                return homoImg
             else:
                 print("Image3 is None")
 
@@ -96,7 +112,8 @@ class Undistort():
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
                 homoImg=self.homography_matrix(undistImg, 4)
-                cv2.imwrite('homo4.png', homoImg)
+                # cv2.imwrite('homo4.png', homoImg)
+                return homoImg
             else:
                 print("Image4 is None")
 
