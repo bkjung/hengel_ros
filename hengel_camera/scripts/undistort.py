@@ -3,6 +3,7 @@
 import rospy
 import numpy as np
 from sensor_msgs.msg import Image, CameraInfo, CompressedImage
+from std_msgs.msg import Bool
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
 import message_filters
@@ -13,15 +14,11 @@ class Undistort():
     def __init__(self):
         rospy.init_node('undistortion', anonymous=True)
 
-        # rospy.Subscriber('/genius1/compressed', CompressedImage, self.callback_undistort1)
-        # rospy.Subscriber('/genius2/compressed', CompressedImage, self.callback_undistort2)
-        # rospy.Subscriber('/genius3/compressed', CompressedImage, self.callback_undistort3)
-        # rospy.Subscriber('/genius4/compressed', CompressedImage, self.callback_undistort4)
-        # rospy.spin()
-
+        self.is_initiated=False
         self.sum_pub=rospy.Publisher('/summed_image/compressed', CompressedImage, queue_size=3)
-
+        self.cam_activator_pub=rospy.Publisher('/initiator', Bool, queue_size=1)
         self.rate=rospy.Rate(10)
+
 
         self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
         self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
@@ -30,9 +27,19 @@ class Undistort():
 
         self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10, 0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_callback)
+
+        self.initiate_camera()
         rospy.spin()
+    
+    def initiate_camera(self):
+        while not self.is_initiated:
+            msg=Bool()
+            msg.data=True
+            self.cam_activator_pub.publish(msg)   
+
 
     def sync_callback(self, _img1, _img2, _img3, _img4):
+        self.is_initiated=True
         img1,time1=self.callback_undistort1(_img1)
         img2,time2=self.callback_undistort2(_img2)
         img3,time3=self.callback_undistort3(_img3)
