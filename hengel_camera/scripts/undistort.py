@@ -6,6 +6,7 @@ from sensor_msgs.msg import Image, CameraInfo, CompressedImage
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
 import message_filters
+import time
 
 
 class Undistort():
@@ -20,20 +21,48 @@ class Undistort():
 
         self.rate=rospy.Rate(10)
 
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback_undistort1, self.callback_undistort2, self.callback_undistort3, self.callback_undistort4], 10, 0.1, allow_headerless=True)
+        self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
+        self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
+        self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
+        self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
+
+        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10, 0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_callback)
         rospy.spin()
 
     def sync_callback(self, _img1, _img2, _img3, _img4):
-        img1=callback_undistort1(_img1)
-        img2=callback_undistort1(_img2)
-        img3=callback_undistort1(_img3)
-        img4=callback_undistort1(_img4)
-        cv2.imwrite('homo1.png',img1)
-        cv2.imwrite('homo2.png',img2)
-        cv2.imwrite('homo3.png',img3)
-        cv2.imwrite('homo4.png',img4)
+        img1=self.callback_undistort1(_img1)
+        img2=self.callback_undistort2(_img2)
+        img3=self.callback_undistort3(_img3)
+        img4=self.callback_undistort4(_img4)
 
+        im_mask_inv1, im_mask1=self.find_mask(img1)
+        im_mask_inv3, im_mask3=self.find_mask(img3)
+        print("inv: "+str(im_mask_inv1.shape))
+        print("mask: "+str(im_mask1.shape))
+
+
+        img1_masked=np.multiply(img1, im_mask_inv1)
+        img2_masked=np.multiply(np.multiply(img2, im_mask1), im_mask3)
+        img3_masked=np.multiply(img3, im_mask_inv3)
+        img4_masked=np.multiply(np.multiply(img4, im_mask1), im_mask3)
+
+        summed_image= img1_masked+img2_masked+img3_masked+img4_masked
+
+        cv2.imshow('summed.png', summed_image)
+        cv2.waitKey(3)
+
+        #cv2.imwrite('homo1.png',img1)
+        #cv2.imwrite('homo2.png',img2)
+        #cv2.imwrite('homo3.png',img3)
+        #cv2.imwrite('homo4.png',img4)
+
+    def find_mask(self, img):
+        black_range1=np.array([0,0,0])
+        im_mask=(cv2.inRange(img, black_range1, black_range1)).astype('bool')
+        im_mask=np.dstack((im_mask, im_mask, im_mask))
+        im_mask_inv=(1-im_mask).astype('bool')
+        return im_mask_inv, im_mask
 
     def callback_undistort1(self,_img):
         try:
@@ -131,7 +160,7 @@ class Undistort():
                 [50,45]
                 ])
 
-        objPts = [[[point_r[0]*(-5.0)+640.0, point_r[1]*(-5.0)+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
+        objPts = [[[point_r[1]*(-5.0)+640.0, point_r[0]*(-5.0)+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
 
         imgPtsArr=[]
         imgPtsArr.append([[614.2, 483],[516.8,480.2],[487.5,331.3],[414,329.3],[419.3,478.5],[340.5,326.7],[352.2,237.8],[194.4,323.5],[684.6,536]])
