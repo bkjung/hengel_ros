@@ -8,13 +8,14 @@ import os
 import time
 import rospy
 
-length_side = 1000
-size_x = 1000
-size_y = 1080
+# length_side = 1000
+length_side = 3000
+size_x = length_side
+size_y = length_side + 80
 
 #CANVAS_LENGTH=6
-dist = 4 #dist= 24/CANVAS_LENGTH
-radius = 2
+dist_threshold = 1/length_side #dist= 24/CANVAS_LENGTH
+radius = 1
 
 package_base_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../.."))
@@ -95,12 +96,15 @@ class PathMaker():
     def path_append(self, x, y):
         if self.isFirst == True:
             self.path_drawing.append([x, y])
+            print("first point added")
             self.isFirst = False
         else:
             last_x, last_y = self.path_drawing[-1]
-            if sqrt(pow(last_x - x, 2) + pow(last_y - y, 2)) > dist:
+            dist = sqrt(pow(last_x - x, 2) + pow(last_y - y, 2))
+            # print(dist)
+            if dist > dist_threshold:
                 self.path_drawing.append([x, y])
-                print(x, y)
+                print(str(x)+" "+str(y))
 
     def command_drawing(self):
         if self.button_draw.config('relief')[-1] == 'sunken':
@@ -116,8 +120,12 @@ class PathMaker():
             "%y%m%d_%H%M%S") + ".txt"
         f = open(self.file_path, 'w')
         for i in range(1, len(self.path_drawing)):
-            data = str(self.path_drawing[i][0]) + "  " + str(
-                self.path_drawing[i][1]) + "\n"
+            if i in self.draw_start_index:
+                data = str(self.path_drawing[i][0]) + "  " + str(self.path_drawing[i][1]) + " " + str(1) + "\n"
+            elif (i+1) in self.draw_start_index:
+                data = str(self.path_drawing[i][0]) + "  " + str(self.path_drawing[i][1]) + " " + str(0) + "\n"
+            else:
+                data = str(self.path_drawing[i][0]) + "  " + str(self.path_drawing[i][1]) + "\n"
             f.write(data)
         f.close()
         print("path saved at " + self.file_path)

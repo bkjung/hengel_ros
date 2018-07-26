@@ -32,8 +32,10 @@
 #define PROTOCOL_VERSION                2.0                 // See which protocol version is used in the Dynamixel
 
 // Default setting
-#define DXL_ID_10                       10                  // Dynamixel ID: 10
-#define DXL_ID_13                       13                  // Dynamixel ID: 10
+// #define DXL_ID_10                       10                  // Dynamixel ID: 10
+// #define DXL_ID_13                       13                  // Dynamixel ID: 10
+#define DXL_ID_10                       1                  // Dynamixel ID: 10
+#define DXL_ID_13                       3                  // Dynamixel ID: 10
 #define DXL_ID_254                      254
 #define BAUDRATE                        57600
 #define DEVICENAME                      "/dev/ttyUSB0"      // Check which port is being used on your controller
@@ -54,7 +56,8 @@
 
 #define VALVE_OPEN                      3900
 //int GOAL_POSITION = 3200;
-int GOAL_POSITION = 3270;
+// int GOAL_POSITION = 3270;
+int GOAL_POSITION = 1024;
 int MODE = 1;
 int SHUTDOWN = 0;
 bool RECEIVED_MSG = false;
@@ -216,18 +219,21 @@ int main(int argc, char **argv)
     if (SHUTDOWN != 0)
     {
       // Close valve
-      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 3200, &dxl_error);
-      do
-      {
-        dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
-        printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
+      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 1024, &dxl_error);
 
-        //if (RECEIVED_MSG == true)
-        //{
-        //    RECEIVED_MSG = false;
-        //    break;
-        //}
-      } while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD) && ros::ok());
+      dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+      printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
+      // do
+      // {
+      //   dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+      //   printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
+
+      //   //if (RECEIVED_MSG == true)
+      //   //{
+      //   //    RECEIVED_MSG = false;
+      //   //    break;
+      //   //}
+      // } while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD) && ros::ok());
 
       // Disable torque
       dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, DXL_ID_254, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
@@ -258,23 +264,27 @@ int main(int argc, char **argv)
       //   printf("%s\n", packetHandler->getRxPacketError(dxl_error));
       // }
       // printf("write goal position done\n");
-      do
-      {
-        // Read present position
-        dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
-        // if (dxl_comm_result != COMM_SUCCESS)
-        // {
-        //   printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
-        // }
-        // else if (dxl_error != 0)
-        // {
-        //   printf("%s\n", packetHandler->getRxPacketError(dxl_error));
-        // }
 
-        printf("continuous mode\n");
-        printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, valve_open, dxl_present_position);
 
-      }while((abs(valve_open - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD));
+      printf("continuous mode\n");
+      printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, valve_open, dxl_present_position);      
+      // do
+      // {
+      //   // Read present position
+      //   dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+      //   // if (dxl_comm_result != COMM_SUCCESS)
+      //   // {
+      //   //   printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
+      //   // }
+      //   // else if (dxl_error != 0)
+      //   // {
+      //   //   printf("%s\n", packetHandler->getRxPacketError(dxl_error));
+      //   // }
+
+      //   printf("continuous mode\n");
+      //   printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, valve_open, dxl_present_position);
+
+      // }while((abs(valve_open - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD));
     }
     else
     {
@@ -288,23 +298,28 @@ int main(int argc, char **argv)
       //   printf("%s\n", packetHandler->getRxPacketError(dxl_error));
       // }
       // printf("write goal position done\n");
-      do
-      {
-        // Read present position
-        dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
-        // if (dxl_comm_result != COMM_SUCCESS)
-        // {
-        //   printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
-        // }
-        // else if (dxl_error != 0)
-        // {
-        //   printf("%s\n", packetHandler->getRxPacketError(dxl_error));
-        // }
 
-        printf("discrete mode\n");
-        printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
 
-      }while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD));
+      dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);      
+      printf("discrete mode\n");
+      printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
+      // do
+      // {
+      //   // Read present position
+      //   dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+      //   // if (dxl_comm_result != COMM_SUCCESS)
+      //   // {
+      //   //   printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
+      //   // }
+      //   // else if (dxl_error != 0)
+      //   // {
+      //   //   printf("%s\n", packetHandler->getRxPacketError(dxl_error));
+      //   // }
+
+      //   printf("discrete mode\n");
+      //   printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
+
+      // }while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD));
     }
 
     // publish present position
@@ -317,12 +332,14 @@ int main(int argc, char **argv)
   }
 
   // Close valve
-  dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 3200, &dxl_error);
-  
-  {
-    dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
-    printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
-  } while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD));
+  dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 00, &dxl_error);
+
+  dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+  printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);  
+  // {
+  //   dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+  //   printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
+  // } while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD));
 
   // Disable Dynamixel Torque
   dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, DXL_ID_254, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
