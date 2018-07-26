@@ -30,36 +30,40 @@ class Undistort():
 
         self.initiate_camera()
         rospy.spin()
-    
+
     def initiate_camera(self):
         while not self.is_initiated:
             msg=Bool()
             msg.data=True
-            self.cam_activator_pub.publish(msg)   
+            self.cam_activator_pub.publish(msg)
 
 
     def sync_callback(self, _img1, _img2, _img3, _img4):
+        _time=time.time()
         self.is_initiated=True
         img1,time1=self.callback_undistort1(_img1)
         img2,time2=self.callback_undistort2(_img2)
         img3,time3=self.callback_undistort3(_img3)
         img4,time4=self.callback_undistort4(_img4)
-
+        print("1: "+str(time.time()-_time))
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
-
+        print("2: "+str(time.time()-_time))
 
         img1_masked=np.multiply(img1, im_mask_inv1)
         img2_masked=np.multiply(np.multiply(img2, im_mask1), im_mask3)
+        print("3: "+str(time.time()-_time))
         img3_masked=np.multiply(img3, im_mask_inv3)
         img4_masked=np.multiply(np.multiply(img4, im_mask1), im_mask3)
 
         summed_image= img1_masked+img2_masked+img3_masked+img4_masked
+        print("4: "+str(time.time()-_time))
 
         #cv2.imshow('summed.png', summed_image)
         #cv2.waitKey(3)
         bridge=CvBridge()
         summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
+        print("5: "+str(time.time()-_time))
         self.sum_pub.publish(summed_msg)
         print("img1: "+str(time1)+", img2: "+str(time2-time1)+", img3: "+str(time3-time1)+", img4: "+str(time4-time1)+", summ: "+str(time.time()-time1))
 
@@ -69,10 +73,16 @@ class Undistort():
         #cv2.imwrite('homo4.png',img4)
 
     def find_mask(self, img):
+        _time=time.time()
         black_range1=np.array([0,0,0])
+        time1=time.time()-_time
         im_mask=(cv2.inRange(img, black_range1, black_range1)).astype('bool')
+        time2=time.time()-_time
         im_mask=np.dstack((im_mask, im_mask, im_mask))
+        time3=time.time()-_time
         im_mask_inv=(1-im_mask).astype('bool')
+        time4=time.time()-_time
+        print("1: "+str(time1)+", 2:"+str(time2)+", 3:"+str(time3)+", 4:"+str(time4))
         return im_mask_inv, im_mask
 
     def callback_undistort1(self,_img):
