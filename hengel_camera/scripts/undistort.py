@@ -19,6 +19,8 @@ class Undistort():
         # rospy.Subscriber('/genius4/compressed', CompressedImage, self.callback_undistort4)
         # rospy.spin()
 
+        self.sum_pub=rospy.Publisher('/summed_image/compressed', CompressedImage, queue_size=3)
+
         self.rate=rospy.Rate(10)
 
         self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
@@ -31,15 +33,13 @@ class Undistort():
         rospy.spin()
 
     def sync_callback(self, _img1, _img2, _img3, _img4):
-        img1=self.callback_undistort1(_img1)
-        img2=self.callback_undistort2(_img2)
-        img3=self.callback_undistort3(_img3)
-        img4=self.callback_undistort4(_img4)
+        img1,time1=self.callback_undistort1(_img1)
+        img2,time2=self.callback_undistort2(_img2)
+        img3,time3=self.callback_undistort3(_img3)
+        img4,time4=self.callback_undistort4(_img4)
 
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
-        print("inv: "+str(im_mask_inv1.shape))
-        print("mask: "+str(im_mask1.shape))
 
 
         img1_masked=np.multiply(img1, im_mask_inv1)
@@ -49,8 +49,12 @@ class Undistort():
 
         summed_image= img1_masked+img2_masked+img3_masked+img4_masked
 
-        cv2.imshow('summed.png', summed_image)
-        cv2.waitKey(3)
+        #cv2.imshow('summed.png', summed_image)
+        #cv2.waitKey(3)
+        bridge=CvBridge()
+        summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
+        self.sum_pub.publish(summed_msg)
+        print("img1: "+str(time1)+", img2: "+str(time2-time1)+", img3: "+str(time3-time1)+", img4: "+str(time4-time1)+", summ: "+str(time.time()-time1))
 
         #cv2.imwrite('homo1.png',img1)
         #cv2.imwrite('homo2.png',img2)
@@ -66,6 +70,7 @@ class Undistort():
 
     def callback_undistort1(self,_img):
         try:
+            time1=time.time()
             print("SUBSCRIBE-1")
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
@@ -80,14 +85,17 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                print("undistort time: "+str(time.time()-time1))
                 homoImg=self.homography_matrix(undistImg,1)
+                print("homography time: "+str(time.time()-time1))
                 # cv2.imwrite('homo1.png', homoImg)
-                return homoImg
+                return homoImg, time.time()
             else:
                 print("Image1 is None")
 
     def callback_undistort2(self,_img):
         try:
+            time1=time.time()
             print("SUBSCRIBE-2")
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
@@ -102,12 +110,13 @@ class Undistort():
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
                 homoImg=self.homography_matrix(undistImg, 2)
                 # cv2.imwrite('homo2.png', homoImg)
-                return homoImg
+                return homoImg, time.time()
             else:
                 print("Image2 is None")
 
     def callback_undistort3(self,_img):
         try:
+            time1=time.time()
             print("SUBSCRIBE-3")
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
@@ -122,12 +131,13 @@ class Undistort():
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
                 homoImg=self.homography_matrix(undistImg, 3)
                 # cv2.imwrite('homo3.png', homoImg)
-                return homoImg
+                return homoImg, time.time()
             else:
                 print("Image3 is None")
 
     def callback_undistort4(self,_img):
         try:
+            time1=time.time()
             print("SUBSCRIBE-4")
             bridge=CvBridge()
             rawimg=bridge.compressed_imgmsg_to_cv2(_img, "bgr8")
@@ -142,7 +152,7 @@ class Undistort():
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
                 homoImg=self.homography_matrix(undistImg, 4)
                 # cv2.imwrite('homo4.png', homoImg)
-                return homoImg
+                return homoImg, time.time()
             else:
                 print("Image4 is None")
 
@@ -167,7 +177,7 @@ class Undistort():
         imgPtsArr.append([[616.0,319.7], [598.0,278.0], [748.0, 320.2], [216.5,401.8], [65.8,401.8], [565.0, 370.0]])
         imgPtsArr.append([[199.8, 550.2], [297,549],[395.5,548],[495.7,548.1],[594.8,547.1],[692.9,545.1],[783.6,542.1],
             [62,464],[142.2,463.8],[225.2,463.2],[308.2,462],[392.5,461.2],[476.9,459.6],[562, 460],[647, 459],[729.8, 457.8],
-            [171.2,399.2], [244,398],[316.5,398],[388.5, 345.7],[650.9,343.1]])
+            [170.8,399], [243.8, 397.7],[316, 397],[390.2,396.5],[686.2,393.5]])
         imgPtsArr.append([
              [96.2,522],[197,524],
                 [166,471], [357.4,473.4],[549,475.6],[733.7, 474.7],
