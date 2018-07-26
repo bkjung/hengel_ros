@@ -48,7 +48,6 @@ class PredictGlobalMap():
         self.robot_view_publisher = rospy.Publisher(
             '/predict_robot_view', CompressedImage, queue_size=10)
         rospy.Subscriber('/usb_cam1/homography/compressed', CompressedImage, self.callback_homography)
-
         rospy.spin()
 
     ################## DEBUG #########################
@@ -85,17 +84,18 @@ class PredictGlobalMap():
         cv_img=bridge.compressed_imgmsg_to_cv2(_img)
         cv_img=cv2.cvtColor(cv_img, cv2.COLOR_RGB2BGR)
 
-        if cv_img is not None:
+        map_cv=
+
+        if map_cv is not None:
             self.root = Toplevel()
             self.c = Canvas(self.root, height=size_x, width=size_y, bg="white")
             self.root.title("global map")
             _str = str(size_x) + "x" + str(size_y)
             self.root.geometry(_str)
 
-            self.photo=cv_img
-            self.photo_height, self.photo_width = self.photo.shape[:2]
+            self.photo_height, self.photo_width = map_cv.shape[:2]
             
-            photo_PIL = PIL.Image.fromarray(self.photo)
+            photo_PIL = PIL.Image.fromarray(map_cv)
             photo_PIL = PIL.ImageTk.PhotoImage(photo_PIL)
 
             x_px=450
