@@ -27,9 +27,11 @@ class CamPublisher():
 		self.cam2.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
 
 		rospy.Subscriber('/initiator', Bool, self.initiator)
-		self.pub = rospy.Publisher('/genius3/compressed', CompressedImage, queue_size=1)
-		self.pub2= rospy.Publisher('/genius4/compressed', CompressedImage, queue_size=1)
-		self.rate = rospy.Rate(9)
+		self.pub = rospy.Publisher('/genius3/compressed', CompressedImage, queue_size=10)
+		self.pub2= rospy.Publisher('/genius4/compressed', CompressedImage, queue_size=10)
+		self.rate = rospy.Rate(5)
+
+		rospy.spin()
 
 
 	def initiator(self, msg):
@@ -40,7 +42,7 @@ class CamPublisher():
 		print("pi2 initiated, time: "+str(time.time()))
 		while True:
 			if rospy.is_shutdown():
-			break
+	     		    break
 				#with picamera.PiCamera() as camera:
 				#	camera.resolution=(1280,720)
 				## camera.framerate=Fraction(1,6)
