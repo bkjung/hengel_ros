@@ -12,6 +12,8 @@ from PIL import Image
 import time
 import os
 from navigation_control import NavigationControl
+from hengel_camera.line_thickener import MapMaker
+from 
 import cv2
 
 from Tkinter import *
@@ -108,6 +110,14 @@ class PaintSelectfile():
 		    pass
                     #print(str(self.arr_path[i][j][k][0])+" "+str(self.arr_path[i][j][k][1]))
         print("-----------------------------------------------")
+
+
+        ####### camera package execute #######
+        app = MapMaker(self.arr_path, self.isIntensityControl, self.isStartEndIndexed, self.arr_intensity, self.start_point_list, self.end_point_list)
+        app.run()
+        # At this state, predict_globalmap callbacks are working as thread.
+
+        #paint_selectfile
         self.run()
 
     def get_path(self):
