@@ -285,6 +285,7 @@ class NavigationControl():
 
         self.pub_distance = rospy.Publisher('/distance', Float32, queue_size=5)
         self.pub_endpoint = rospy.Publisher('/endpoint', Point, queue_size=5)
+        self.pub_midpoint = rospy.Publisher('/midpoint', Point, queue_size=5)
 
         print("Initialize Done")
 
@@ -362,6 +363,8 @@ class NavigationControl():
                         try:
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
+                            self.point.z=self.heading.data
+                            self.pub_midpoint.publish(self.point)
                             #self.endPoint.x=self.point.x+self.D*cos(self.heading.data)
                             #self.endPoint.y=self.point.y+self.D*sin(self.heading.data)
 
