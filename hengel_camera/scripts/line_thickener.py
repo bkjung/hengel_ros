@@ -21,9 +21,9 @@ class MapMaker():
         self.sprayIntensity=255
 
         self.pixMetRatio=100
-        lineThickness=0.1
-        height=400
-        width=100
+        self.lineThickness=0.1
+        self.height=400
+        self.width=100
 
         if _isIntensityControl:
             if _isStartEndIndexed:
@@ -37,16 +37,14 @@ class MapMaker():
                 self.mode=2
             else:
                 #continuously drawing
-                self.mode=3
                 self.sprayIntensity=0
         
         self.run()
             
     def run(self):   
         x_last, y_last=0,0
-        draw=False
         # img=np.full((pixMetRatio*letterNum, pixMetRatio),255)
-        img=np.full((height, width), 255)
+        img=np.full((self.height, self.width), 255)
 
         count, start_count, end_count=0,0,0
         for letter_path in self.arr_path:
@@ -64,20 +62,21 @@ class MapMaker():
                             sprayIntensity=255              
                     count+=1
 
-                    if draw:
+                    if self.sprayIntensity!=255:
                         img[int(x_curr)][int(y_curr)]=0
 
-                        dist=lineThickness*pixMetRatio
+                        dist=self.lineThickness*self.pixMetRatio
                         x1=int(x_curr-dist/2)
                         x2=int(x_curr+dist/2)
 
                         for i in range(x1, x2+1):
                             x=x_curr-i
                             if abs(x)>dist/2:
-                                img[i][int(y_curr)]=0
+                                img[i][int(y_curr)]=min(0, img[i][int(y_curr)])
                             else:
                                 y=sqrt(dist*dist/4-x*x)
                                 y1=int(y_curr-y)
                                 y2=int(y_curr+y)
                                 for j in range(y1, y2+1):
                                     img[i][j]=min(0, img[i][j])
+        PredictGlobalMap(img)
