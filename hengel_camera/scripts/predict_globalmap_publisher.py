@@ -12,7 +12,7 @@ from time import sleep
 from geometry_msgs.msg import Point
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Image, CompressedImage
-from math import cos, sin
+from math import cos, sin, pi
 import numpy as np
 from cv_bridge import CvBridge
 import cv2
@@ -25,29 +25,22 @@ scale_factor = 3  #[pixel/cm]
 th=0
 
 class PredictGlobalMap():
-    def __init__(self):
+    def __init__(self, _img):
+        rospy.init_node('hengel_global_map')
 
-        # c.pack(expand=YES, fill=BOTH)
-        # c.grid(row=1, column=0)
-        # f=Frame(self.root)
-        # f.grid(row=0, column=0, sticky="n")
-        self.x = 50
-        self.y = 50
+        self.pixMetRatio=100
+        self.mapImg=_img
+
+        self.x = 0
+        self.y = 0
         self.th = 0
-
-        self.photo = np.ndarray([])
-
-        # self.map_subscriber = rospy.Subscriber('/current_global_map', Image, callback_map)
-        # self.position_subscriber = rospy.Subscriber('/current_position', Point, callback_position)
-        # self.heading_subscriber = rospy.Subscriber('/current_heading', Float32, callback_heading)
-        
-        
         
         self.global_map_publisher = rospy.Publisher(
             '/predict_global_map', Image, queue_size=10)
         self.robot_view_publisher = rospy.Publisher(
             '/predict_robot_view', CompressedImage, queue_size=10)
-        rospy.Subscriber('/usb_cam1/homography/compressed', CompressedImage, self.callback_homography)
+
+        rospy.Subscriber('/midpoint', Point, self.callback_point)
         rospy.spin()
 
     ################## DEBUG #########################
@@ -77,14 +70,12 @@ class PredictGlobalMap():
             print(e)
     ##################################################
 
-    def callback_homography(self, _img):
-        print("homography callback")
+    def callback_point(self, _pnt):
+        map_cv=self.mapImg
+        x_px=_pnt.x*self.pixMetRatio
+        y=self.mapImg.shape[2] - _pnt.y*self.pixMetRatio
+        th=pnt.z
         print("time:", time.time())
-        bridge=CvBridge()
-        cv_img=bridge.compressed_imgmsg_to_cv2(_img)
-        cv_img=cv2.cvtColor(cv_img, cv2.COLOR_RGB2BGR)
-
-        map_cv=
 
         if map_cv is not None:
             self.root = Toplevel()
@@ -98,45 +89,18 @@ class PredictGlobalMap():
             photo_PIL = PIL.Image.fromarray(map_cv)
             photo_PIL = PIL.ImageTk.PhotoImage(photo_PIL)
 
-            x_px=450
-            y_px=450
-            self.th=0
-            r_px=100
-            scale_factor=3
+            map_size=100
 
             imagesprite=self.c.create_image(0,0, anchor="nw", image=photo_PIL)
-            self.c.create_oval(
-                x_px - r_px,
-                y_px - r_px,
-                x_px + r_px,
-                y_px + r_px,
-                width=2,
-                fill='')
             self.c.create_polygon(
-                int(x_px - 75.5 * scale_factor * cos(self.th)),
-                -int(-y_px + scale_factor * 75.5 * sin(self.th)),
-                int(x_px - 58 * scale_factor * cos(self.th)),
-                -int(-y_px + scale_factor * 58 * sin(self.th)),
-                int(x_px - 29 * scale_factor * cos(self.th) +
-                    25 * scale_factor * sin(self.th)),
-                -int(-y_px + scale_factor * 29 * sin(self.th) +
-                    25 * scale_factor * cos(self.th)),
-                int(x_px + 29 * scale_factor * cos(self.th) +
-                    25 * scale_factor * sin(self.th)),
-                -int(-y_px - scale_factor * 29 * sin(self.th) +
-                    25 * scale_factor * cos(self.th)),
-                int(x_px + 58 * scale_factor * cos(self.th)),
-                -int(-y_px - scale_factor * 58 * sin(self.th)),
-                int(x_px + 75.5 * scale_factor * cos(self.th)),
-                -int(-y_px - scale_factor * 75.5 * sin(self.th)),
-                int(x_px + 75.5 * scale_factor * cos(self.th) +
-                    111 * scale_factor * sin(self.th)),
-                -int(-y_px - scale_factor * 75.5 * sin(self.th) +
-                    111 * scale_factor * cos(self.th)),
-                int(x_px - 75.5 * scale_factor * cos(self.th) +
-                    111 * scale_factor * sin(self.th)),
-                -int(-y_px + scale_factor * 75.5 * sin(self.th) +
-                    111 * scale_factor * cos(self.th)),
+                x_px+map_size/sqrt(2)*cos(th+pi/4),
+                y_px+map_size/sqrt(2)*sin(th+pi/4),
+                x_px-map_size/sqrt(2)*cos(pi/4-th),
+                y_px+map_size/sqrt(2)*sin(pi/4-th),
+                x_px-map_size/sqrt(2)*cos(pi/4+th),
+                y_px-map_size/sqrt(2)*sin(pi/4+th),
+                x_px+map_size/sqrt(2)*cos(pi/4-th),
+                y_px-map_size/sqrt(2)*sin(pi/4-th),
                 outline='red',
                 fill='',
                 width=3)
@@ -160,7 +124,6 @@ class PredictGlobalMap():
             print("publish-1, time:", time.time())
             self.crop_image()
             # self.root.mainloop()
-
 
         else:
             pass        
@@ -212,24 +175,3 @@ class PredictGlobalMap():
 
         # rect = cv2.boundingRect(pts)
         # cropped = res[rect[1]:rect[1] + rect[3], rect[0]:rect[0] + rect[2]]
-
-    def callback_position(self, _position):
-        self.x = _position.x
-        self.y = _position.y
-
-    def callback_heading(self, _heading):
-        self.th = _heading.data
-
-    def callback_map(self, _map):
-        bridge = CvBridge()
-        self.photo = bridge.imgmsg_to_cv2(_map, "rgb8")
-        # self.photo = cv2.cvtColor(self.photo, cv2.COLOR_RGB2BGR)
-
-
-if __name__ == "__main__":
-    try:
-        rospy.init_node('hengel_global_map')
-        PredictGlobalMap()
-    except Exception as e:
-        print(e)
-        rospy.loginfo("shutdown program")
