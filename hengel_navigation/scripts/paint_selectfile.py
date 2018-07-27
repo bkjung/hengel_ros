@@ -13,7 +13,6 @@ import time
 import os
 from navigation_control import NavigationControl
 from hengel_camera.line_thickener import MapMaker
-from 
 import cv2
 
 from Tkinter import *
