@@ -13,7 +13,8 @@ class ConcenctricPath():
 
     def run(self):
         CANVAS_SIZE = 4.0
-        WAYPOINT_INTERVAL = 0.005
+        #WAYPOINT_INTERVAL = 0.005
+        WAYPOINT_INTERVAL = 0.0075
         THETA_INTERVAL = 25
 
         # r = np.arange(0, 1.0/2, 0.0000001)
