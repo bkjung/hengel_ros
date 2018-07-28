@@ -3,26 +3,27 @@
 import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
 from std_msgs.msg import Float32
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CompressedImage
 from nav_msgs.msg import Path
 from visualization_msgs.msg import Marker
 from hengel_navigation.msg import ValveInput, OperationMode
+from hengel_camera.markRobotView import RobotView
 import tf
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos, asin
 from tf.transformations import euler_from_quaternion
 import numpy as np
 import sys
-#from PIL import Image
-#import PIL.Image
 import time
 import os
 import cv2
 import cv_bridge
-#from real_globalmap import RealGlobalMap
-#from pi_cam_manager import PiCamManager
-#from crosspoint_docking import CrosspointDocking
 import logging
 import matplotlib.pyplot as plt
+import skimage.io as ski_io
+
+#import PIL.Image
+#import PIL.ImageTk
+
 
 SPRAY_OFF = 1024
 
@@ -64,7 +65,7 @@ class NavigationControl():
     #     self.initial_setting()
     #     self.run()
 
-    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _D):
+    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _D, _img):
         while True:
             word = raw_input(
                     "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType :"
@@ -80,6 +81,7 @@ class NavigationControl():
         self.isPositionControl = _isPositionControl
         self.isIntensityControl = _isIntensityControl
         self.D=_D
+        self.img=np.full((2000,2000), 255)
 
         self.initial_setting()
 
@@ -109,9 +111,9 @@ class NavigationControl():
                             )
                     self.option_cam_save = int(word)
                     if self.option_cam_save==1 or self.option_cam_save==2:
-                        break                    
-                
-                if self.cam_save_period_waypoints==2:
+                        break
+
+                if self.option_cam_save==2:
                     word = raw_input(
                             "CAM SAVE Period (No. Waypoints) \nType :"
                             )
@@ -119,7 +121,7 @@ class NavigationControl():
                     word = raw_input(
                             "CAM SAVE Point (x,y, theta) \nType x: "
                             )
-                    self.cam_save_x = float(word)                    
+                    self.cam_save_x = float(word)
                     word = raw_input(
                             "CAM SAVE Point (x,y, theta) \nType y: "
                             )
@@ -455,7 +457,9 @@ class NavigationControl():
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
                             self.point.z=self.heading.data
                             self.pub_midpoint.publish(self.point)
-                            
+                            app=RobotView(self.img, self.point, self.endPoint, self.valve_angle_input)
+                            self.img=app.run()
+
                             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
                             print(str(self.endPoint.x)+"  "+str(self.endPoint.y))
 
@@ -884,7 +888,6 @@ class NavigationControl():
         # #Wait for 1 second to close valve
         # self.quit_valve()
 
-
     def control_motors(self, _loop_cnt, delta1, delta2):
         loop_cnt = 0
         while True:
@@ -935,7 +938,7 @@ class NavigationControl():
         ###Step 4. Rotate and Align heading to initial point
         heading_to_initial = atan2((self.point.y-_y)/(self.point.x-_x))
         initial_diff_angle = angle_difference(heading_to_initial, _theta)
-        self.control_motors([self.L*3.141592*initial_diff_angle/(self.R*0.04), -0.04, +0.04]) #Turn left        
+        self.control_motors([self.L*3.141592*initial_diff_angle/(self.R*0.04), -0.04, +0.04]) #Turn left
 
         ###Step 5. Go straight to initial point
         self.control_motors([distance/0.04*self.freq, +0.04, +0.04])
