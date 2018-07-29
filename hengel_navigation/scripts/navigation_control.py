@@ -65,7 +65,7 @@ class NavigationControl():
     #     self.initial_setting()
     #     self.run()
 
-    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _D, _img):
+    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _D):
         while True:
             word = raw_input(
                     "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType :"
