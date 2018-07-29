@@ -12,7 +12,6 @@ from PIL import Image
 import time
 import os
 from navigation_control import NavigationControl
-from hengel_camera.line_thickener import MapMaker
 import cv2
 
 from Tkinter import *
@@ -52,7 +51,6 @@ class PaintSelectfile():
         self.isIntensityControl = False
         self.isStartEndIndexed = False
 
-        self.img=np.ndarray([])
 
         while True:
             word = raw_input("[1] Position control, [2] RPM control, [3] Position control & Spray intensity control\n Type 1 or 2 or 3:")
@@ -127,16 +125,7 @@ class PaintSelectfile():
         print("-----------------------------------------------")
 
 
-        ####### camera package execute #######
-        if self.visualCompensation:
-            app = MapMaker(self.arr_path, self.isIntensityControl, self.isStartEndIndexed, self.arr_intensity, self.start_point_list, self.end_point_list, self.CANVAS_SIDE_LENGTH, self.CANVAS_SIDE_HEIGHT)
-            # At this state, predict_globalmap callbacks are working as thread.
-
-            self.img= app.run()
-            #paint_selectfile
-            self.run()
-        else:
-            self.run()
+        self.run()
 
     def get_path(self):
         letter_path = []
@@ -229,7 +218,7 @@ class PaintSelectfile():
 
 
     def run(self):
-        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.D, self.img)
+        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.D)
 
 
 if __name__ == '__main__':

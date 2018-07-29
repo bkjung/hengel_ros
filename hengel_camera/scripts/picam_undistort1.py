@@ -43,6 +43,7 @@ class Undistort():
         if len(mtx)!=0 and len(dst)!=0:
             if rawimg is not None:
                 undistImg=cv2.undistort(rawimg, mtx, dst, None, mtx)
+                cv2.imwrite("undistort.png", undistImg)
                 imgmsg=bridge.cv2_to_compressed_imgmsg(undistImg)
                 self.pub1.publish(imgmsg)
                 cv2.waitKey(3)
@@ -90,8 +91,8 @@ class Undistort():
                 imgmsg=bridge.cv2_to_compressed_imgmsg(undistImg)
                 self.pub3.publish(imgmsg)
                 # cv2.imshow('raw_img', rawimg)
-                # cv2.imshow('undist_img_3', undistImg)
-                cv2.waitKey(3)
+                cv2.imshow('undist_img_3', undistImg)
+                cv2.waitKey(0)
             else:
                 print("Image3 is None")
 
