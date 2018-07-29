@@ -428,6 +428,7 @@ class NavigationControl():
                             if self.intensity_option==1:
                                 #For this option, is_moving_between_segments does not work!!!!
                                 input_pixel_value = int(self.arr_intensity[self.cnt_waypoints])
+                                input_pixel_value_graphic = int(self.arr_intensity[self.cnt_waypoints])
                                 if input_pixel_value >=0 and input_pixel_value<256:   #if the input is alright, then
 
                                     #cut off value larger than 230 to 230.
@@ -457,7 +458,7 @@ class NavigationControl():
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
                             self.point.z=self.heading.data
                             self.pub_midpoint.publish(self.point)
-                            app=RobotView(self.img, self.point, self.endPoint, self.valve_angle_input)
+                            app=RobotView(self.img, self.point, self.endPoint, input_pixel_value_graphic)
                             self.img=app.run()
 
                             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
