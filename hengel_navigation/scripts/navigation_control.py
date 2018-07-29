@@ -439,6 +439,7 @@ class NavigationControl():
                                     self.valve_angle_publisher.publish(self.valve_angle_input)
 
                             elif self.intensity_option==2:
+                                input_pixel_value_graphic=0
                                 self.valve_angle_input.goal_position = 740
                                 self.valve_angle_publisher.publish(self.valve_angle_input)
                                 #if self.is_moving_between_segments==True:
