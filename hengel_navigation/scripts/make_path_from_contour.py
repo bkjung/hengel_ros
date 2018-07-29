@@ -67,7 +67,7 @@ class MakePath():
 
 
 if __name__ == "__main__": 
-    img=cv2.imread("LA.jpg", cv2.IMREAD_COLOR) 
+    img=cv2.imread("/home/bkjung/Dropbox/Making_Robot_Path/previous/Adidas_logo_large.png", cv2.IMREAD_COLOR) 
     if img is not None: 
         img_gray=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
         img_bw = cv2.threshold(img_gray, 127, 255, cv2.THRESH_BINARY)[1] 
@@ -80,11 +80,11 @@ if __name__ == "__main__":
 
 
         for cnt_subpath in range(len(path)): 
-            print("No. "+str(cnt_subpath)+" length: "+str(len(path[cnt_subpath]))) 
+            # print("No. "+str(cnt_subpath)+" length: "+str(len(path[cnt_subpath]))) 
             for loop in range(len(path[cnt_subpath])): 
                 # if len(path[cnt_subpath])!=1: 
                 total_path_image[path[cnt_subpath][loop][0]][path[cnt_subpath][loop][1]]=0 
-                print(str(path[cnt_subpath][loop][0])+" "+str(path[cnt_subpath][loop][1])) 
+                # print(str(path[cnt_subpath][loop][0])+" "+str(path[cnt_subpath][loop][1])) 
 
 
 
