@@ -458,6 +458,7 @@ class NavigationControl():
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
                             self.point.z=self.heading.data
                             self.pub_midpoint.publish(self.point)
+                            self.pub_endpoint.publish(self.endPoint)
                             app=RobotView(self.img, self.point, self.endPoint, input_pixel_value_graphic)
                             self.img=app.run()
 
