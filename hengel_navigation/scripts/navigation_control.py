@@ -457,9 +457,11 @@ class NavigationControl():
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
                             self.point.z=self.heading.data
-                            self.pub_midpoint.publish(self.point)
-                            app=RobotView(self.img, self.point, self.endPoint, input_pixel_value_graphic)
-                            self.img=app.run()
+
+                            #Mingg Part Commented by bkjung 180729-1533
+                            #self.pub_midpoint.publish(self.point)
+                            #app=RobotView(self.img, self.point, self.endPoint, input_pixel_value_graphic)
+                            #self.img=app.run()
 
                             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
                             print(str(self.endPoint.x)+"  "+str(self.endPoint.y))
