@@ -55,7 +55,7 @@ class RobotView():
 
     def line_thickener(self):
         if self.spray_intensity!=255:
-            self.img[int(self.end_x)][int(self.end_y)]=self.spray_intensity
+            self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
             dist=self.lineThickness*self.pixMetRatio
             x1=int(self.end_x-dist/2)
             x2=int(self.end_x+dist/2)
@@ -64,14 +64,14 @@ class RobotView():
                 x=self.end_x-i
                 if i>0 and i<self.img.shape[1]:
                     if abs(x)>dist/2:
-                        self.img[i][int(self.end_y)]=min(self.spray_intensity, self.img[i][int(self.end_y)])
+                        self.img[int(self.end_y)][i]=min(self.spray_intensity, self.img[int(self.end_y)][i])
                     else:
                         y=sqrt(dist*dist/4-x*x)
                         y1=int(self.end_y-y)
                         y2=int(self.end_y+y)
                         for j in range(y1, y2+1):
                             if j>0 and j<self.img.shape[0]:
-                                self.img[i][j]=min(self.spray_intensity, self.img[i][j])
+                                self.img[j][i]=min(self.spray_intensity, self.img[j][i])
         bridge=CvBridge()
         imgMsg=bridge.cv2_to_compressed_imgmsg(self.img)
         self.pub2.publish(imgMsg)
