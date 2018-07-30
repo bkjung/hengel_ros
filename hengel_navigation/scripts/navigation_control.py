@@ -7,7 +7,6 @@ from sensor_msgs.msg import Image, CompressedImage
 from nav_msgs.msg import Path
 from visualization_msgs.msg import Marker
 from hengel_navigation.msg import ValveInput, OperationMode
-from hengel_camera.markRobotView import RobotView
 import tf
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos, asin
 from tf.transformations import euler_from_quaternion
@@ -459,8 +458,6 @@ class NavigationControl():
                             self.point.z=self.heading.data
                             self.pub_midpoint.publish(self.point)
                             self.pub_endpoint.publish(self.endPoint)
-                            app=RobotView(self.img, self.point, self.endPoint, input_pixel_value_graphic)
-                            self.img=app.run()
 
                             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
                             print(str(self.endPoint.x)+"  "+str(self.endPoint.y))
