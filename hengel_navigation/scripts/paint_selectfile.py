@@ -48,10 +48,11 @@ class PaintSelectfile():
                 self.CANVAS_SIDE_LENGTH = float(word.split()[0])
                 self.CANVAS_SIDE_HEIGHT = float(word.split()[1])
                 break
-            word = raw_input("What is the ratio you want to multiply waypoints?\n Type: ")
-            self.scale_up_factor = float(word)
-            self.CANVAS_SIDE_LENGTH = self.CANVAS_SIDE_LENGTH*self.scale_up_factor
-            self.CANVAS_SIDE_HEIGHT = self.CANVAS_SIDE_HEIGHT*self.scale_up_factor
+            word = raw_input("What is the ratio you want to multiply waypoints? (length, height)\n Type: ")
+            self.scale_up_factor_length = float(word.split()[0])
+            self.scale_up_factor_height = float(word.split()[1])
+            self.CANVAS_SIDE_LENGTH = self.CANVAS_SIDE_LENGTH*self.scale_up_factor_length
+            self.CANVAS_SIDE_HEIGHT = self.CANVAS_SIDE_HEIGHT*self.scale_up_factor_height
 
         if self.option_scale_up==1:
             while True:
@@ -169,8 +170,8 @@ class PaintSelectfile():
                             y_curr=(self.CANVAS_SIDE_HEIGHT-float(_str[1]))
                             # y_curr=float(_str[1])
                         else:
-                            x_curr=(float(_str[0])*(-1.0))*self.scale_up_factor
-                            y_curr=self.CANVAS_SIDE_HEIGHT-float(_str[1])*self.scale_up_factor
+                            x_curr=(float(_str[0])*(-1.0))*self.scale_up_factor_length
+                            y_curr=self.CANVAS_SIDE_HEIGHT-float(_str[1])*self.scale_up_factor_height
                             # y_curr=float(_str[1])
 
 
@@ -239,7 +240,7 @@ class PaintSelectfile():
 
 
     def run(self):
-        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.D)
+        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.isStartEndIndexed, self.D)
 
 
 if __name__ == '__main__':

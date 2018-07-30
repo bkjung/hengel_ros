@@ -64,7 +64,7 @@ class NavigationControl():
     #     self.initial_setting()
     #     self.run()
 
-    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _D):
+    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _isStartEndIndexed, _D):
         while True:
             word = raw_input(
                     "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType :"
@@ -79,6 +79,7 @@ class NavigationControl():
         self.end_point_list = _end_point_list
         self.isPositionControl = _isPositionControl
         self.isIntensityControl = _isIntensityControl
+        self.isStartEndIndexed = _isStartEndIndexed
         self.D=_D
         self.img=np.full((2000,2000), 255)
 
@@ -97,7 +98,7 @@ class NavigationControl():
                 while True:
                     word = raw_input(
                             # "There are 3 options for spray intensity.\n[1] Input from waypoint file \n[2] Constant 740 \n[3] Sinusoidal Fluctuation \nType :"
-                            "There are 2 options for spray intensity.\n[1] Input from waypoint file \n[2] Constant 740 \nType :"
+                            "There are 2 options for spray intensity.\n[1] Input from waypoint file (or StartEnd indexed) \n[2] Constant 740 \nType :"
                             )
                     self.intensity_option = int(word)
                     # if self.intensity_option==1 or self.intensity_option==2 or self.intensity_option==3:
@@ -405,7 +406,7 @@ class NavigationControl():
                    # ###########################################################################################
 
 
-                    if self.intensity_option == 2:
+                    if self.isStartEndIndexed:
                         if (self.cnt_waypoints) in self.start_point_list:
                             self.is_moving_between_segments = False
                         elif (self.cnt_waypoints) in self.end_point_list:
@@ -425,33 +426,35 @@ class NavigationControl():
                             break
                         try:
                             if self.intensity_option==1:
-                                #For this option, is_moving_between_segments does not work!!!!
-                                input_pixel_value = int(self.arr_intensity[self.cnt_waypoints])
-                                input_pixel_value_graphic = int(self.arr_intensity[self.cnt_waypoints])
-                                if input_pixel_value >=0 and input_pixel_value<256:   #if the input is alright, then
+                                if not self.isStartEndIndexed:
+                                    #For this option, is_moving_between_segments does not work!!!!
+                                    input_pixel_value = int(self.arr_intensity[self.cnt_waypoints])
+                                    input_pixel_value_graphic = int(self.arr_intensity[self.cnt_waypoints])
+                                    if input_pixel_value >=0 and input_pixel_value<256:   #if the input is alright, then
 
-                                    #cut off value larger than 230 to 230.
-                                    input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
-                                    spray_input = 660.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
-                                    # self.spray_intensity_publisher.publish(spray_input)
-                                    self.valve_angle_input.goal_position = int(spray_input)
-                                    self.valve_angle_publisher.publish(self.valve_angle_input)
+                                        #cut off value larger than 230 to 230.
+                                        input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
+                                        spray_input = 660.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
+                                        # self.spray_intensity_publisher.publish(spray_input)
+                                        self.valve_angle_input.goal_position = int(spray_input)
+                                        self.valve_angle_publisher.publish(self.valve_angle_input)
+                                else:
+                                    if self.is_moving_between_segments==True:
+                                        # self.spray_intensity_publisher.publish(1024.0)
+                                        self.valve_angle_input.goal_position = 1024
+                                        self.valve_angle_publisher.publish(self.valve_angle_input)
+                                    else:
+                                        #self.spray_intensity_publisher.publish(660.0)
+                                        # self.spray_intensity_publisher.publish(740.0)
+                                        self.valve_angle_input.goal_position = 660
+                                        self.valve_angle_publisher.publish(self.valve_angle_input)
+
 
                             elif self.intensity_option==2:
                                 input_pixel_value_graphic=0
                                 self.valve_angle_input.goal_position = 740
                                 self.valve_angle_publisher.publish(self.valve_angle_input)
-                                #if self.is_moving_between_segments==True:
-                                #    # self.spray_intensity_publisher.publish(1024.0)
-                                #    self.valve_angle_input.goal_position = 1024
-                                #    self.valve_angle_publisher.publish(self.valve_angle_input)
-                                #else:
-                                #    #self.spray_intensity_publisher.publish(660.0)
-                                #    # self.spray_intensity_publisher.publish(740.0)
-                                #    self.valve_angle_input.goal_position = 740
-                                #    self.valve_angle_publisher.publish(self.valve_angle_input)
 
-                            # elif self.intensity_option==3:
 
 
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
