@@ -37,11 +37,31 @@ os.system("mkdir -p " + package_base_path +
 class PaintSelectfile():
     def __init__(self):
         while True:
-            word = raw_input("What is the LENGTH AND HEIGHT OF CANVAS SIDE in selected file?\n Type: ")
-            self.CANVAS_SIDE_LENGTH = float(word.split()[0])
-            self.CANVAS_SIDE_HEIGHT = float(word.split()[1])
-            break
-        print("Length, Height of Canvas Side = " + str(self.CANVAS_SIDE_LENGTH))
+            word = raw_input("Do you want to scale up input waypoints? (NO:1, YES:2)\n Type: ")
+            self.option_scale_up = int(word)
+            if self.option_scale_up==1 or self.option_scale_up==2:
+                break
+
+        if self.option_scale_up==2:
+            while True:
+                word = raw_input("What is the LENGTH AND HEIGHT OF CANVAS SIDE in selected file?\n Type: ")
+                self.CANVAS_SIDE_LENGTH = float(word.split()[0])
+                self.CANVAS_SIDE_HEIGHT = float(word.split()[1])
+                break
+            word = raw_input("What is the ratio you want to multiply waypoints? (length, height)\n Type: ")
+            self.scale_up_factor_length = float(word.split()[0])
+            self.scale_up_factor_height = float(word.split()[1])
+            self.CANVAS_SIDE_LENGTH = self.CANVAS_SIDE_LENGTH*self.scale_up_factor_length
+            self.CANVAS_SIDE_HEIGHT = self.CANVAS_SIDE_HEIGHT*self.scale_up_factor_height
+
+        if self.option_scale_up==1:
+            while True:
+                word = raw_input("What is the LENGTH AND HEIGHT OF CANVAS SIDE in selected file?\n Type: ")
+                self.CANVAS_SIDE_LENGTH = float(word.split()[0])
+                self.CANVAS_SIDE_HEIGHT = float(word.split()[1])
+                break
+
+        print("Length, Height of Canvas Side = " + str(self.CANVAS_SIDE_LENGTH)+" "+str(self.CANVAS_SIDE_HEIGHT))
         # print("Length of Padding = " + str(PADDING_LENGTH))
         # print("Distance of Viewpoint = " + str(VIEWPOINT_DISTANCE))
         self.arr_path = []
@@ -114,14 +134,11 @@ class PaintSelectfile():
         print("Total Waypoints = %d" %(self.cnt_points))
         print("Total Intensity Count = %d" %(len(self.arr_intensity)))
         # print(self.arr_path)
-        temp_cnt = 0
-        for i in range(len(self.arr_path)):
-            for j in range(len(self.arr_path[i])):
-                for k in range(len(self.arr_path[i][j])):
-                    temp_cnt +=1
-                    pass
+        #for i in range(len(self.arr_path)):
+        #    for j in range(len(self.arr_path[i])):
+        #        for k in range(len(self.arr_path[i][j])):
+        #            pass
                     #print(str(self.arr_path[i][j][k][0])+" "+str(self.arr_path[i][j][k][1]))
-        print("Temp count = %d" %temp_cnt)
         print("-----------------------------------------------")
 
 
@@ -148,9 +165,14 @@ class PaintSelectfile():
                     if not len(_str) == 0:
                         # x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH)*(-1.0)
                         # y_curr=(4.0-float(_str[1]))*CANVAS_SIDE_LENGTH
-                        x_curr=(float(_str[0])*(-1.0))
-                        # y_curr=(self.CANVAS_SIDE_LENGTH-float(_str[1]))
-                        y_curr=float(_str[1])
+                        if self.option_scale_up==1:
+                            x_curr=(float(_str[0])*(-1.0))
+                            y_curr=(self.CANVAS_SIDE_HEIGHT-float(_str[1]))
+                            # y_curr=float(_str[1])
+                        else:
+                            x_curr=(float(_str[0])*(-1.0))*self.scale_up_factor_length
+                            y_curr=self.CANVAS_SIDE_HEIGHT-float(_str[1])*self.scale_up_factor_height
+                            # y_curr=float(_str[1])
 
 
                         #if self.option_interval==2:
@@ -218,7 +240,7 @@ class PaintSelectfile():
 
 
     def run(self):
-        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.D)
+        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.isStartEndIndexed, self.D)
 
 
 if __name__ == '__main__':

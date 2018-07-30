@@ -58,7 +58,6 @@ catkin_package(
 catkin_install_python(PROGRAMS
   scripts/main_program.py
   scripts/navigation_control.py
-  scripts/odometry_publisher.py
   scripts/paint_drawing.py
   scripts/paint_letter.py
 

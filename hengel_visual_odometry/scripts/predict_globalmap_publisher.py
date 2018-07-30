@@ -22,7 +22,7 @@ size_x = 1200
 size_y = 1200
 robot_size = 15  #[cm]
 scale_factor = 3  #[pixel/cm]
-
+th=0
 
 class PredictGlobalMap():
     def __init__(self):

@@ -13,8 +13,9 @@ class ConcenctricPath():
 
     def run(self):
         CANVAS_SIZE = 4.0
+        #WAYPOINT_INTERVAL = 0.0075
         #WAYPOINT_INTERVAL = 0.005
-        WAYPOINT_INTERVAL = 0.0075
+        WAYPOINT_INTERVAL = 0.0025
         THETA_INTERVAL = 25
 
         # r = np.arange(0, 1.0/2, 0.0000001)
@@ -47,7 +48,7 @@ class ConcenctricPath():
             # print("%f  %f" % (x[i], y[i]))
 
         current_time = time.strftime("%y%m%d_%H%M%S")
-        with open("/home/hengel/circle_"+current_time+".txt", "w") as f:
+        with open("/home/hengel/circle_"+current_time+"_"+str(WAYPOINT_INTERVAL)+"_"+str(CANVAS_SIZE)+".txt", "w") as f:
             for i in range(len(x)):
                 f.write("%f  %f  %f\n" % (x[i], y[i], 25.0-25.0*cos(2*pi*i/1256)))
 
