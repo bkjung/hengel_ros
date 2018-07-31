@@ -8,7 +8,7 @@ from paint_letter import PaintLetter
 from paint_lieul import PaintLieul
 from paint_korea import PaintKorea
 from paint_selectfile import PaintSelectfile
-from test_code import GoToPoint
+# from test_code import GoToPoint
 
 OPTION_LETTERS = 1
 OPTION_DRAWING = 2
