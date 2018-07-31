@@ -23,17 +23,25 @@ class VisualCompensation():
         self.initialize()
     def initialize(self):
         rospy.init_node('hengel_camera_compensation', anonymous=False)
-        self.pixMetRatio=500      
+        self.pixMetRatio=500
         self.img=np.ndarray([int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)])
-        
+
 
         self.endPoint_callback=message_filters.Subscriber('/endpoint', Point)
         self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
 
         self.ts=message_filters.ApproximateTimeSynchronizer([self.endPoint_callback, self.midPoint_callback], 10, 0.1, allow_headerless=True)
-        self.ts.registerCallback(self.sync_callback)    
+        self.ts.registerCallback(self.sync_callback)
+
+        self.pub_virtual_map=rospy.Publisher('/virtual_map', CompressedImage, queue_size=3)
 
     def sync_callback(self, _endPoint, _midPoint):
         app=RobotView(self.img, _midPoint, _endPoint, _spray)
         self.img = app.run()
 
+        bridge=CvBridge()
+        virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.img)
+        self.pub_virtual_map.publish(virtual_map_msg)
+
+if __name__=='__main__':
+    VisualCompensation()

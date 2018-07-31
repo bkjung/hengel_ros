@@ -170,6 +170,7 @@ class NavigationControl():
         self.valve_status = SPRAY_OFF
 
         self.dt = 0.02  # [s]
+        #self.dt = 0.01  # [s]
         self.freq = 1.0/self.dt
         self.r = rospy.Rate(1.0/self.dt)
 
