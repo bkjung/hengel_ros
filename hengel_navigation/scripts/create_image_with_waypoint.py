@@ -30,7 +30,8 @@ class CreateImageWithWaypoints():
         self.canvas_size_y = int(word.split()[1])
         print("Length, Height of Output Image = %d, %d" %(self.canvas_size_x, self.canvas_size_y))
 
-        self.img=np.zeros((self.canvas_size_y, self.canvas_size_x) )
+        # self.img=np.zeros((self.canvas_size_y, self.canvas_size_x) )
+        self.img=np.full((self.canvas_size_y, self.canvas_size_x), 255)
 
     def get_path(self):
         root = Tk()
@@ -41,6 +42,8 @@ class CreateImageWithWaypoints():
         # y_dir=[0, -1, -1, -1,  1, 1, 1, 0,  0]
         x_dir=[0, -1,  0,  1, -1, 0, 1, 1, -1, -2, -1,  0,  1,  2, -2,  2, -2, 2, -2,  2, -2, -1, 0, 1, 2]
         y_dir=[0, -1, -1, -1,  1, 1, 1, 0,  0, -2, -2, -2, -2, -2, -1, -1,  0, 0,  1,  1,  2,  2, 2, 2, 2]
+        # x_dir = [0]
+        # y_dir = [0]
 
 
         if os.path.isfile(path_str):
@@ -58,7 +61,7 @@ class CreateImageWithWaypoints():
                             y_curr = y_converted + y_dir[i]
                             x_curr = x_converted + x_dir[i]
                             if y_curr < self.canvas_size_y and y_curr >=0 and x_curr < self.canvas_size_x and x_curr >=0:
-                                self.img[y_curr][x_curr] = 255
+                                self.img[y_curr][x_curr] = 0
 
         
 
@@ -67,7 +70,7 @@ if __name__ == '__main__':
         app = CreateImageWithWaypoints()
         app.get_path()
         
-        cv2.imwrite("/home/bkjung/image_from_waypoints_"+str(time.time())+".png", app.img)
+        cv2.imwrite("/home/bkjung/image_from_waypoints_"+time.strftime("%y%m%d_%H%M%S")+".png", app.img)
 
         print("End of Main Function")
 
