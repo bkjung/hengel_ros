@@ -173,7 +173,7 @@ class NavigationControl():
         self.freq = 1.0/self.dt
         self.r = rospy.Rate(1.0/self.dt)
 
-        self.dt_sim= 0.00001  # [s]
+        self.dt_sim= 0.00000001  # [s]
         self.r_sim = rospy.Rate(1.0/self.dt)
 
         #It SHOULD BE 1 for current code.
@@ -739,7 +739,8 @@ class NavigationControl():
                             if self.intensity_option==1:
                                 if not self.isStartEndIndexed:
                                     #For this option, is_moving_between_segments does not work!!!!
-                                    input_pixel_value = int(self.arr_intensity[self.cnt_waypoints])
+                                    original_input_pixel_value = int(self.arr_intensity[self.cnt_waypoints])
+                                    input_pixel_value = original_input_pixel_value
                                     input_pixel_value_graphic = int(self.arr_intensity[self.cnt_waypoints])
                                     if input_pixel_value >=0 and input_pixel_value<256:   #if the input is alright, then
 
@@ -787,7 +788,7 @@ class NavigationControl():
                             arr_leftWheel.append((leftWheel.x, leftWheel.y))
                             arr_rightWheel.append((rightWheel.x, rightWheel.y))
 
-                            if input_pixel_value<255:
+                            if original_input_pixel_value<=254:
                                 arr_endPoint.append((self.endPoint.x, self.endPoint.y))
                             
                             
@@ -804,10 +805,10 @@ class NavigationControl():
                             delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                             delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
 
-                            # delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
-                            # delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
-                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1.0
-                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1.0
+                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
+                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
+                            # delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1.0
+                            # delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1.0
 
                             #Motor Smoothing Buffer Disabled
                             pubDelta1 = delOmega1
