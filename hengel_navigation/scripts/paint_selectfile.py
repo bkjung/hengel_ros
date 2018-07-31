@@ -118,27 +118,10 @@ class PaintSelectfile():
                 print("Type value(>=0.001)")
             else:
                 break
-
-        while True:
-            word=raw_input("[1]Visual Compensation [2]No :")
-            if int(word)==1:
-                self.visualCompensation=True
-                break
-            elif int(word)==2:
-                self.visualCompensation=False
-                break
-
-        self.get_path()
-        print("path creation completed")
-        print("-----------------------------------------------")
-        print("Total Waypoints = %d" %(self.cnt_points))
-        print("Total Intensity Count = %d" %(len(self.arr_intensity)))
-        # print(self.arr_path)
-        #for i in range(len(self.arr_path)):
-        #    for j in range(len(self.arr_path[i])):
         #        for k in range(len(self.arr_path[i][j])):
         #            pass
                     #print(str(self.arr_path[i][j][k][0])+" "+str(self.arr_path[i][j][k][1]))
+        self.get_path()
         print("-----------------------------------------------")
 
 
@@ -147,7 +130,8 @@ class PaintSelectfile():
     def get_path(self):
         letter_path = []
         subletter_path=[]
-        x_last = -self.D
+        #x_last = -self.D
+        x_last = self.D
         y_last = 0.0
         self.cnt_points = 0
         #subletter_path.append([x_last, y_last])
@@ -168,10 +152,14 @@ class PaintSelectfile():
                         if self.option_scale_up==1:
                             x_curr=(float(_str[0])*(-1.0))
                             y_curr=(self.CANVAS_SIDE_HEIGHT-float(_str[1]))
+                            #x_curr=(float(_str[0]))
+                            #y_curr=(self.CANVAS_SIDE_HEIGHT-float(_str[1]))*(-1.0)
                             # y_curr=float(_str[1])
                         else:
-                            x_curr=(float(_str[0])*(-1.0))*self.scale_up_factor_length
-                            y_curr=self.CANVAS_SIDE_HEIGHT-float(_str[1])*self.scale_up_factor_height
+                            #x_curr=(float(_str[0])*(-1.0))*self.scale_up_factor_length
+                            #y_curr=self.CANVAS_SIDE_HEIGHT-float(_str[1])*self.scale_up_factor_height
+                            x_curr=(float(_str[0])*(-1.0))*self.scale_up_factor_length*(-1.0)
+                            y_curr=(self.CANVAS_SIDE_HEIGHT-float(_str[1])*self.scale_up_factor_height)*(-1.0)
                             # y_curr=float(_str[1])
 
 
