@@ -11,7 +11,7 @@ import sys
 import time
 import os
 import cv2
-import cv_bridge
+from cv_bridge import CvBridge
 import message_filters
 
 class VisualCompensation():
@@ -35,7 +35,7 @@ class VisualCompensation():
         rospy.spin()
 
     def sync_callback(self, _endPoint, _midPoint):
-        app=RobotView(self.img, _midPoint, _endPoint, _spray)
+        app=RobotView(self.img, _midPoint, _endPoint)
         self.img = app.run()
 
         bridge=CvBridge()

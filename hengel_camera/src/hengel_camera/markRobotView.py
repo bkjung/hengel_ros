@@ -14,7 +14,7 @@ import cv2
 import copy
 
 class RobotView():
-    def __init__(self, _img, _midpnt, _endpoint, _spray):
+    def __init__(self, _img, _midpnt, _endpoint):
     #def __init__(self):
         self.pixMetRatio=500
         self.lineThickness=0.03
@@ -27,8 +27,8 @@ class RobotView():
         self.end_x=-_endpoint.x*self.pixMetRatio
         self.end_y=self.img.shape[0]-_endpoint.y*self.pixMetRatio
         #self.spray_intensity=_spray.goal_position
-        self.spray_intensity=_spray
-        print("end_x: "+str( self.end_x)+", end_y: "+str(self.end_y)+", spray: "+str(self.spray_intensity))
+        self.spray_intensity=_endpoint.z
+        #print("end_x: "+str( self.end_x)+", end_y: "+str(self.end_y)+", spray: "+str(self.spray_intensity))
 
         self.pub1=rospy.Publisher('/markedImg', CompressedImage, queue_size=3)
         self.pub2=rospy.Publisher('/notMarkedImg', CompressedImage, queue_size=3)
