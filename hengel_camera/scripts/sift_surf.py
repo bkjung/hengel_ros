@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
-def SIFTmatching(img1, img2):
+def SIFT_KNN_matching(img1, img2):
     sift = cv2.xfeatures2d.SIFT_create()
     kp1, des1= sift.detectAndCompute(img1, None)
     kp2, des2= sift.detectAndCompute(img2, None)
@@ -21,7 +21,7 @@ def SIFTmatching(img1, img2):
     img3=cv2.drawMatchesKnn(img2, kp2, img1, kp1, good, img3, flags=2)
     plt.imshow(img3), plt.show()
 
-def ORBmatching(img1, img2):
+def ORB_BF_matching(img1, img2):
     orb= cv2.ORB_create(nfeatures=1500)
     # find the keypoints and descriptors with SIFT
     kp1, des1 = orb.detectAndCompute(img1, None)
@@ -45,7 +45,7 @@ def ORBmatching(img1, img2):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def FLANNmatching(img1, img2):
+def SIFT_FLANN_matching(img1, img2):
     sift=cv2.xfeatures2d.SIFT_create()
 
     kp1, des1 = sift.detectAndCompute(img1, None)
@@ -110,9 +110,9 @@ if __name__=="__main__":
     img2= cv2.imread("/home/bkjung/demo_1280.png", cv2.IMREAD_GRAYSCALE)
     img1= cv2.imread("/home/bkjung/LABS_6.png", cv2.IMREAD_GRAYSCALE)
 
-    FLANNmatching(img1, img2)
-    # SIFTmatching(img1, img2)
-    # ORBmatching(img1, img2)
+    SIFT_FLANN_matching(img1, img2)
+    # SIFT_KNN_matching(img1, img2)
+    # ORB_BF_matching(img1, img2)
 
     surf = cv2.xfeatures2d.SURF_create()
 
