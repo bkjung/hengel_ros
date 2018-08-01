@@ -41,72 +41,57 @@ class MapMaker():
 
 
     def run(self):
+        _time=time.time()
         x_last, y_last=0,0
         # img=np.full((pixMetRatio*letterNum, pixMetRatio),255)
         img=np.full((self.height, self.width), 255)
-
-        print("MapMaker running")
 
         count, start_count, end_count=0,0,0
 
         for letter_path in self.arr_path:
             for subletter_path in letter_path:
                 for point in subletter_path:
-                    debug=-1
                     if len(point)==2:
                         x_curr=-point[0]*self.pixMetRatio
                         y_curr=point[1]*self.pixMetRatio
-                        debug=-5
 
                     if x_curr>self.width or x_curr<0 or y_curr<0 or y_curr>self.height:
 
                         sys.exit("WAYPOINTS OUT OF CANVAS")
                     if self.mode==1:
-                        debug=-2
                         if count<len(self.arr_intensity):
                             self.sprayIntensity=int(self.arr_intensity[count])
 
                     elif self.mode==2:
-                        debug = -10
                         if (self.sprayIntensity==255) and start_count<len(self.start_point_list)  and (self.start_point_list[start_count]==count) :
                             self.sprayIntensity=0
                             start_count+=1
-                        debug = -3
                         if (self.sprayIntensity==0) and end_count<len(self.end_point_list)  and (self.end_point_list[end_count]==count):
                             self.sprayIntensity=255
                             end_count+=1
                     count+=1
 
-                    debug=0
                     if self.sprayIntensity!=255:
-                        img[int(x_curr)][int(y_curr)]=self.sprayIntensity
-                        debug=1
+                        img[int(y_curr)][int(x_curr)]=self.sprayIntensity
 
                         dist=self.lineThickness*self.pixMetRatio
                         x1=int(x_curr-dist/2)
                         x2=int(x_curr+dist/2)
 
                         for i in range(x1, x2+1):
-                            debug=2
                             x=x_curr-i
-                            debug=3
                             if i>0 and i<self.width:
-                                debug=4
                                 if abs(x)>dist/2:
-                                    img[i][int(y_curr)]=min(self.sprayIntensity, img[i][int(y_curr)])
-                                    debug=5
+                                    img[int(y_curr)][i]=min(self.sprayIntensity, img[int(y_curr)][i])
                                 else:
-                                    y=sqrt(dist*dist/4-x*x)
+                                    if i>x_curr:                                    
+                                        y=sqrt(dist*dist/4- (x_curr-i)*(x_curr-i))
+                                    else:
+                                        y=sqrt(dist*dist/4- (x_curr-i-1)*(x_curr-i-1))
                                     y1=int(y_curr-y)
                                     y2=int(y_curr+y)
-                                    debug=6
                                     for j in range(y1, y2+1):
-                                        debug=7
                                         if j>0 and j<self.height:
-                                            debug=8
-                                            img[i][j]=min(self.sprayIntensity, img[i][j])
-                                            debug=9
-        debug=-19
-        print(img.shape)
-        cv2.imwrite('/home/hengel/globalmap.png', img)
+                                            img[j][i]=min(self.sprayIntensity, img[j][i])
+        print("map making time: "+str(time.time()-_time)) 
         return img
