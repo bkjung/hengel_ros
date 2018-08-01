@@ -11,7 +11,7 @@ import sys
 import time
 import os
 import cv2
-import cv_bridge
+from cv_bridge import CvBridge
 import message_filters
 
 class VisualCompensation():
@@ -24,7 +24,7 @@ class VisualCompensation():
     def initialize(self):
         rospy.init_node('hengel_camera_compensation', anonymous=False)
         self.pixMetRatio=500
-        self.img=np.ndarray([int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)])
+        self.img=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
         self.endPoint_callback=message_filters.Subscriber('/endpoint', Point)
         self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
 
@@ -35,7 +35,8 @@ class VisualCompensation():
         rospy.spin()
 
     def sync_callback(self, _endPoint, _midPoint):
-        app=RobotView(self.img, _midPoint, _endPoint, _spray)
+        app=RobotView(self.img, _midPoint, _endPoint)
+        print("run")
         self.img = app.run()
 
         bridge=CvBridge()

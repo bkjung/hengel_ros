@@ -14,7 +14,7 @@ import cv2
 import copy
 
 class RobotView():
-    def __init__(self, _img, _midpnt, _endpoint, _spray):
+    def __init__(self, _img, _midpnt, _endpoint):
     #def __init__(self):
         self.pixMetRatio=500
         self.lineThickness=0.03
@@ -23,18 +23,21 @@ class RobotView():
 
         self.mid_x=-_midpnt.x*self.pixMetRatio
         self.mid_y=self.img.shape[0]-_midpnt.y*self.pixMetRatio
-        self.th= _midpnt.z
+        self.th= -_midpnt.z
         self.end_x=-_endpoint.x*self.pixMetRatio
         self.end_y=self.img.shape[0]-_endpoint.y*self.pixMetRatio
         #self.spray_intensity=_spray.goal_position
-        self.spray_intensity=_spray
-        print("end_x: "+str( self.end_x)+", end_y: "+str(self.end_y)+", spray: "+str(self.spray_intensity))
+        self.spray_intensity=_endpoint.z
+        # print("end_x: "+str( self.end_x)+", end_y: "+str(self.end_y)+", spray: "+str(self.spray_intensity))
 
         self.pub1=rospy.Publisher('/markedImg', CompressedImage, queue_size=3)
         self.pub2=rospy.Publisher('/notMarkedImg', CompressedImage, queue_size=3)
+        self.pub3=rospy.Publisher('/time', Float32, queue_size=5)
 
     def run(self):
+        print(self.end_x, self.img.shape[1], self.end_y, self.img.shape[0])
         if self.end_x>=0 and self.end_x<self.img.shape[1] and self.end_y>=0 and self.end_y<self.img.shape[0]:
+            print("run")
             self.line_thickener()
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
 
@@ -46,14 +49,15 @@ class RobotView():
         #self.th=pi/4
         #print("point: "+str(self.mid_x)+","+str(self.mid_yx)+","+str(self.th))
 
-        self.viewMarker()
+        # self.viewMarker()
 
-        cv2.imwrite("/home/hengel/robotview.png", self.markedImg)
-        cv2.imwrite("/home/hengel/robotview2.png", self.img)
+        # cv2.imwrite("/home/hengel/robotview.png", self.markedImg)
+        # cv2.imwrite("/home/hengel/robotview2.png", self.img)
 
         return self.img
 
     def line_thickener(self):
+        print("thickener")
         _time=time.time()
         if self.spray_intensity!=255:
             self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
@@ -76,11 +80,10 @@ class RobotView():
                         for j in range(y1, y2+1):
                             if j>0 and j<self.img.shape[0]:
                                 self.img[j][i]=min(self.spray_intensity, self.img[j][i])
-        print("map making time: "+str(time.time()-_time))
-        bridge=CvBridge()
-        imgMsg=bridge.cv2_to_compressed_imgmsg(self.img)
-        self.pub2.publish(imgMsg)
-
+        ttime=Float32()
+        ttime.data=float(time.time()-_time)
+        self.pub3.publish(ttime)
+        # print("map making time: "+str(time.time()-_time))
 
     def viewMarker(self):
         map_size=1280
