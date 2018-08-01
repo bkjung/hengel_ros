@@ -70,8 +70,8 @@ def FLANNmatching(img1, img2):
 
 
 if __name__=="__main__":
-    img2= cv2.imread("/home/intern05/demo.png", cv2.IMREAD_GRAYSCALE)
-    img1= cv2.imread("/home/intern05/test/frame0000.jpg", cv2.IMREAD_GRAYSCALE)
+    img2= cv2.imread("/home/bkjung/demo_1280.png", cv2.IMREAD_GRAYSCALE)
+    img1= cv2.imread("/home/bkjung/LABS_6.png", cv2.IMREAD_GRAYSCALE)
 
     FLANNmatching(img1, img2)
     SIFTmatching(img1, img2)
