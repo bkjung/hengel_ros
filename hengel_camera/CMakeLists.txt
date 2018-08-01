@@ -13,10 +13,13 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   geometry_msgs
   message_generation
+  roscpp
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(flann REQUIRED flann)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
