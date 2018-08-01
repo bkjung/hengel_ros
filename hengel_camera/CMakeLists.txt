@@ -199,7 +199,7 @@ catkin_package(
 catkin_install_python(PROGRAMS
   scripts/globalAlignment.py
   scripts/picam_undistort1.py
-  scripts/visualCompensation.py
+  scripts/virtualMap.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
