@@ -48,15 +48,36 @@ class Undistort():
         print("1: "+str(time.time()-_time))
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
+        _, im_mask2=self.find_mask(img2)
+        _, im_mask4=self.find_mask(img4)
+
+        print(im_mask1)
         print("2: "+str(time.time()-_time))
 
-        img1_masked=np.multiply(img1, im_mask_inv1)
-        img2_masked=np.multiply(np.multiply(img2, im_mask1), im_mask3)
-        print("3: "+str(time.time()-_time))
-        img3_masked=np.multiply(img3, im_mask_inv3)
-        img4_masked=np.multiply(np.multiply(img4, im_mask1), im_mask3)
+        rospy.loginfo("img1: "+str(img1.shape))
 
-        summed_image= img1_masked+img2_masked+img3_masked+img4_masked
+        img_white=np.full((1280, 1280,3), 255)
+
+
+        # cv2.bitwise_and(im_mask1, im_mask12, mask=im_mask2)
+        # cv2.bitwise_and(im_mask3, im_mask34, mask=im_mask4)
+        # cv2.bitwise_and(im_mask12, im_mask1234, mask=im_mask34)
+
+        # # cv2.bitwise_and(img1, img1_masked, mask= im_mask_inv1)
+        # cv2.bitwise_and(img2, img2_masked, mask=im_mask1234)
+        # # img2_masked=np.multiply(np.multiply(img2, im_mask1), im_mask3)
+        # cv2.bitwise_and(img3, img3_masked, mask=im_mask1234)
+        # # img3_masked=np.multiply(img3, im_mask_inv3)
+        # cv2.bitwise_and(img4, img4_masked, mask=im_mask1234)
+        # # cv2.bitwise_and(img4_masked, img4_masked, mask=im_mask3)
+        # # img4_masked=np.multiply(np.multiply(img4, im_mask1), im_mask3)
+
+        # # img_white_masked=np.multiply(np.multiply(np.multiply(np.multiply(img_white, im_mask1),im_mask3), im_mask2), im_mask4)
+        # cv2.bitwise_and(img_white, img_white_masked, mask=im_mask1234)
+
+        # # summed_image= img1_masked+img2_masked+img3_masked+img4_masked+img_white_masked
+        # summed_image= img1+img2_masked+img3_masked+img4_masked+img_white_masked
+
         print("4: "+str(time.time()-_time))
 
         #cv2.imshow('summed.png', summed_image)
