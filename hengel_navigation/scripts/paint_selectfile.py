@@ -150,7 +150,7 @@ class PaintSelectfile():
                         # x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH)*(-1.0)
                         # y_curr=(4.0-float(_str[1]))*CANVAS_SIDE_LENGTH
                         if self.option_scale_up==1:
-                            x_curr=(float(_str[0])*(-1.0))
+                            x_curr=float(_str[0])*(-1)
                             y_curr=(self.CANVAS_SIDE_HEIGHT-float(_str[1]))
                             #x_curr=(float(_str[0]))
                             #y_curr=(self.CANVAS_SIDE_HEIGHT-float(_str[1]))*(-1.0)
@@ -158,8 +158,8 @@ class PaintSelectfile():
                         else:
                             #x_curr=(float(_str[0])*(-1.0))*self.scale_up_factor_length
                             #y_curr=self.CANVAS_SIDE_HEIGHT-float(_str[1])*self.scale_up_factor_height
-                            x_curr=(float(_str[0])*(-1.0))*self.scale_up_factor_length*(-1.0)
-                            y_curr=(self.CANVAS_SIDE_HEIGHT-float(_str[1])*self.scale_up_factor_height)*(-1.0)
+                            x_curr=(float(_str[0])*(-1))*self.scale_up_factor_length
+                            y_curr=self.CANVAS_SIDE_HEIGHT-float(_str[1])*self.scale_up_factor_height
                             # y_curr=float(_str[1])
 
 
