@@ -54,6 +54,7 @@ class RobotView():
         return self.img
 
     def line_thickener(self):
+        _time=time.time()
         if self.spray_intensity!=255:
             self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
             dist=self.lineThickness*self.pixMetRatio
@@ -66,15 +67,20 @@ class RobotView():
                     if abs(x)>dist/2:
                         self.img[int(self.end_y)][i]=min(self.spray_intensity, self.img[int(self.end_y)][i])
                     else:
-                        y=sqrt(dist*dist/4-x*x)
+                        if i>self.end_x:
+                            y=sqrt(dist*dist/4-(self.end_x-i)*(self.end_x-i))
+                        else:
+                            y=sqrt(dist*dist/4-(self.end_x-i-1)*(self.end_x-i-1))
                         y1=int(self.end_y-y)
                         y2=int(self.end_y+y)
                         for j in range(y1, y2+1):
                             if j>0 and j<self.img.shape[0]:
                                 self.img[j][i]=min(self.spray_intensity, self.img[j][i])
+        print("map making time: "+str(time.time()-_time))
         bridge=CvBridge()
         imgMsg=bridge.cv2_to_compressed_imgmsg(self.img)
         self.pub2.publish(imgMsg)
+
 
     def viewMarker(self):
         map_size=1280
