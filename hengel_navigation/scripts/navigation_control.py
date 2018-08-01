@@ -435,6 +435,7 @@ class NavigationControl():
 
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
+                            self.endPoint.z=float(input_pixel_value_graphic)
                             self.point.z=self.heading.data
                             self.pub_midpoint.publish(self.point)
                             self.pub_endpoint.publish(self.endPoint)
