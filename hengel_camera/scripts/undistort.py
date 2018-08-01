@@ -19,6 +19,18 @@ class Undistort():
         self.cam_activator_pub=rospy.Publisher('/initiator', Bool, queue_size=1)
         self.rate=rospy.Rate(10)
 
+        self.homo1= np.array([[-1.67130692e-01,  5.99743615e+00, -5.29293784e+02],
+            [-2.40710331e+00,  4.76090267e+00,  1.55119117e+03],
+            [-2.21043846e-04,  7.30990701e-03,  1.00000000e+00]])
+        self.homo2= np.array([[-2.36547415e+00,  4.44589419e+00,  1.65240597e+03],
+            [-1.11902669e-02,  2.88055561e+00,  2.03902843e+03],
+            [-5.36747061e-06,  6.70728023e-03,  1.00000000e+00]])
+        self.homo3= np.array([[ 2.55132452e-01,  9.82372337e+00,  4.09600642e+03],
+            [ 6.45201391e+00,  1.30885948e+01, -1.66201249e+03],
+            [ 3.88669729e-04,  2.00259308e-02,  1.00000000e+00]])
+        self.homo4= np.array([[ 2.57420243e+00,  5.85803823e+00, -4.05003547e+02],
+            [-1.15034759e-01,  7.22474987e+00, -7.29546146e+02],
+            [-1.92621119e-04,  8.88963498e-03,  1.00000000e+00]])
 
         self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
         self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
@@ -40,28 +52,24 @@ class Undistort():
 
     def sync_callback(self, _img1, _img2, _img3, _img4):
         _time=time.time()
+        bridge=CvBridge()
         self.is_initiated=True
-        img1,time1=self.callback_undistort1(_img1)
-        img2,time2=self.callback_undistort2(_img2)
-        img3,time3=self.callback_undistort3(_img3)
-        img4,time4=self.callback_undistort4(_img4)
-        print("1: "+str(time.time()-_time))
+        img1 = cv2.warpPerspective(bridge.compressed_imgmsg_to_cv2(_img1), self.homo1, (1280,1280))
+        img2 = cv2.warpPerspective(bridge.compressed_imgmsg_to_cv2(_img2), self.homo2, (1280,1280))
+        img3 = cv2.warpPerspective(bridge.compressed_imgmsg_to_cv2(_img3), self.homo3, (1280,1280))
+        img4 = cv2.warpPerspective(bridge.compressed_imgmsg_to_cv2(_img4), self.homo4, (1280,1280))
+
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
         _, im_mask2=self.find_mask(img2)
         _, im_mask4=self.find_mask(img4)
 
         print(im_mask1)
-        print("2: "+str(time.time()-_time))
-
-        rospy.loginfo("img1: "+str(img1.shape))
-
         img_white=np.full((1280, 1280,3), 255)
 
-
-        # cv2.bitwise_and(im_mask1, im_mask12, mask=im_mask2)
-        # cv2.bitwise_and(im_mask3, im_mask34, mask=im_mask4)
-        # cv2.bitwise_and(im_mask12, im_mask1234, mask=im_mask34)
+        im_mask13=cv2.bitwise_and(np.array(im_mask1), np.array(im_mask3))
+        im_mask24=cv2.bitwise_and(np.array(im_mask2), np.array(im_mask4))
+        im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
 
         # # cv2.bitwise_and(img1, img1_masked, mask= im_mask_inv1)
         # cv2.bitwise_and(img2, img2_masked, mask=im_mask1234)
@@ -70,38 +78,31 @@ class Undistort():
         # # img3_masked=np.multiply(img3, im_mask_inv3)
         # cv2.bitwise_and(img4, img4_masked, mask=im_mask1234)
         # # cv2.bitwise_and(img4_masked, img4_masked, mask=im_mask3)
-        # # img4_masked=np.multiply(np.multiply(img4, im_mask1), im_mask3)
 
         # # img_white_masked=np.multiply(np.multiply(np.multiply(np.multiply(img_white, im_mask1),im_mask3), im_mask2), im_mask4)
-        # cv2.bitwise_and(img_white, img_white_masked, mask=im_mask1234)
-
-        # # summed_image= img1_masked+img2_masked+img3_masked+img4_masked+img_white_masked
-        # summed_image= img1+img2_masked+img3_masked+img4_masked+img_white_masked
+        img_white_masked=np.multiply(img_white, im_mask1234)
+        img2_masked=np.multiply(img2, im_mask13)
+        img4_masked=np.multiply(img4, im_mask13)
+        summed_image= img1+img2_masked+img3+img4_masked+img_white_masked
 
         print("4: "+str(time.time()-_time))
 
-        #cv2.imshow('summed.png', summed_image)
-        #cv2.waitKey(3)
         bridge=CvBridge()
         summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
-        print("5: "+str(time.time()-_time))
         self.sum_pub.publish(summed_msg)
-        print("img1: "+str(time1)+", img2: "+str(time2-time1)+", img3: "+str(time3-time1)+", img4: "+str(time4-time1)+", summ: "+str(time.time()-time1))
 
-        #cv2.imwrite('homo1.png',img1)
-        #cv2.imwrite('homo2.png',img2)
-        #cv2.imwrite('homo3.png',img3)
-        #cv2.imwrite('homo4.png',img4)
 
     def find_mask(self, img):
         _time=time.time()
         black_range1=np.array([0,0,0])
         time1=time.time()-_time
-        im_mask=(cv2.inRange(img, black_range1, black_range1)).astype('bool')
+        # im_mask=(cv2.inRange(img, black_range1, black_range1)).astype('bool')
+        im_mask=(cv2.inRange(img, black_range1, black_range1))
         time2=time.time()-_time
         im_mask=np.dstack((im_mask, im_mask, im_mask))
         time3=time.time()-_time
-        im_mask_inv=(1-im_mask).astype('bool')
+        # im_mask_inv=(1-im_mask).astype('bool')
+        im_mask_inv=(1-im_mask)
         time4=time.time()-_time
         print("1: "+str(time1)+", 2:"+str(time2)+", 3:"+str(time3)+", 4:"+str(time4))
         return im_mask_inv, im_mask
