@@ -4,7 +4,7 @@ import rospy
 from geometry_msgs.msg import Point
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Image, CompressedImage
-from hengel_camera.markRobotView import RobotView
+from markRobotView import RobotView
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos, asin
 import numpy as np
 import sys
@@ -74,11 +74,13 @@ class VisualCompensation():
         img4_masked=np.multiply(img4, im_mask13)
         summed_image= img1+img2_masked+img3+img4_masked+img_white_masked
 
-        print("4: "+str(time.time()-_time))
+        self.crop_image(summed_image)
 
-        bridge=CvBridge()
-        summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
-        self.sum_pub.publish(summed_msg)
+        # bridge=CvBridge()
+        # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
+        # self.sum_pub.publish(summed_msg)
+
+    # def crop_image(self, _img):
 
 
     def find_mask(self, img):
@@ -92,13 +94,12 @@ class VisualCompensation():
         return im_mask_inv, im_mask
 
     def sync_virtual_callback(self, _endPoint, _midPoint):
-        app=RobotView(self.img, _midPoint, _endPoint)
-        print("run")
+        app=RobotView(self.img, _midPoint, _endPoint) # Add the endpoint into the virtual map
         self.img = app.run()
 
-        bridge=CvBridge()
-        virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.img)
-        self.pub_virtual_map.publish(virtual_map_msg)
+        # bridge=CvBridge()
+        # virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.img)
+        # self.pub_virtual_map.publish(virtual_map_msg)
 
     def callback_undistort1(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
@@ -137,8 +138,6 @@ class VisualCompensation():
             [-1.15034759e-01,  7.22474987e+00, -7.29546146e+02],
             [-1.92621119e-04,  8.88963498e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo4, (1280,1280))
-
-
 
 
 if __name__=='__main__':
