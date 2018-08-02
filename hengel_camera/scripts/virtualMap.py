@@ -28,6 +28,10 @@ class VisualCompensation():
         self.bridge=CvBridge()
         self.pixMetRatio=500
 
+        self.mid_predict_canvas_x=0
+        self.mid_predict_canvas_y=0
+        self.mid_predict_canvas_th=0
+
         self.img=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
         self.endPoint_callback=message_filters.Subscriber('/endpoint', Point)
         self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
@@ -52,7 +56,7 @@ class VisualCompensation():
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
         _time=time.time()
         bridge=CvBridge()
-        img1 = self.callback_undistort1(_img2)
+        img1 = self.callback_undistort1(_img1)
         img2 = self.callback_undistort2(_img2)
         img3 = self.callback_undistort3(_img3)
         img4 = self.callback_undistort4(_img4)
@@ -80,7 +84,17 @@ class VisualCompensation():
         # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
         # self.sum_pub.publish(summed_msg)
 
-    # def crop_image(self, _img):
+    def crop_image(self, _img):
+        mid_predict_img_x = self.mid_predict_canvas_x * self.pixMetRatio
+        mid_predict_img_y = _img.shape[0] self.mid_predict_canvas_y * self.pixMetRatio
+        mid_predict_img_th = self.mid_predict_canvas_th
+        half_map_size = 125
+
+        imgPts=np.array([[0,0], [0, 1280], [1280, 1280], [1280,0]])
+        obsPts=np.array([[mid_predict_img_x-half_map_size*sin(mid_predict_img_th), mid_predict_img_y-cos(mid_predict_img_th)],
+                        [mid_predict_img_x+half_map_size]])
+
+        
 
 
     def find_mask(self, img):
@@ -95,6 +109,10 @@ class VisualCompensation():
 
     def sync_virtual_callback(self, _endPoint, _midPoint):
         app=RobotView(self.img, _midPoint, _endPoint) # Add the endpoint into the virtual map
+        self.mid_predict_canvas_x=_midPoint.x
+        self.mid_predict_canvas_y=_midPoint.y
+        self.mid_predict_canvas_th=_midPoint.z
+
         self.img = app.run()
 
         # bridge=CvBridge()
