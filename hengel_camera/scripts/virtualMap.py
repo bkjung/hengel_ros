@@ -108,12 +108,16 @@ class VisualCompensation():
         return im_mask_inv, im_mask
 
     def sync_virtual_callback(self, _endPoint, _midPoint):
+        _time=time.time()
+
         app=RobotView(self.img, _midPoint, _endPoint) # Add the endpoint into the virtual map
         self.mid_predict_canvas_x=_midPoint.x
         self.mid_predict_canvas_y=_midPoint.y
         self.mid_predict_canvas_th=_midPoint.z
 
         self.img = app.run()
+
+        print("Visual Calculation Elapsed Time: "+str(time.time()-_time))
 
         # bridge=CvBridge()
         # virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.img)
