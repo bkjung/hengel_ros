@@ -131,7 +131,7 @@ link_directories(${FLANN_LIBRARY_DIRS})
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
-  src/${PROJECT_NAME}/feature_match.c
+  src/${PROJECT_NAME}/feature_match.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -148,7 +148,7 @@ add_library(${PROJECT_NAME}
 # add_executable(hengel_mono_odom src/hengel_mono_odom.cpp)
 # add_dependencies(hengel_mono_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # target_link_libraries(hengel_mono_odom ${catkin_LIBRARIES})
-add_executable(feature_match src/hengel_camera/feature_match.c)
+add_executable(feature_match src/hengel_camera/feature_match.cpp)
 
 #######################################################################################
 
