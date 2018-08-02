@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <time.h>
+
 #define FLANN_USE_CUDA
 
 
@@ -66,6 +68,8 @@ void write_results(const char* filename, int *data, int rows, int cols)
 
 int main(int argc, char** argv)
 {
+    clock_t tStart = clock();
+
     float* dataset;
     float* testset;
     int nn;
@@ -110,6 +114,8 @@ int main(int argc, char** argv)
     free(testset);
     free(result);
     free(dists);
+
+    printf("Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
 
     return 0;
 }
