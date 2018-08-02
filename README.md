@@ -10,3 +10,10 @@ hengel robot autonomous painting - ros package
 
 ### Requirements:
 git clone https://github.com/mariusmuja/flann.git /usr/local/include/flann
+
+cd /usr/local/include/flann
+mkdir build
+cd build
+cmake ..
+make
+sudo make install
