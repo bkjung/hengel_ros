@@ -12,6 +12,7 @@ import numpy as np
 from cv_bridge import CvBridge
 import cv2
 import copy
+import collections
 
 class RobotView():
     def __init__(self, _img, _midpnt, _endpoint):
@@ -84,6 +85,37 @@ class RobotView():
         ttime.data=float(time.time()-_time)
         self.pub3.publish(ttime)
         # print("map making time: "+str(time.time()-_time))
+
+    def remove_points_during_vision_compensation(self, _recent_pts):
+        #Make all pixels in recent_pts to white (255)
+        print("remove points during visual compenstaion")
+
+        #This should be carefully selected !!!!!!!!!!!!!!!!!!!
+        dist=self.lineThickness*self.pixMetRatio
+
+        for ind in range(len(_recent_pts)):
+            point_x = _recent_pts[ind][0]
+            point_y = _recent_pts[ind][1]
+            if point_x != 0.0 and point_y != 0.0:
+                x1=int(point_x+dist/2)
+                x2=int(point_x+dist/2)
+
+                for i in range(x1, x2+1):
+                    x=point_x-i
+                    if i>0 and i<self.img.shape[1]:
+                        if abs(x)>dist/2:
+                            self.img[int(point_y)][i]=255
+                        else:
+                            if i>point_x:
+                                y=sqrt(dist*dist/4-(point_x-i)*(self.point_x-i))
+                            else:
+                                y=sqrt(dist*dist/4-(point_x-i-1)*(self.point_x-i-1))
+                            y1=int(point_y-y)
+                            y2=int(point_y+y)
+                            for j in range(y1, y2+1):
+                                if j>0 and j<self.img.shape[0]:
+                                    self.img[j][i]=255
+
 
     def viewMarker(self):
         map_size=1280

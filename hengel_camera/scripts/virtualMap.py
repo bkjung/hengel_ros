@@ -13,14 +13,19 @@ import os
 import cv2
 from cv_bridge import CvBridge
 import message_filters
+import collections
 
 class VisualCompensation():
-    def __init__(self):
+    def __init__(self, _num_pts_delete):
         word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
         self.width=float(word.split()[0])
         self.height=float(word.split()[1])
 
         self.initialize()
+
+        self.num_pts_delete = _num_pts_delete
+
+        self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
 
     def initialize(self):
         rospy.init_node('hengel_camera_compensation', anonymous=False)
@@ -41,7 +46,7 @@ class VisualCompensation():
         self.ts.registerCallback(self.sync_virtual_callback)
 
         self.pub_virtual_map=rospy.Publisher('/virtual_map', CompressedImage, queue_size=3)
-
+        self.vision_offset_publisher = rospy.Publisher('/offset_change', Point, queue_size=10)
         self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
         self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
         self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
@@ -80,6 +85,24 @@ class VisualCompensation():
 
         self.crop_image(summed_image)
 
+        #################
+        '''
+        fm = Feature_Match(self.img, summed_image)
+        if fm.status == True:
+            self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
+            app=RobotView(self.img, _midPoint, _endPoint) # Add the endpoint into the virtual map
+            self.img = app.remove_points_during_vision_compensation(self.recent_pts)
+
+            #Initialize Queue
+            self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
+
+
+
+        '''
+        #################
+
+        print("Visual Calculation Elapsed Time After Camera_Image Input: "+str(time.time()-_time))
+
         # bridge=CvBridge()
         # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
         # self.sum_pub.publish(summed_msg)
@@ -93,9 +116,6 @@ class VisualCompensation():
         imgPts=np.array([[0,0], [0, 1280], [1280, 1280], [1280,0]])
         obsPts=np.array([[mid_predict_img_x-half_map_size*sin(mid_predict_img_th), mid_predict_img_y-cos(mid_predict_img_th)],
                         [mid_predict_img_x+half_map_size]])
-
-
-
 
     def find_mask(self, img):
         _time=time.time()
@@ -115,9 +135,9 @@ class VisualCompensation():
         self.mid_predict_canvas_y=_midPoint.y
         self.mid_predict_canvas_th=_midPoint.z
 
-        self.img = app.run()
+        self.recent_pts.appendleft((_midPoint.x, _midPoint.y))
 
-        print("Visual Calculation Elapsed Time: "+str(time.time()-_time))
+        self.img = app.run()
 
         # bridge=CvBridge()
         # virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.img)
@@ -163,4 +183,5 @@ class VisualCompensation():
 
 
 if __name__=='__main__':
-    VisualCompensation()
+    num_pts_delte = 150 #num_of_waypoints_to_delete_in_virtualmap_after_compensation
+    VisualCompensation(num_pts_delete)
