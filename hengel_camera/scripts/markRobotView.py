@@ -38,7 +38,7 @@ class RobotView():
         print(self.end_x, self.img.shape[1], self.end_y, self.img.shape[0])
         if self.end_x>=0 and self.end_x<self.img.shape[1] and self.end_y>=0 and self.end_y<self.img.shape[0]:
             print("run")
-            self.line_thickener()
+            self.add_endpoint()
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
 
         #self.img=cv2.imread('/home/hengel/globalmap.png')
@@ -56,8 +56,8 @@ class RobotView():
 
         return self.img
 
-    def line_thickener(self):
-        print("thickener")
+    def add_endpoint(self):
+        print("endpoint add")
         _time=time.time()
         if self.spray_intensity!=255:
             self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
