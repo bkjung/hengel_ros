@@ -305,12 +305,8 @@ class NavigationControl():
         self.valve_angle_publisher.publish(
                 self.valve_angle_input)
 
-        self.offset_change_x_subscriber = rospy.Subscriber(
-                '/offset_change_x', Float32, queue_size=5)
-        self.offset_change_y_subscriber = rospy.Subscriber(
-                '/offset_change_y', Float32, queue_size=5)
-        self.offset_change_theta_subscriber = rospy.Subscriber(
-                '/offset_change_theta', Float32, queue_size=5)
+        self.vision_offset_subscriber = rospy.Subscriber(
+                '/offset_change', Point, self.callback_vision_offset)
 
         self.pub_markers = rospy.Publisher('/robot_trajectory_visualization', Marker, queue_size=5)
         self.pub_markers_painting = rospy.Publisher('/painting_visualization', Marker, queue_size=5)
@@ -937,8 +933,6 @@ class NavigationControl():
     def save_topview_image(self):
         pass
 
-
-
     def plot_arr(self, arr, option):
         arr_1 = list(-item[0] for item in arr)
         arr_2 = list(item[1] for item in arr)
@@ -990,3 +984,13 @@ class NavigationControl():
             self.valve_angle_input.goal_position = 1024
             self.valve_angle_publisher.publish(self.valve_angle_input)
             self.r.sleep()
+
+    def callback_vision_offset(self, _data):
+        print("Callback Vision OFFSET Received")
+        offset_x = _data.x
+        offset_y = _data.y
+        offset_theta = _data.z
+
+        self.point.x=self.point.x + offset_x
+        self.point.y=self.point.y + offset_y
+        self.heading.data = self.heading.data + offset_theta
