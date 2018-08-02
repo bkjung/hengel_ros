@@ -234,12 +234,15 @@ class NavigationControl():
         self.traj_painting.action = Marker.ADD
         self.traj_painting.pose.orientation.w = 1.0
         self.traj_painting.type = Marker.LINE_STRIP
+
         self.traj_painting.scale.x = 0.01 # line width
         self.traj_painting.color.r = 0.0
         self.traj_painting.color.b = 1.0
         self.traj_painting.color.a = 1.0
 
+
         self.traj_painting.id = 0; #overwrite any existing shapes
+
         self.traj_painting.lifetime.secs = 1; #timeout for display
 
         self.traj_painting.points = []
@@ -292,8 +295,6 @@ class NavigationControl():
         #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
 
-        # self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
-
         self.valve_angle_publisher = rospy.Publisher(
                 '/valve_input', ValveInput, queue_size=5)
         self.valve_operation_mode_publisher = rospy.Publisher(
@@ -304,17 +305,12 @@ class NavigationControl():
         self.valve_angle_publisher.publish(
                 self.valve_angle_input)
 
-        #self.crop_map_publisher = rospy.Publisher('/cropped_predict_map', PIL.Image, queue_size=5)
-        self.offset_change_x_publisher = rospy.Publisher(
+        self.offset_change_x_subscriber = rospy.Subscriber(
                 '/offset_change_x', Float32, queue_size=5)
-        self.offset_change_y_publisher = rospy.Publisher(
+        self.offset_change_y_subscriber = rospy.Subscriber(
                 '/offset_change_y', Float32, queue_size=5)
-        self.offset_change_theta_publisher = rospy.Publisher(
+        self.offset_change_theta_subscriber = rospy.Subscriber(
                 '/offset_change_theta', Float32, queue_size=5)
-
-        # self.spray_intensity_publisher = rospy.Publisher(
-        #         '/spray_intensity', Float32, queue_size=5)
-
 
         self.pub_markers = rospy.Publisher('/robot_trajectory_visualization', Marker, queue_size=5)
         self.pub_markers_painting = rospy.Publisher('/painting_visualization', Marker, queue_size=5)
@@ -454,10 +450,10 @@ class NavigationControl():
                             delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                             delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
 
-                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
-                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
-                            # delOmega1= (1/self.R)*(delS+2*self.L*delOmega)
-                            # delOmega2= (1/self.R)*(delS-2*self.L*delOmega)
+                            # delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
+                            # delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
+                            delOmega1= (1/self.R)*(delS+self.L*delOmega)
+                            delOmega2= (1/self.R)*(delS-self.L*delOmega)
 
                             if self.motor_buffer_option == 1:       #Motor Smoothing Buffer Enabled
                                 pass
@@ -807,10 +803,10 @@ class NavigationControl():
                             delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                             delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
 
-                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
-                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
-                            # delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 1.0
-                            # delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 1.0
+                            # delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
+                            # delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
+                            delOmega1= (1/self.R)*(delS+self.L*delOmega) * 1.0
+                            delOmega2= (1/self.R)*(delS-self.L*delOmega) * 1.0
 
                             #Motor Smoothing Buffer Disabled
                             pubDelta1 = delOmega1
