@@ -107,10 +107,10 @@ def SIFT_FLANN_matching(img1, img2):
 
 
 if __name__=="__main__":
-    img2= cv2.imread("/home/bkjung/demo_1280.png", cv2.IMREAD_GRAYSCALE)
-    img1= cv2.imread("/home/bkjung/LABS_6.png", cv2.IMREAD_GRAYSCALE)
+    img_virtual= cv2.imread("/home/bkjung/demo_1280.png", cv2.IMREAD_GRAYSCALE)
+    img_photo= cv2.imread("/home/bkjung/LABS_6.png", cv2.IMREAD_GRAYSCALE)
 
-    SIFT_FLANN_matching(img1, img2)
+    SIFT_FLANN_matching(img_photo, img_virtual)
     # SIFT_KNN_matching(img1, img2)
     # ORB_BF_matching(img1, img2)
 
