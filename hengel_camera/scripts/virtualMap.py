@@ -86,7 +86,7 @@ class VisualCompensation():
 
     def crop_image(self, _img):
         mid_predict_img_x = self.mid_predict_canvas_x * self.pixMetRatio
-        mid_predict_img_y = _img.shape[0] self.mid_predict_canvas_y * self.pixMetRatio
+        mid_predict_img_y = _img.shape[0] - self.mid_predict_canvas_y * self.pixMetRatio
         mid_predict_img_th = self.mid_predict_canvas_th
         half_map_size = 125
 
@@ -94,7 +94,7 @@ class VisualCompensation():
         obsPts=np.array([[mid_predict_img_x-half_map_size*sin(mid_predict_img_th), mid_predict_img_y-cos(mid_predict_img_th)],
                         [mid_predict_img_x+half_map_size]])
 
-        
+
 
 
     def find_mask(self, img):
@@ -132,7 +132,7 @@ class VisualCompensation():
             [-2.21043846e-04,  7.30990701e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo1, (1280,1280))
 
-    
+
     def callback_undistort2(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         mtx=np.array([[397.515439, 0, 427.319496], [0, 396.393346, 359.074317],[0,0,1]])
