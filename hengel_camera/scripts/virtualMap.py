@@ -150,7 +150,7 @@ class VisualCompensation():
         
         #################
 
-        print("Visual Calculation Elapsed Time After Camera_Image Input: "+str(time.time()-_time))
+        print("Cam Input -> Visual Calc / Total Time: "+str(time.time()-_time))
 
         # bridge=CvBridge()
         # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
