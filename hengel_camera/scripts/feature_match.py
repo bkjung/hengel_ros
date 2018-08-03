@@ -59,7 +59,7 @@ class FeatureMatch():
         cv2.imwrite("/home/bkjung/img1.png", img1)
         cv2.imwrite("/home/bkjung/img2.png", img2)
 
-        print("img1: "+str(img1.shape)+", img2: "+str(img2.shape))
+        # print("img1: "+str(img1.shape)+", img2: "+str(img2.shape))
 
         kp1, des1 = sift.detectAndCompute(img1, None)
         kp2, des2 = sift.detectAndCompute(img2, None)
@@ -81,11 +81,11 @@ class FeatureMatch():
                 good.append(m)
 
         # print(len(kp1))
-        print([m.queryIdx for m in good])
 
         # print("abc",kp1[good[3].queryIdx].pt)
         
         if len(good)>MIN_MATCH_COUNT:
+            print([m.queryIdx for m in good])
             # print(np.float32([ kp1[m.queryIdx].pt for m in good ]))
             src_pts=np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
             dst_pts=np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
