@@ -15,6 +15,7 @@ from cv_bridge import CvBridge
 import message_filters
 import collections
 from feature_match import FeatureMatch
+from matplotlib import pyplot as plt
 
 class VisualCompensation():
     def __init__(self, _num_pts_delete):
@@ -25,8 +26,6 @@ class VisualCompensation():
         self.num_pts_delete = _num_pts_delete
         self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
 
-
-
         self.initialize()
 
     def initialize(self):
@@ -35,10 +34,8 @@ class VisualCompensation():
         self.bridge=CvBridge()
         self.pixMetRatio=500
 
-
         self.img=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
         self.app_robotview=RobotView(self.img) # Add the endpoint into the virtual map
-
 
         self.mid_predict_canvas_x=0
         self.mid_predict_canvas_y=0
@@ -46,7 +43,6 @@ class VisualCompensation():
 
         self.endPoint_callback=message_filters.Subscriber('/endpoint', Point)
         self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
-
 
         self.ts=message_filters.ApproximateTimeSynchronizer([self.endPoint_callback, self.midPoint_callback], 10, 0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_virtual_callback)
@@ -124,16 +120,20 @@ class VisualCompensation():
                 print("IMAGE EMPTY")
                 raise Exeption("Image Empty")
             else:
-                # print("debug-1")
                 # print("img1 "+str(self.img.dtype)+" "+"img2 "+str(summed_image.dtype))
                 _img1 = np.uint8(self.img)
                 _img2 = np.uint8(summed_image)
 
-                # print("debug-2")
                 # _img1 = cv2.cvtColor(_img1, cv2.COLOR_BGR2GRAY)
-                # print("debug-3")
                 _img2 = cv2.cvtColor(_img2, cv2.COLOR_BGR2GRAY)
-                # print("debug-4")
+
+                plt.figure(1)
+                plt.subplot(211)
+                plt.imshow(_img1, cmap='gray')
+                plt.subplot(212)
+                plt.imshow(_img2, cmap='gray')
+                plt.draw()
+                plt.pause(0.00000000001)
 
                 fm.SIFT_FLANN_matching(_img1, _img2)
                 if fm.status == True:
