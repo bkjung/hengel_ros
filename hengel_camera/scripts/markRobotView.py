@@ -41,7 +41,7 @@ class RobotView():
         if self.end_x>=0 and self.end_x<self.img.shape[1] and self.end_y>=0 and self.end_y<self.img.shape[0]:
             
             print("run")
-            self.add_endpoint(_midPoint, _endPoint)
+            self.add_endpoint()
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
 
         #self.img=cv2.imread('/home/hengel/globalmap.png')
