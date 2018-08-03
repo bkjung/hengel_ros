@@ -74,7 +74,8 @@ class VisualCompensation():
 
         rospy.spin()
 
-    def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
+    # def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
+    def sync_real_callback(self, _img1, _img2, _img3, _img4):
         _time=time.time()
         img1 = self.undistort1(_img1)
         img2 = self.undistort2(_img2)
@@ -107,16 +108,19 @@ class VisualCompensation():
         # self.crop_image(summed_image)
 
         #################
-        
-        fm = FeatureMatch()
-        fm.SIFT_FLANN_matching(self.img, summed_image)
-        if fm.status == True:
-            self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
-            self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
-            self.img = self.app_robotview.img
+        try:
+            fm = FeatureMatch()
+            fm.SIFT_FLANN_matching(np.dstack((self.img,self.img, self.img)), summed_image)
+            if fm.status == True:
+                self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
+                self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
+                self.img = self.app_robotview.img
 
-            #Initialize Queue
-            self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
+                #Initialize Queue
+                self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
+        except Exception as e:
+            print(e)
+            sys.exit("flann error")
 
 
 
