@@ -21,14 +21,13 @@ class VisualCompensation():
         word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
         self.width=float(word.split()[0])
         self.height=float(word.split()[1])
-
-        self.initialize()
-
+        
         self.num_pts_delete = _num_pts_delete
-
         self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
 
-        self.app_robotview=RobotView(self.img) # Add the endpoint into the virtual map
+
+
+        self.initialize()
 
     def initialize(self):
         rospy.init_node('hengel_camera_compensation', anonymous=False)
@@ -36,11 +35,15 @@ class VisualCompensation():
         self.bridge=CvBridge()
         self.pixMetRatio=500
 
+
+        self.img=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
+        self.app_robotview=RobotView(self.img) # Add the endpoint into the virtual map
+
+
         self.mid_predict_canvas_x=0
         self.mid_predict_canvas_y=0
         self.mid_predict_canvas_th=0
 
-        self.img=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
         self.endPoint_callback=message_filters.Subscriber('/endpoint', Point)
         self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
 
@@ -54,8 +57,11 @@ class VisualCompensation():
         self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
         self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
         self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
+        self.callback_pi_left=message_filters.Subscriber('/pi_cam_left/compressed', CompressedImage)
+        self.callback_pi_right=message_filters.Subscriber('/pi_cam_right/compressed', CompressedImage)
 
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10, 0.1, allow_headerless=True)
+        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4,
+                                             self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_real_callback)
 
 
@@ -66,13 +72,14 @@ class VisualCompensation():
 
         rospy.spin()
 
-    def sync_real_callback(self, _img1, _img2, _img3, _img4):
+    def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
         _time=time.time()
-        bridge=CvBridge()
-        img1 = self.callback_undistort1(_img1)
-        img2 = self.callback_undistort2(_img2)
-        img3 = self.callback_undistort3(_img3)
-        img4 = self.callback_undistort4(_img4)
+        img1 = self.undistort1(_img1)
+        img2 = self.undistort2(_img2)
+        img3 = self.undistort3(_img3)
+        img4 = self.undistort4(_img4)
+        img_left=self.undistort_left(_img_left)
+        img_right=self.undistort_right(_img_right)
 
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
@@ -158,26 +165,27 @@ class VisualCompensation():
         # virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.img)
         # self.pub_virtual_map.publish(virtual_map_msg)
 
-    def callback_undistort1(self, _img):
+    def undistort1(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[392.457559, 0, 307.489055],[0, 393.146087, 314.555479], [0,0,1]])
-        dst=np.array([-0.005695, -0.017562, -0.000497, 0.001201])
+        mtx=np.array([[390.6235286774559, 0.0, 380.6630283824523], [0.0, 391.05153994713896, 317.8133925380764], [0.0, 0.0, 1.0]])
+        dst=np.array([0.006484855348017496, -0.019610851268822574, 0.0009123195786112891, -0.00424460183636266])
+        # cv2.undistort(img, mt, dst, None, mtx)
         homo1= np.array([[-1.67130692e-01,  5.99743615e+00, -5.29293784e+02],
             [-2.40710331e+00,  4.76090267e+00,  1.55119117e+03],
             [-2.21043846e-04,  7.30990701e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo1, (1280,1280))
 
 
-    def callback_undistort2(self, _img):
+    def undistort2(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[397.515439, 0, 427.319496], [0, 396.393346, 359.074317],[0,0,1]])
-        dst=np.array([0.008050, -0.019082, 0.002712, 0.009123])
+        mtx=np.array([[394.88382527431764, 0.0, 423.8584744100752], [0.0, 396.53524728115286, 359.4130870937376], [0.0, 0.0, 1.0]])
+        dst=np.array([0.012819138964185638, -0.02474738869007743, 0.005214333503327388, -0.0028437261374924037])
         homo2= np.array([[-2.36547415e+00,  4.44589419e+00,  1.65240597e+03],
             [-1.11902669e-02,  2.88055561e+00,  2.03902843e+03],
             [-5.36747061e-06,  6.70728023e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo2, (1280,1280))
 
-    def callback_undistort3(self, _img):
+    def undistort3(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         mtx=np.array([[384.740566000322766, 0, 416.6703696819],[0, 386.64723334, 297.593178440],[0,0,1]])
         dst=np.array([-0.0048592546, -0.02278286, 0.00255238134, -0.002026589])
@@ -187,7 +195,7 @@ class VisualCompensation():
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo3, (1280,1280))
 
 
-    def callback_undistort4(self, _img):
+    def undistort4(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         mtx=np.array([[387.43952147965115, 0.0, 412.56131546398876], [0.0, 389.1761911600528, 259.39190229663814], [0.0, 0.0, 1.0]])
         dst=np.array([0.005292760390926921, -0.025832001932141472, 0.0005161396135159652, -0.00047231070184728226])
@@ -196,7 +204,15 @@ class VisualCompensation():
             [-1.92621119e-04,  8.88963498e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo4, (1280,1280))
 
+    def undistort_left(self, _img):
+        img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        mtx=np.array([[496.88077412085187, 0.0, 486.19161191113693], [0.0, 497.77308359203073, 348.482250144119], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.27524035766660704, 0.055346669640229516, 0.002041430748143387, -0.0012188333190676689])
 
+    def undistort_right(self, _img):
+        img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        mtx=np.array([[494.0169295185964, 0.0, 483.6710483879246], [0.0, 495.87509303786857, 336.69262125267153], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.26693726936305806, 0.05239559897759021, 0.0024912074565555443, -0.0015904998174301696])
 if __name__=='__main__':
-    num_pts_delte = 150 #num_of_waypoints_to_delete_in_virtualmap_after_compensation
+    num_pts_delete = 150 #num_of_waypoints_to_delete_in_virtualmap_after_compensation
     VisualCompensation(num_pts_delete)
