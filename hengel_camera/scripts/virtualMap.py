@@ -27,6 +27,8 @@ class VisualCompensation():
 
         self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
 
+        self.app_robotview=RobotView(self.img) # Add the endpoint into the virtual map
+
     def initialize(self):
         rospy.init_node('hengel_camera_compensation', anonymous=False)
 
@@ -99,8 +101,8 @@ class VisualCompensation():
         fm = Feature_Match(self.img, summed_image)
         if fm.status == True:
             self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
-            app=RobotView(self.img, _midPoint, _endPoint) # Add the endpoint into the virtual map
-            self.img = app.remove_points_during_vision_compensation(self.recent_pts)
+            self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
+            self.img = self.app_robotview.img
 
             #Initialize Queue
             self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
@@ -138,14 +140,15 @@ class VisualCompensation():
 
     def sync_virtual_callback(self, _endPoint, _midPoint):
         _time=time.time()
-        app=RobotView(self.img, _midPoint, _endPoint) # Add the endpoint into the virtual map
+
         self.mid_predict_canvas_x=_midPoint.x
         self.mid_predict_canvas_y=_midPoint.y
         self.mid_predict_canvas_th=_midPoint.z
 
         self.recent_pts.appendleft((_midPoint.x, _midPoint.y))
 
-        self.img = app.run()
+        self.app_robotview.run(_midPoint, _endPoint)
+        self.img = self.app_robotview.img
         ttime=Float32()
         ttime.data=float(time.time()-_time)
         self.pub_time_2.publish(ttime)
@@ -175,8 +178,8 @@ class VisualCompensation():
 
     def callback_undistort3(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[389.940243, 0, 366.042362],[0, 389.110547, 376.957547],[0,0,1]])
-        dst=np.array([0.001656, -0.022658, 0.005813, -0.003150])
+        mtx=np.array([[384.740566000322766, 0, 416.6703696819],[0, 386.64723334, 297.593178440],[0,0,1]])
+        dst=np.array([-0.0048592546, -0.02278286, 0.00255238134, -0.002026589])
         homo3= np.array([[ 2.55132452e-01,  9.82372337e+00,  4.09600642e+03],
             [ 6.45201391e+00,  1.30885948e+01, -1.66201249e+03],
             [ 3.88669729e-04,  2.00259308e-02,  1.00000000e+00]])
@@ -185,8 +188,8 @@ class VisualCompensation():
 
     def callback_undistort4(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[373.550865, 0, 385.121920],[0, 373.744498, 317.403774], [0,0,1]])
-        dst=np.array([-0.018599, -0.009035, 0.001095, -0.004048])
+        mtx=np.array([[387.43952147965115, 0.0, 412.56131546398876], [0.0, 389.1761911600528, 259.39190229663814], [0.0, 0.0, 1.0]])
+        dst=np.array([0.005292760390926921, -0.025832001932141472, 0.0005161396135159652, -0.00047231070184728226])
         homo4= np.array([[ 2.57420243e+00,  5.85803823e+00, -4.05003547e+02],
             [-1.15034759e-01,  7.22474987e+00, -7.29546146e+02],
             [-1.92621119e-04,  8.88963498e-03,  1.00000000e+00]])

@@ -15,13 +15,18 @@ import copy
 import collections
 
 class RobotView():
-    def __init__(self, _img, _midpnt, _endpoint):
+    def __init__(self, _img):
     #def __init__(self):
         self.pixMetRatio=500
         self.lineThickness=0.03
 
         self.img=_img
 
+        self.pub1=rospy.Publisher('/markedImg', CompressedImage, queue_size=3)
+        self.pub2=rospy.Publisher('/notMarkedImg', CompressedImage, queue_size=3)
+        self.pub3=rospy.Publisher('/time', Float32, queue_size=5)
+
+    def run(self, _midPoint, _endPoint):
         self.mid_x=-_midpnt.x*self.pixMetRatio
         self.mid_y=self.img.shape[0]-_midpnt.y*self.pixMetRatio
         self.th= -_midpnt.z
@@ -31,17 +36,12 @@ class RobotView():
         self.spray_intensity=_endpoint.z
         # print("end_x: "+str( self.end_x)+", end_y: "+str(self.end_y)+", spray: "+str(self.spray_intensity))
 
-        self.pub1=rospy.Publisher('/markedImg', CompressedImage, queue_size=3)
-        self.pub2=rospy.Publisher('/notMarkedImg', CompressedImage, queue_size=3)
-        # self.pub3=rospy.Publisher('/time', Float32, queue_size=5)
-
-    def run(self):
         print(self.end_x, self.img.shape[1], self.end_y, self.img.shape[0])
 
         if self.end_x>=0 and self.end_x<self.img.shape[1] and self.end_y>=0 and self.end_y<self.img.shape[0]:
             
             print("run")
-            self.add_endpoint()
+            self.add_endpoint(_midPoint, _endPoint)
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
 
         #self.img=cv2.imread('/home/hengel/globalmap.png')
