@@ -15,32 +15,32 @@ import copy
 import collections
 
 class RobotView():
-    def __init__(self, _img, _midpnt, _endpoint):
+    def __init__(self, _img):
     #def __init__(self):
         self.pixMetRatio=500
         self.lineThickness=0.03
 
         self.img=_img
 
-        self.mid_x=-_midpnt.x*self.pixMetRatio
-        self.mid_y=self.img.shape[0]-_midpnt.y*self.pixMetRatio
-        self.th= -_midpnt.z
+        self.pub1=rospy.Publisher('/markedImg', CompressedImage, queue_size=3)
+        self.pub2=rospy.Publisher('/notMarkedImg', CompressedImage, queue_size=3)
+        self.pub3=rospy.Publisher('/time', Float32, queue_size=5)
+
+    def run(self, _midpoint, _endpoint):
+        self.mid_x=-_midpoint.x*self.pixMetRatio
+        self.mid_y=self.img.shape[0]-_midpoint.y*self.pixMetRatio
+        self.th= -_midpoint.z
         self.end_x=-_endpoint.x*self.pixMetRatio
         self.end_y=self.img.shape[0]-_endpoint.y*self.pixMetRatio
         #self.spray_intensity=_spray.goal_position
         self.spray_intensity=_endpoint.z
         # print("end_x: "+str( self.end_x)+", end_y: "+str(self.end_y)+", spray: "+str(self.spray_intensity))
 
-        self.pub1=rospy.Publisher('/markedImg', CompressedImage, queue_size=3)
-        self.pub2=rospy.Publisher('/notMarkedImg', CompressedImage, queue_size=3)
-        # self.pub3=rospy.Publisher('/time', Float32, queue_size=5)
-
-    def run(self):
-        print(self.end_x, self.img.shape[1], self.end_y, self.img.shape[0])
+        # print(self.end_x, self.img.shape[1], self.end_y, self.img.shape[0])
 
         if self.end_x>=0 and self.end_x<self.img.shape[1] and self.end_y>=0 and self.end_y<self.img.shape[0]:
             
-            print("run")
+            # print("run")
             self.add_endpoint()
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
 
@@ -60,7 +60,8 @@ class RobotView():
         return self.img
 
     def add_endpoint(self):
-        print("endpoint add")
+        # print("endpoint add")
+
         _time=time.time()
         if self.spray_intensity!=255:
             self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
@@ -109,9 +110,9 @@ class RobotView():
                             self.img[int(point_y)][i]=255
                         else:
                             if i>point_x:
-                                y=sqrt(dist*dist/4-(point_x-i)*(self.point_x-i))
+                                y=sqrt(dist*dist/4-(point_x-i)*(point_x-i))
                             else:
-                                y=sqrt(dist*dist/4-(point_x-i-1)*(self.point_x-i-1))
+                                y=sqrt(dist*dist/4-(point_x-i-1)*(point_x-i-1))
                             y1=int(point_y-y)
                             y2=int(point_y+y)
                             for j in range(y1, y2+1):
