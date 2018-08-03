@@ -27,6 +27,8 @@ class VisualCompensation():
 
         self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
 
+        self.app_robotview=RobotView(self.img) # Add the endpoint into the virtual map
+
     def initialize(self):
         rospy.init_node('hengel_camera_compensation', anonymous=False)
 
@@ -90,8 +92,8 @@ class VisualCompensation():
         fm = Feature_Match(self.img, summed_image)
         if fm.status == True:
             self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
-            app=RobotView(self.img, _midPoint, _endPoint) # Add the endpoint into the virtual map
-            self.img = app.remove_points_during_vision_compensation(self.recent_pts)
+            self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
+            self.img = self.app_robotview.img
 
             #Initialize Queue
             self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
@@ -130,14 +132,14 @@ class VisualCompensation():
     def sync_virtual_callback(self, _endPoint, _midPoint):
         _time=time.time()
 
-        app=RobotView(self.img, _midPoint, _endPoint) # Add the endpoint into the virtual map
         self.mid_predict_canvas_x=_midPoint.x
         self.mid_predict_canvas_y=_midPoint.y
         self.mid_predict_canvas_th=_midPoint.z
 
         self.recent_pts.appendleft((_midPoint.x, _midPoint.y))
 
-        self.img = app.run()
+        self.app_robotview.run(_midPoint, _endPoint)
+        self.img = self.app_robotview.img
 
         # bridge=CvBridge()
         # virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.img)
