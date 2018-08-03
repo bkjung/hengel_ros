@@ -32,12 +32,12 @@ class RobotView():
 
         self.pub1=rospy.Publisher('/markedImg', CompressedImage, queue_size=3)
         self.pub2=rospy.Publisher('/notMarkedImg', CompressedImage, queue_size=3)
-        self.pub3=rospy.Publisher('/time', Float32, queue_size=5)
+        # self.pub3=rospy.Publisher('/time', Float32, queue_size=5)
 
     def run(self):
         print(self.end_x, self.img.shape[1], self.end_y, self.img.shape[0])
+
         if self.end_x>=0 and self.end_x<self.img.shape[1] and self.end_y>=0 and self.end_y<self.img.shape[0]:
-            print("run")
             self.line_thickener()
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
 
@@ -57,8 +57,7 @@ class RobotView():
         return self.img
 
     def line_thickener(self):
-        print("thickener")
-        _time=time.time()
+        # _time=time.time()
         if self.spray_intensity!=255:
             self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
             dist=self.lineThickness*self.pixMetRatio
@@ -80,9 +79,9 @@ class RobotView():
                         for j in range(y1, y2+1):
                             if j>0 and j<self.img.shape[0]:
                                 self.img[j][i]=min(self.spray_intensity, self.img[j][i])
-        ttime=Float32()
-        ttime.data=float(time.time()-_time)
-        self.pub3.publish(ttime)
+        # ttime=Float32()
+        # ttime.data=float(time.time()-_time)
+        # self.pub3.publish(ttime)
         # print("map making time: "+str(time.time()-_time))
 
     def viewMarker(self):

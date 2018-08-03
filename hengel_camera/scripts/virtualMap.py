@@ -51,6 +51,11 @@ class VisualCompensation():
         self.ts.registerCallback(self.sync_real_callback)
 
 
+        ############################ DEBUG ################################
+        self.pub_time_1=rospy.Publisher('/time1', Float32, queue_size=5)
+        self.pub_time_2=rospy.Publisher('/time2', Float32, queue_size=5)
+
+
         rospy.spin()
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
@@ -78,7 +83,11 @@ class VisualCompensation():
         img4_masked=np.multiply(img4, im_mask13)
         summed_image= img1+img2_masked+img3+img4_masked+img_white_masked
 
-        self.crop_image(summed_image)
+        ttime=Float32()
+        ttime.data=float(time.time()-_time)
+        self.pub_time_1.publish(ttime)
+
+        # self.crop_image(summed_image)
 
         # bridge=CvBridge()
         # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
@@ -86,7 +95,7 @@ class VisualCompensation():
 
     def crop_image(self, _img):
         mid_predict_img_x = self.mid_predict_canvas_x * self.pixMetRatio
-        mid_predict_img_y = _img.shape[0] self.mid_predict_canvas_y * self.pixMetRatio
+        mid_predict_img_y = _img.shape[0]- self.mid_predict_canvas_y * self.pixMetRatio
         mid_predict_img_th = self.mid_predict_canvas_th
         half_map_size = 125
 
@@ -108,12 +117,16 @@ class VisualCompensation():
         return im_mask_inv, im_mask
 
     def sync_virtual_callback(self, _endPoint, _midPoint):
+        _time=time.time()
         app=RobotView(self.img, _midPoint, _endPoint) # Add the endpoint into the virtual map
         self.mid_predict_canvas_x=_midPoint.x
         self.mid_predict_canvas_y=_midPoint.y
         self.mid_predict_canvas_th=_midPoint.z
 
         self.img = app.run()
+        ttime=Float32()
+        ttime.data=float(time.time()-_time)
+        self.pub_time_2.publish(ttime)
 
         # bridge=CvBridge()
         # virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.img)
