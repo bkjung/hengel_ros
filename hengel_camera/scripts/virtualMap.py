@@ -127,13 +127,7 @@ class VisualCompensation():
                 # _img1 = cv2.cvtColor(_img1, cv2.COLOR_BGR2GRAY)
                 _img2 = cv2.cvtColor(_img2, cv2.COLOR_BGR2GRAY)
 
-                plt.figure(1)
-                plt.subplot(211)
-                plt.imshow(_img1, cmap='gray')
-                plt.subplot(212)
-                plt.imshow(_img2, cmap='gray')
-                plt.draw()
-                plt.pause(0.00000000001)
+
 
                 fm.SIFT_FLANN_matching(_img1, _img2)
                 if fm.status == True:
