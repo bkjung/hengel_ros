@@ -119,20 +119,33 @@ class VisualCompensation():
         #################
         try:
             fm = FeatureMatch()
-            print("img1: "+str(summed_image.shape))
-            fm.SIFT_FLANN_matching(self.img, cv2.cvtColor(np.uint8(summed_image), cv2.COLOR_BGR2GRAY))
-            if fm.status == True:
-                self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
-                self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
-                self.img = self.app_robotview.img
+            # print("img1: "+str(self.img.shape)+", img2: "+str(summed_image.shape))
+            if self.img is None or summed_image is None:
+                print("IMAGE EMPTY")
+                raise Exeption("Image Empty")
+            else:
+                # print("debug-1")
+                # print("img1 "+str(self.img.dtype)+" "+"img2 "+str(summed_image.dtype))
+                _img1 = np.uint8(self.img)
+                _img2 = np.uint8(summed_image)
 
-                #Initialize Queue
-                self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
+                # print("debug-2")
+                # _img1 = cv2.cvtColor(_img1, cv2.COLOR_BGR2GRAY)
+                # print("debug-3")
+                _img2 = cv2.cvtColor(_img2, cv2.COLOR_BGR2GRAY)
+                # print("debug-4")
+
+                fm.SIFT_FLANN_matching(_img1, _img2)
+                if fm.status == True:
+                    self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
+                    self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
+                    self.img = self.app_robotview.img
+
+                    #Initialize Queue
+                    self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
         except Exception as e:
             print(e)
-            sys.exit("flann error")
-
-
+            sys.exit("Feature Match error")
 
         
         #################
