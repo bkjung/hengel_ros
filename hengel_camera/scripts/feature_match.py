@@ -56,6 +56,7 @@ class FeatureMatch():
     def SIFT_FLANN_matching(self, img1, img2):
         sift=cv2.xfeatures2d.SIFT_create()
 
+        print("img1: "+str(img1.shape)+", img2: "+str(img2.shape))
         kp1, des1 = sift.detectAndCompute(img1, None)
         kp2, des2 = sift.detectAndCompute(img2, None)
 
