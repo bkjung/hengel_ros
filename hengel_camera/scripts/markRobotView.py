@@ -110,9 +110,9 @@ class RobotView():
                             self.img[int(point_y)][i]=255
                         else:
                             if i>point_x:
-                                y=sqrt(dist*dist/4-(point_x-i)*(self.point_x-i))
+                                y=sqrt(dist*dist/4-(point_x-i)*(point_x-i))
                             else:
-                                y=sqrt(dist*dist/4-(point_x-i-1)*(self.point_x-i-1))
+                                y=sqrt(dist*dist/4-(point_x-i-1)*(point_x-i-1))
                             y1=int(point_y-y)
                             y2=int(point_y+y)
                             for j in range(y1, y2+1):
