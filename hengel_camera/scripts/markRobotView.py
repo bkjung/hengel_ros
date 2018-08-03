@@ -61,6 +61,7 @@ class RobotView():
 
     def add_endpoint(self):
         print("endpoint add")
+
         _time=time.time()
         if self.spray_intensity!=255:
             self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
