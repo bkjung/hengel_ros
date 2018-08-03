@@ -56,11 +56,13 @@ class VisualCompensation():
         self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
         self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
         self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
-        self.callback_pi_left=message_filters.Subscriber('/pi_cam_left/compressed', CompressedImage)
-        self.callback_pi_right=message_filters.Subscriber('/pi_cam_right/compressed', CompressedImage)
+        # self.callback_pi_left=message_filters.Subscriber('/pi_cam_left/compressed', CompressedImage)
+        # self.callback_pi_right=message_filters.Subscriber('/pi_cam_right/compressed', CompressedImage)
 
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4,
-                                             self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
+        # self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4,
+        #                                      self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
+
+        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10, 0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_real_callback)
 
 
@@ -77,8 +79,8 @@ class VisualCompensation():
         img2 = self.undistort2(_img2)
         img3 = self.undistort3(_img3)
         img4 = self.undistort4(_img4)
-        img_left=self.undistort_left(_img_left)
-        img_right=self.undistort_right(_img_right)
+        # img_left=self.undistort_left(_img_left)
+        # img_right=self.undistort_right(_img_right)
 
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
