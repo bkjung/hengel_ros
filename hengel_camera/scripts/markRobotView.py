@@ -26,10 +26,10 @@ class RobotView():
         self.pub2=rospy.Publisher('/notMarkedImg', CompressedImage, queue_size=3)
         self.pub3=rospy.Publisher('/time', Float32, queue_size=5)
 
-    def run(self, _midPoint, _endPoint):
-        self.mid_x=-_midpnt.x*self.pixMetRatio
-        self.mid_y=self.img.shape[0]-_midpnt.y*self.pixMetRatio
-        self.th= -_midpnt.z
+    def run(self, _midpoint, _endpoint):
+        self.mid_x=-_midpoint.x*self.pixMetRatio
+        self.mid_y=self.img.shape[0]-_midpoint.y*self.pixMetRatio
+        self.th= -_midpoint.z
         self.end_x=-_endpoint.x*self.pixMetRatio
         self.end_y=self.img.shape[0]-_endpoint.y*self.pixMetRatio
         #self.spray_intensity=_spray.goal_position
