@@ -55,6 +55,7 @@ class FeatureMatch():
         cv2.destroyAllWindows()
 
     def SIFT_FLANN_matching(self, img1, img2):
+        self.status = False
         sift=cv2.xfeatures2d.SIFT_create()
         cv2.imwrite("/home/bkjung/img1.png", img1)
         cv2.imwrite("/home/bkjung/img2.png", img2)
@@ -85,6 +86,7 @@ class FeatureMatch():
         # print("abc",kp1[good[3].queryIdx].pt)
         
         if len(good)>MIN_MATCH_COUNT:
+            self.status = True
             print([m.queryIdx for m in good])
             # print(np.float32([ kp1[m.queryIdx].pt for m in good ]))
             src_pts=np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
@@ -118,7 +120,7 @@ class FeatureMatch():
             img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
             home = expanduser("~")
             cv2.imwrite(home+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
-            # plt.imshow(img3,),plt.show()
+            plt.imshow(img3,),plt.show()
         else:
             print("Feature Match FAILED")
 
