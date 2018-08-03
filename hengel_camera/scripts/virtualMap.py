@@ -58,6 +58,11 @@ class VisualCompensation():
         self.ts.registerCallback(self.sync_real_callback)
 
 
+        ############################ DEBUG ################################
+        self.pub_time_1=rospy.Publisher('/time1', Float32, queue_size=5)
+        self.pub_time_2=rospy.Publisher('/time2', Float32, queue_size=5)
+
+
         rospy.spin()
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
@@ -85,7 +90,11 @@ class VisualCompensation():
         img4_masked=np.multiply(img4, im_mask13)
         summed_image= img1+img2_masked+img3+img4_masked+img_white_masked
 
-        self.crop_image(summed_image)
+        ttime=Float32()
+        ttime.data=float(time.time()-_time)
+        self.pub_time_1.publish(ttime)
+
+        # self.crop_image(summed_image)
 
         #################
         '''
@@ -140,6 +149,9 @@ class VisualCompensation():
 
         self.app_robotview.run(_midPoint, _endPoint)
         self.img = self.app_robotview.img
+        ttime=Float32()
+        ttime.data=float(time.time()-_time)
+        self.pub_time_2.publish(ttime)
 
         # bridge=CvBridge()
         # virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.img)
