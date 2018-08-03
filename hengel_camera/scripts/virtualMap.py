@@ -106,7 +106,8 @@ class VisualCompensation():
 
         #################
         
-        fm = FeatureMatch(self.img, summed_image)
+        fm = FeatureMatch()
+        fm.SIFT_FLANN_matching(self.img, summed_image)
         if fm.status == True:
             self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
             self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
