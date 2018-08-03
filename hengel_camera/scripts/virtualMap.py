@@ -92,17 +92,23 @@ class VisualCompensation():
 
         img_white=np.full((1280, 1280,3), 255)
 
-        im_mask13=cv2.bitwise_and(np.array(im_mask1), np.array(im_mask3))
-        im_mask24=cv2.bitwise_and(np.array(im_mask2), np.array(im_mask4))
-        im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
+        # im_mask13=cv2.bitwise_and(np.array(im_mask1), np.array(im_mask3))
+        # im_mask24=cv2.bitwise_and(np.array(im_mask2), np.array(im_mask4))
+        # im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
 
-        img_white_masked=np.multiply(img_white, im_mask1234)
-        img2_masked=np.multiply(img2, im_mask13)
-        img4_masked=np.multiply(img4, im_mask13)
+        # img_white_masked=np.multiply(img_white, im_mask1234)
+        # img2_masked=np.multiply(img2, im_mask13)
+        # img4_masked=np.multiply(img4, im_mask13)
+        img1_masked=np.multiply(img1, im_mask_inv1).astype('uint8')
+        img2_masked=np.multiply(np.multiply(img2, im_mask1), im_mask3).astype('uint8')
+        img3_masked=np.multiply(img3, im_mask_inv3).astype('uint8')
+        img4_masked=np.multiply(np.multiply(img4, im_mask1), im_mask3).astype('uint8')
+        img_white_masked=np.multiply(np.multiply(np.multiply(np.multiply(img_white, im_mask1), im_mask2),im_mask3),im_mask4).astype('uint8')
+        
         summed_image= img1+img2_masked+img3+img4_masked+img_white_masked
 
         ttime=Float32()
-        cv2.imwrite("/home/bkjung/summed.png", summed_image)
+
         print(str(time.time()-_time))
         ttime.data=float(time.time()-_time)
         self.pub_time_2.publish(ttime)
@@ -113,7 +119,8 @@ class VisualCompensation():
         #################
         try:
             fm = FeatureMatch()
-            fm.SIFT_FLANN_matching(np.dstack((self.img,self.img, self.img)), summed_image)
+            print("img1: "+str(summed_image.shape))
+            fm.SIFT_FLANN_matching(self.img, cv2.cvtColor(np.uint8(summed_image), cv2.COLOR_BGR2GRAY))
             if fm.status == True:
                 self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                 self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
@@ -149,11 +156,11 @@ class VisualCompensation():
     def find_mask(self, img):
         _time=time.time()
         black_range1=np.array([0,0,0])
-        # im_mask=(cv2.inRange(img, black_range1, black_range1)).astype('bool')
-        im_mask=(cv2.inRange(img, black_range1, black_range1))
+        im_mask=(cv2.inRange(img, black_range1, black_range1)).astype('bool')
+        # im_mask=(cv2.inRange(img, black_range1, black_range1))
         im_mask=np.dstack((im_mask, im_mask, im_mask))
-        # im_mask_inv=(1-im_mask).astype('bool')
-        im_mask_inv=(1-im_mask)
+        im_mask_inv=(1-im_mask).astype('bool')
+        # im_mask_inv=(1-im_mask)
         return im_mask_inv, im_mask
 
     def sync_virtual_callback(self, _endPoint, _midPoint):
