@@ -77,6 +77,7 @@ class VisualCompensation():
     # def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
         _time=time.time()
+        print("sync real")
         img1 = self.undistort1(_img1)
         img2 = self.undistort2(_img2)
         img3 = self.undistort3(_img3)
@@ -89,7 +90,6 @@ class VisualCompensation():
         _, im_mask2=self.find_mask(img2)
         _, im_mask4=self.find_mask(img4)
 
-        print(im_mask1)
         img_white=np.full((1280, 1280,3), 255)
 
         im_mask13=cv2.bitwise_and(np.array(im_mask1), np.array(im_mask3))
@@ -102,8 +102,11 @@ class VisualCompensation():
         summed_image= img1+img2_masked+img3+img4_masked+img_white_masked
 
         ttime=Float32()
+        cv2.imwrite("/home/bkjung/summed.png", summed_image)
+        print(str(time.time()-_time))
         ttime.data=float(time.time()-_time)
-        self.pub_time_1.publish(ttime)
+        self.pub_time_2.publish(ttime)
+
 
         # self.crop_image(summed_image)
 

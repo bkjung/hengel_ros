@@ -36,11 +36,11 @@ class RobotView():
         self.spray_intensity=_endpoint.z
         # print("end_x: "+str( self.end_x)+", end_y: "+str(self.end_y)+", spray: "+str(self.spray_intensity))
 
-        print(self.end_x, self.img.shape[1], self.end_y, self.img.shape[0])
+        # print(self.end_x, self.img.shape[1], self.end_y, self.img.shape[0])
 
         if self.end_x>=0 and self.end_x<self.img.shape[1] and self.end_y>=0 and self.end_y<self.img.shape[0]:
             
-            print("run")
+            # print("run")
             self.add_endpoint()
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
 
@@ -60,7 +60,7 @@ class RobotView():
         return self.img
 
     def add_endpoint(self):
-        print("endpoint add")
+        # print("endpoint add")
 
         _time=time.time()
         if self.spray_intensity!=255:
