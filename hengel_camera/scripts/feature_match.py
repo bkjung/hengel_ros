@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 from os.path import expanduser
+import time
 
 class FeatureMatch():
     def __init__(self):
@@ -55,8 +56,11 @@ class FeatureMatch():
 
     def SIFT_FLANN_matching(self, img1, img2):
         sift=cv2.xfeatures2d.SIFT_create()
+        cv2.imwrite("/home/bkjung/img1.png", img1)
+        cv2.imwrite("/home/bkjung/img2.png", img2)
 
         print("img1: "+str(img1.shape)+", img2: "+str(img2.shape))
+
         kp1, des1 = sift.detectAndCompute(img1, None)
         kp2, des2 = sift.detectAndCompute(img2, None)
 
