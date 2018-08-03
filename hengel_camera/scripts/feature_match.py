@@ -91,34 +91,36 @@ class FeatureMatch():
             dst_pts=np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
 
-        M, mask= cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+            M, mask= cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
 
-        img1_homo=cv2.warpPerspective(img1, M, (1280, 1280))
-        img2_homo=cv2.warpPerspective(img2, M, (1280, 1280))
+            img1_homo=cv2.warpPerspective(img1, M, (1280, 1280))
+            img2_homo=cv2.warpPerspective(img2, M, (1280, 1280))
 
-        # cv2.imwrite("/home/bkjung/img1_homo.png", img1_homo)
-        # cv2.imwrite("/home/bkjung/img2_homo.png", img2_homo)
-        # matchesMask=mask.ravel().tolist()
+            # cv2.imwrite("/home/bkjung/img1_homo.png", img1_homo)
+            # cv2.imwrite("/home/bkjung/img2_homo.png", img2_homo)
+            # matchesMask=mask.ravel().tolist()
 
-        # h,w = img1.shape
-        # pts=np.float32([[0,0],[0,h-1],[w-1,h-1], [w-1,0]]).reshape(-1,1,2)
-        # dst=cv2.perspectiveTransform(pts,M)
+            # h,w = img1.shape
+            # pts=np.float32([[0,0],[0,h-1],[w-1,h-1], [w-1,0]]).reshape(-1,1,2)
+            # dst=cv2.perspectiveTransform(pts,M)
 
 
-        # Need to draw only good matches, so create a mask
-        matchesMask = [[0,0] for i in xrange(len(matches))]
-        # ratio test as per Lowe's paper
-        for i,(m,n) in enumerate(matches):
-            if m.distance < 0.7*n.distance:
-                matchesMask[i]=[1,0]
-        draw_params = dict(matchColor = (0,255,0),
-                        singlePointColor = (255,0,0),
-                        matchesMask = matchesMask,
-                        flags = 0)
-        img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
-        home = expanduser("~")
-        cv2.imwrite(home+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
-        # plt.imshow(img3,),plt.show()
+            # Need to draw only good matches, so create a mask
+            matchesMask = [[0,0] for i in xrange(len(matches))]
+            # ratio test as per Lowe's paper
+            for i,(m,n) in enumerate(matches):
+                if m.distance < 0.7*n.distance:
+                    matchesMask[i]=[1,0]
+            draw_params = dict(matchColor = (0,255,0),
+                            singlePointColor = (255,0,0),
+                            matchesMask = matchesMask,
+                            flags = 0)
+            img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
+            home = expanduser("~")
+            cv2.imwrite(home+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
+            # plt.imshow(img3,),plt.show()
+        else:
+            print("Feature Match FAILED")
 
 
 if __name__=="__main__":
