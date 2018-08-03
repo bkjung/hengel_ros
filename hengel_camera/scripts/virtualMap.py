@@ -14,6 +14,7 @@ import cv2
 from cv_bridge import CvBridge
 import message_filters
 import collections
+from feature_match import FeatureMatch
 
 class VisualCompensation():
     def __init__(self, _num_pts_delete):
@@ -106,8 +107,9 @@ class VisualCompensation():
         # self.crop_image(summed_image)
 
         #################
-        '''
-        fm = Feature_Match(self.img, summed_image)
+        
+        fm = FeatureMatch()
+        fm.SIFT_FLANN_matching(self.img, summed_image)
         if fm.status == True:
             self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
             self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
@@ -118,7 +120,7 @@ class VisualCompensation():
 
 
 
-        '''
+        
         #################
 
         print("Visual Calculation Elapsed Time After Camera_Image Input: "+str(time.time()-_time))
