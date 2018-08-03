@@ -57,8 +57,8 @@ class FeatureMatch():
     def SIFT_FLANN_matching(self, img1, img2):
         self.status = False
         sift=cv2.xfeatures2d.SIFT_create()
-        cv2.imwrite("/home/bkjung/img1.png", img1)
-        cv2.imwrite("/home/bkjung/img2.png", img2)
+        # cv2.imwrite("/home/bkjung/img1.png", img1)
+        # cv2.imwrite("/home/bkjung/img2.png", img2)
 
         # print("img1: "+str(img1.shape)+", img2: "+str(img2.shape))
 
@@ -84,6 +84,12 @@ class FeatureMatch():
         # print(len(kp1))
 
         # print("abc",kp1[good[3].queryIdx].pt)
+
+        plt.figure(1, figsize=(10, 20))
+        plt.subplot(311)
+        plt.imshow(img1, cmap='gray')
+        plt.subplot(312)
+        plt.imshow(img2, cmap='gray')
         
         if len(good)>MIN_MATCH_COUNT:
             self.status = True
@@ -120,9 +126,14 @@ class FeatureMatch():
             img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
             home = expanduser("~")
             cv2.imwrite(home+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
-            plt.imshow(img3,),plt.show()
+            # plt.imshow(img3,),plt.show()
+            plt.subplot(313)
+            plt.imshow(img3, cmap='gray')
         else:
             print("Feature Match FAILED")
+
+        plt.draw()
+        plt.pause(0.00000000001)
 
 
 if __name__=="__main__":
