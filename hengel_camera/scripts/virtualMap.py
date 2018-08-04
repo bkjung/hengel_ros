@@ -22,11 +22,6 @@ class VisualCompensation():
         word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
         self.width=float(word.split()[0])
         self.height=float(word.split()[1])
-<<<<<<< HEAD
-
-=======
-
->>>>>>> 7deec31f1372df487ec280ec50e51328a7e96ebe
         self.num_pts_delete = _num_pts_delete
         self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
 
@@ -63,11 +58,8 @@ class VisualCompensation():
         self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4,
                                              self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
 
-<<<<<<< HEAD
         #self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10, 0.1, allow_headerless=True)
-=======
         self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10, 0.1, allow_headerless=True)
->>>>>>> 7deec31f1372df487ec280ec50e51328a7e96ebe
         self.ts.registerCallback(self.sync_real_callback)
 
 
@@ -201,14 +193,8 @@ class VisualCompensation():
         # self.pub_virtual_map.publish(virtual_map_msg)
 
     def undistort1(self, _img):
-<<<<<<< HEAD
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         mtx=np.array([[393.8666817683925, 0.0, 399.6813895086665], [0.0, 394.55108358870405, 259.84676565717876], [0.0, 0.0, 1.0]])
-=======
-        print("undistort1")
-        img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[393.8666817683925, 0.0, 399.6813895086665], [0.0, 394.55108358870405, 259.84676565717876], [0.0, 0.0, 1.0])
->>>>>>> 7deec31f1372df487ec280ec50e51328a7e96ebe
         dst=np.array([-0.0032079005049939543, -0.020856072501002923, 0.000252242294186179, -0.0021042704510431365])
 
         # #################DEBUG#######################333
@@ -223,20 +209,14 @@ class VisualCompensation():
             [-5.52616807e-05,  6.56931832e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo1, (1280,1280))
 
-<<<<<<< HEAD
     def undistort2(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         mtx=np.array([[396.01900903941834, 0.0, 410.8496405295566], [0.0, 396.2406539134792, 285.8932176591904], [0.0, 0.0, 1.0]])
-=======
-
-
-
 
 
     def undistort2(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         mtx=np.array([[396.01900903941834, 0.0, 410.8496405295566], [0.0, 396.2406539134792, 285.8932176591904], [0.0, 0.0, 1.0])
->>>>>>> 7deec31f1372df487ec280ec50e51328a7e96ebe
         dst=np.array([-0.008000340519517233, -0.016478659972026452, 7.25792172844022e-05, -0.00434319738405187])
 
         # #################DEBUG#######################333
