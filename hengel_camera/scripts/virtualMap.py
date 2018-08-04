@@ -55,9 +55,9 @@ class VisualCompensation():
         self.callback_pi_left=message_filters.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage)
         self.callback_pi_right=message_filters.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage)
 
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4,
-                                             self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
+       # self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4, self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
 
+        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_real_callback)
 
         ############################ DEBUG ################################
@@ -75,16 +75,16 @@ class VisualCompensation():
 
         rospy.spin()
 
-    def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
-    # def sync_real_callback(self, _img1, _img2, _img3, _img4):
+#    def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
+    def sync_real_callback(self, _img1, _img2, _img3, _img4):
         _time=time.time()
         print("sync")
         img1 = self.undistort1(_img1)
         img2 = self.undistort2(_img2)
         img3 = self.undistort3(_img3)
         img4 = self.undistort4(_img4)
-        img_left=self.undistort_left(_img_left)
-        img_right=self.undistort_right(_img_right)
+        #img_left=self.undistort_left(_img_left)
+        #img_right=self.undistort_right(_img_right)
 
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
@@ -103,7 +103,7 @@ class VisualCompensation():
         img1_masked=np.multiply(img1, im_mask_inv1)
         img3_masked=np.multiply(img3, im_mask_inv3)
         summed_image= img1+img2_masked+img3+img4_masked+img_white_masked
-        summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
+        summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
         self.pub_sum.publish(summed_msg)
         print("summed_image time: "+str(time.time()-_time))
 
