@@ -207,10 +207,9 @@ class VisualCompensation():
         # imgmsg=self.bridge.cv2_to_imgmsg(undist)
         # self.pub1.publish(imgmsg)
 
-
-        homo1= np.array([[-1.67130692e-01,  5.99743615e+00, -5.29293784e+02],
-            [-2.40710331e+00,  4.76090267e+00,  1.55119117e+03],
-            [-2.21043846e-04,  7.30990701e-03,  1.00000000e+00]])
+        homo1= np.array([[-1.99133283e+00,  3.96335542e+00,  1.43529996e+03],
+            [ 1.26013904e-02,  3.20665968e+00,  1.58076675e+03],
+            [-5.52616807e-05,  6.56931832e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo1, (1280,1280))
 
         
@@ -229,9 +228,9 @@ class VisualCompensation():
         # imgmsg=self.bridge.cv2_to_imgmsg(undist)
         # self.pub2.publish(imgmsg)
 
-        homo2= np.array([[-2.36547415e+00,  4.44589419e+00,  1.65240597e+03],
-            [-1.11902669e-02,  2.88055561e+00,  2.03902843e+03],
-            [-5.36747061e-06,  6.70728023e-03,  1.00000000e+00]])
+        homo2= np.array([[-1.74979870e-01,  2.54748382e+00,  1.50601223e+03],
+            [ 1.58754865e+00,  3.68531885e+00, -7.91871465e+01],
+            [-2.64765872e-04,  5.74538321e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo2, (1280,1280))
 
     def undistort3(self, _img):
@@ -246,9 +245,9 @@ class VisualCompensation():
         # imgmsg=self.bridge.cv2_to_imgmsg(undist)
         # self.pub3.publish(imgmsg)
 
-        homo3= np.array([[ 2.55132452e-01,  9.82372337e+00,  4.09600642e+03],
-            [ 6.45201391e+00,  1.30885948e+01, -1.66201249e+03],
-            [ 3.88669729e-04,  2.00259308e-02,  1.00000000e+00]])
+        homo3= np.array([[-7.40372498e-01, -1.98724001e+00,  5.84423593e+02],
+            [-2.66312131e-01, -2.04017699e+00,  5.30073442e+02],
+            [-7.32465195e-04, -3.95525627e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo3, (1280,1280))
 
 
@@ -265,9 +264,9 @@ class VisualCompensation():
         # self.pub4.publish(imgmsg)
 
 
-        homo4= np.array([[ 2.57420243e+00,  5.85803823e+00, -4.05003547e+02],
-            [-1.15034759e-01,  7.22474987e+00, -7.29546146e+02],
-            [-1.92621119e-04,  8.88963498e-03,  1.00000000e+00]])
+        homo4= np.array([[-1.23822870e+01, -2.25348748e+01,  5.50429631e+03],
+            [-1.44691773e+01, -1.57846862e+01, -2.07284155e+03],
+            [-3.29809947e-02, -2.38592050e-02,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo4, (1280,1280))
 
     def undistort_left(self, _img):
@@ -281,9 +280,9 @@ class VisualCompensation():
         # imgmsg=self.bridge.cv2_to_imgmsg(undist)
         # self.pub_pi_l.publish(imgmsg)
 
-        homo4= np.array([[ 2.57420243e+00,  5.85803823e+00, -4.05003547e+02],
-            [-1.15034759e-01,  7.22474987e+00, -7.29546146e+02],
-            [-1.92621119e-04,  8.88963498e-03,  1.00000000e+00]])
+        homo4= np.array([[-8.70731094e-02,  1.47816011e+00,  4.02882375e+02],
+            [-3.60449157e-01,  1.38082612e+00,  7.28709159e+02],
+            [-1.63990036e-04,  2.28324521e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo4, (1280,1280))
 
 
@@ -298,9 +297,9 @@ class VisualCompensation():
         # imgmsg=self.bridge.cv2_to_imgmsg(undist)
         # self.pub_pi_r.publish(imgmsg)
 
-        homo4= np.array([[ 2.57420243e+00,  5.85803823e+00, -4.05003547e+02],
-            [-1.15034759e-01,  7.22474987e+00, -7.29546146e+02],
-            [-1.92621119e-04,  8.88963498e-03,  1.00000000e+00]])
+        homo4= np.array([[-1.85451252e-03,  1.48625255e+00,  4.00372407e+02],
+            [-2.81151513e-01,  1.55607938e+00,  7.91845451e+02],
+            [-2.73379929e-05,  2.29141415e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo4, (1280,1280))
 
 if __name__=='__main__':
