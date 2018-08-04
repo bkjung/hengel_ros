@@ -12,33 +12,36 @@ import numpy as np
 from cv_bridge import CvBridge
 import cv2
 import copy
+import collections
 
 class RobotView():
-    def __init__(self, _img, _midpnt, _endpoint):
+    def __init__(self, _img):
     #def __init__(self):
         self.pixMetRatio=500
         self.lineThickness=0.03
 
         self.img=_img
 
-        self.mid_x=-_midpnt.x*self.pixMetRatio
-        self.mid_y=self.img.shape[0]-_midpnt.y*self.pixMetRatio
-        self.th= -_midpnt.z
+        self.pub1=rospy.Publisher('/markedImg', CompressedImage, queue_size=3)
+        self.pub2=rospy.Publisher('/notMarkedImg', CompressedImage, queue_size=3)
+        self.pub3=rospy.Publisher('/time', Float32, queue_size=5)
+
+    def run(self, _midpoint, _endpoint):
+        self.mid_x=-_midpoint.x*self.pixMetRatio
+        self.mid_y=self.img.shape[0]-_midpoint.y*self.pixMetRatio
+        self.th= -_midpoint.z
         self.end_x=-_endpoint.x*self.pixMetRatio
         self.end_y=self.img.shape[0]-_endpoint.y*self.pixMetRatio
         #self.spray_intensity=_spray.goal_position
         self.spray_intensity=_endpoint.z
         # print("end_x: "+str( self.end_x)+", end_y: "+str(self.end_y)+", spray: "+str(self.spray_intensity))
 
-        self.pub1=rospy.Publisher('/markedImg', CompressedImage, queue_size=3)
-        self.pub2=rospy.Publisher('/notMarkedImg', CompressedImage, queue_size=3)
-        self.pub3=rospy.Publisher('/time', Float32, queue_size=5)
+        # print(self.end_x, self.img.shape[1], self.end_y, self.img.shape[0])
 
-    def run(self):
-        print(self.end_x, self.img.shape[1], self.end_y, self.img.shape[0])
         if self.end_x>=0 and self.end_x<self.img.shape[1] and self.end_y>=0 and self.end_y<self.img.shape[0]:
-            print("run")
-            self.line_thickener()
+            
+            # print("run")
+            self.add_endpoint()
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
 
         #self.img=cv2.imread('/home/hengel/globalmap.png')
@@ -56,8 +59,9 @@ class RobotView():
 
         return self.img
 
-    def line_thickener(self):
-        print("thickener")
+    def add_endpoint(self):
+        # print("endpoint add")
+
         _time=time.time()
         if self.spray_intensity!=255:
             self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
@@ -80,10 +84,41 @@ class RobotView():
                         for j in range(y1, y2+1):
                             if j>0 and j<self.img.shape[0]:
                                 self.img[j][i]=min(self.spray_intensity, self.img[j][i])
-        ttime=Float32()
-        ttime.data=float(time.time()-_time)
-        self.pub3.publish(ttime)
+        # ttime=Float32()
+        # ttime.data=float(time.time()-_time)
+        # self.pub3.publish(ttime)
         # print("map making time: "+str(time.time()-_time))
+
+    def remove_points_during_vision_compensation(self, _recent_pts):
+        #Make all pixels in recent_pts to white (255)
+        print("remove points during visual compenstaion")
+
+        #This should be carefully selected !!!!!!!!!!!!!!!!!!!
+        dist=self.lineThickness*self.pixMetRatio
+
+        for ind in range(len(_recent_pts)):
+            point_x = _recent_pts[ind][0]
+            point_y = _recent_pts[ind][1]
+            if point_x != 0.0 and point_y != 0.0:
+                x1=int(point_x+dist/2)
+                x2=int(point_x+dist/2)
+
+                for i in range(x1, x2+1):
+                    x=point_x-i
+                    if i>0 and i<self.img.shape[1]:
+                        if abs(x)>dist/2:
+                            self.img[int(point_y)][i]=255
+                        else:
+                            if i>point_x:
+                                y=sqrt(dist*dist/4-(point_x-i)*(point_x-i))
+                            else:
+                                y=sqrt(dist*dist/4-(point_x-i-1)*(point_x-i-1))
+                            y1=int(point_y-y)
+                            y2=int(point_y+y)
+                            for j in range(y1, y2+1):
+                                if j>0 and j<self.img.shape[0]:
+                                    self.img[j][i]=255
+
 
     def viewMarker(self):
         map_size=1280

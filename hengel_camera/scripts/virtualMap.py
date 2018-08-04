@@ -13,12 +13,18 @@ import os
 import cv2
 from cv_bridge import CvBridge
 import message_filters
+import collections
+from feature_match import FeatureMatch
+from matplotlib import pyplot as plt
 
 class VisualCompensation():
-    def __init__(self):
+    def __init__(self, _num_pts_delete):
         word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
         self.width=float(word.split()[0])
         self.height=float(word.split()[1])
+        
+        self.num_pts_delete = _num_pts_delete
+        self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
 
         self.initialize()
 
@@ -28,45 +34,74 @@ class VisualCompensation():
         self.bridge=CvBridge()
         self.pixMetRatio=500
 
+        self.img=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
+        self.app_robotview=RobotView(self.img) # Add the endpoint into the virtual map
+
         self.mid_predict_canvas_x=0
         self.mid_predict_canvas_y=0
         self.mid_predict_canvas_th=0
 
-        self.img=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
         self.endPoint_callback=message_filters.Subscriber('/endpoint', Point)
         self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
-
 
         self.ts=message_filters.ApproximateTimeSynchronizer([self.endPoint_callback, self.midPoint_callback], 10, 0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_virtual_callback)
 
         self.pub_virtual_map=rospy.Publisher('/virtual_map', CompressedImage, queue_size=3)
-
+        self.vision_offset_publisher = rospy.Publisher('/offset_change', Point, queue_size=10)
         self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
         self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
         self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
         self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
+        self.callback_pi_left=message_filters.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage)
+        self.callback_pi_right=message_filters.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage)
+
+        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4,
+                                             self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
 
         self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10, 0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_real_callback)
 
 
+        # rospy.Subscriber('/genius1/compressed', CompressedImage, self.undistort1)
+        # rospy.Subscriber('/genius2/compressed', CompressedImage, self.undistort2)
+        # rospy.Subscriber('/genius3/compressed', CompressedImage, self.undistort3)
+        # rospy.Subscriber('/genius4/compressed', CompressedImage, self.undistort4)
+        # rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.undistort_left)
+        # rospy.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage, self.undistort_right)
+
+
+
+        ############################ DEBUG ################################
+        self.pub_time_1=rospy.Publisher('/time1', Float32, queue_size=5)
+        self.pub_time_2=rospy.Publisher('/time2', Float32, queue_size=5)
+        self.pub1=rospy.Publisher('/genius1/undist', Image, queue_size=5 )
+        self.pub2=rospy.Publisher('/genius2/undist', Image, queue_size=5 )
+        self.pub3=rospy.Publisher('/genius3/undist', Image, queue_size=5 )
+        self.pub4=rospy.Publisher('/genius4/undist', Image, queue_size=5 )
+        self.pub_pi_l=rospy.Publisher('/pi_left/undist', Image, queue_size=5 )
+        self.pub_pi_r=rospy.Publisher('/pi_right/undist', Image, queue_size=5 )
+
+
+
         rospy.spin()
 
-    def sync_real_callback(self, _img1, _img2, _img3, _img4):
+    def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
+    # def sync_real_callback(self, _img1, _img2, _img3, _img4):
         _time=time.time()
-        bridge=CvBridge()
-        img1 = self.callback_undistort1(_img1)
-        img2 = self.callback_undistort2(_img2)
-        img3 = self.callback_undistort3(_img3)
-        img4 = self.callback_undistort4(_img4)
+        print("sync")
+        img1 = self.undistort1(_img1)
+        img2 = self.undistort2(_img2)
+        img3 = self.undistort3(_img3)
+        img4 = self.undistort4(_img4)
+        img_left=self.undistort_left(_img_left)
+        img_right=self.undistort_right(_img_right)
 
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
         _, im_mask2=self.find_mask(img2)
         _, im_mask4=self.find_mask(img4)
 
-        print(im_mask1)
         img_white=np.full((1280, 1280,3), 255)
 
         im_mask13=cv2.bitwise_and(np.array(im_mask1), np.array(im_mask3))
@@ -76,9 +111,47 @@ class VisualCompensation():
         img_white_masked=np.multiply(img_white, im_mask1234)
         img2_masked=np.multiply(img2, im_mask13)
         img4_masked=np.multiply(img4, im_mask13)
+        img1_masked=np.multiply(img1, im_mask_inv1)
+        img3_masked=np.multiply(img3, im_mask_inv3)
+        
         summed_image= img1+img2_masked+img3+img4_masked+img_white_masked
+        print("summed_image time: "+str(time.time()-_time))
 
-        self.crop_image(summed_image)
+        # self.crop_image(summed_image)
+
+        #################
+        try:
+            fm = FeatureMatch()
+            # print("img1: "+str(self.img.shape)+", img2: "+str(summed_image.shape))
+            if self.img is None or summed_image is None:
+                print("IMAGE EMPTY")
+                raise Exeption("Image Empty")
+            else:
+                # print("img1 "+str(self.img.dtype)+" "+"img2 "+str(summed_image.dtype))
+                _img1 = np.uint8(self.img)
+                _img2 = np.uint8(summed_image)
+
+                # _img1 = cv2.cvtColor(_img1, cv2.COLOR_BGR2GRAY)
+                _img2 = cv2.cvtColor(_img2, cv2.COLOR_BGR2GRAY)
+
+
+
+                fm.SIFT_FLANN_matching(_img1, _img2)
+                if fm.status == True:
+                    self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
+                    self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
+                    self.img = self.app_robotview.img
+
+                    #Initialize Queue
+                    self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
+        except Exception as e:
+            print(e)
+            sys.exit("Feature Match error")
+
+        
+        #################
+
+        print("Cam Input -> Visual Calc / Total Time: "+str(time.time()-_time))
 
         # bridge=CvBridge()
         # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
@@ -86,7 +159,7 @@ class VisualCompensation():
 
     def crop_image(self, _img):
         mid_predict_img_x = self.mid_predict_canvas_x * self.pixMetRatio
-        mid_predict_img_y = _img.shape[0] self.mid_predict_canvas_y * self.pixMetRatio
+        mid_predict_img_y = _img.shape[0] - self.mid_predict_canvas_y * self.pixMetRatio
         mid_predict_img_th = self.mid_predict_canvas_th
         half_map_size = 125
 
@@ -94,69 +167,147 @@ class VisualCompensation():
         obsPts=np.array([[mid_predict_img_x-half_map_size*sin(mid_predict_img_th), mid_predict_img_y-cos(mid_predict_img_th)],
                         [mid_predict_img_x+half_map_size]])
 
-        
-
-
     def find_mask(self, img):
         _time=time.time()
         black_range1=np.array([0,0,0])
-        # im_mask=(cv2.inRange(img, black_range1, black_range1)).astype('bool')
         im_mask=(cv2.inRange(img, black_range1, black_range1))
         im_mask=np.dstack((im_mask, im_mask, im_mask))
-        # im_mask_inv=(1-im_mask).astype('bool')
         im_mask_inv=(1-im_mask)
         return im_mask_inv, im_mask
 
     def sync_virtual_callback(self, _endPoint, _midPoint):
-        app=RobotView(self.img, _midPoint, _endPoint) # Add the endpoint into the virtual map
+        _time=time.time()
+
         self.mid_predict_canvas_x=_midPoint.x
         self.mid_predict_canvas_y=_midPoint.y
         self.mid_predict_canvas_th=_midPoint.z
 
-        self.img = app.run()
+        self.recent_pts.appendleft((_midPoint.x, _midPoint.y))
+
+        self.app_robotview.run(_midPoint, _endPoint)
+        self.img = self.app_robotview.img
+        ttime=Float32()
+        ttime.data=float(time.time()-_time)
+        self.pub_time_2.publish(ttime)
 
         # bridge=CvBridge()
         # virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.img)
         # self.pub_virtual_map.publish(virtual_map_msg)
 
-    def callback_undistort1(self, _img):
+    def undistort1(self, _img):
+        print("undistort1")
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[392.457559, 0, 307.489055],[0, 393.146087, 314.555479], [0,0,1]])
-        dst=np.array([-0.005695, -0.017562, -0.000497, 0.001201])
+        mtx=np.array([[393.8666817683925, 0.0, 399.6813895086665], [0.0, 394.55108358870405, 259.84676565717876], [0.0, 0.0, 1.0])
+        dst=np.array([-0.0032079005049939543, -0.020856072501002923, 0.000252242294186179, -0.0021042704510431365])
+
+        # #################DEBUG#######################333
+        # undist=cv2.undistort(img, mtx, dst, None, mtx)
+        # cv2.imwrite("/home/bkjung/undist_for_homography/genius1/undist_"+str(time.time())+".png",undist)
+
+        # imgmsg=self.bridge.cv2_to_imgmsg(undist)
+        # self.pub1.publish(imgmsg)
+
+
         homo1= np.array([[-1.67130692e-01,  5.99743615e+00, -5.29293784e+02],
             [-2.40710331e+00,  4.76090267e+00,  1.55119117e+03],
             [-2.21043846e-04,  7.30990701e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo1, (1280,1280))
 
+<<<<<<< HEAD
 
     def callback_undistort2(self, _img):
+=======
+        
+
+        
+
+
+    def undistort2(self, _img):
+>>>>>>> 9f26b1d69027e6a17d5e65e921c707f5da0c3e09
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[397.515439, 0, 427.319496], [0, 396.393346, 359.074317],[0,0,1]])
-        dst=np.array([0.008050, -0.019082, 0.002712, 0.009123])
+        mtx=np.array([[396.01900903941834, 0.0, 410.8496405295566], [0.0, 396.2406539134792, 285.8932176591904], [0.0, 0.0, 1.0])
+        dst=np.array([-0.008000340519517233, -0.016478659972026452, 7.25792172844022e-05, -0.00434319738405187])
+
+        # #################DEBUG#######################333
+        # undist=cv2.undistort(img, mtx, dst, None, mtx)
+        # cv2.imwrite("/home/bkjung/undist_for_homography/genius2/undist_"+str(time.time())+".png",undist)
+        # imgmsg=self.bridge.cv2_to_imgmsg(undist)
+        # self.pub2.publish(imgmsg)
+
         homo2= np.array([[-2.36547415e+00,  4.44589419e+00,  1.65240597e+03],
             [-1.11902669e-02,  2.88055561e+00,  2.03902843e+03],
             [-5.36747061e-06,  6.70728023e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo2, (1280,1280))
 
-    def callback_undistort3(self, _img):
+    def undistort3(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[389.940243, 0, 366.042362],[0, 389.110547, 376.957547],[0,0,1]])
-        dst=np.array([0.001656, -0.022658, 0.005813, -0.003150])
+        mtx=np.array([[387.8191999285985, 0.0, 392.3078288789019],[ 0.0, 382.1093651210362, 317.43368009853674], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.008671221810333559, -0.013546386893040543, -0.00016537575030651431, 0.002659594999360673])
+
+
+        # #################DEBUG#######################333
+        # undist=cv2.undistort(img, mtx, dst, None, mtx)
+        # cv2.imwrite("/home/bkjung/undist_for_homography/genius3/undist_"+str(time.time())+".png",undist)
+        # imgmsg=self.bridge.cv2_to_imgmsg(undist)
+        # self.pub3.publish(imgmsg)
+
         homo3= np.array([[ 2.55132452e-01,  9.82372337e+00,  4.09600642e+03],
             [ 6.45201391e+00,  1.30885948e+01, -1.66201249e+03],
             [ 3.88669729e-04,  2.00259308e-02,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo3, (1280,1280))
 
 
-    def callback_undistort4(self, _img):
+    def undistort4(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[373.550865, 0, 385.121920],[0, 373.744498, 317.403774], [0,0,1]])
-        dst=np.array([-0.018599, -0.009035, 0.001095, -0.004048])
+        mtx=np.array([[384.2121883964654, 0.0, 423.16727407803353], [0.0, 386.8188468139677, 359.5190506678551], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.0056866549555025896, -0.019460881544303938, 0.0012937686026747307, -0.0031999317338443087])
+
+
+        #################DEBUG#######################333
+        # undist=cv2.undistort(img, mtx, dst, None, mtx)
+        # cv2.imwrite("/home/bkjung/undist_for_homography/genius4/undist_"+str(time.time())+".png",undist)
+        # imgmsg=self.bridge.cv2_to_imgmsg(undist)
+        # self.pub4.publish(imgmsg)
+
+
+        homo4= np.array([[ 2.57420243e+00,  5.85803823e+00, -4.05003547e+02],
+            [-1.15034759e-01,  7.22474987e+00, -7.29546146e+02],
+            [-1.92621119e-04,  8.88963498e-03,  1.00000000e+00]])
+        return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo4, (1280,1280))
+
+    def undistort_left(self, _img):
+        img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        mtx=np.array([[496.88077412085187, 0.0, 486.19161191113693], [0.0, 497.77308359203073, 348.482250144119], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.27524035766660704, 0.055346669640229516, 0.002041430748143387, -0.0012188333190676689])
+
+        #################DEBUG#######################333
+        # undist=cv2.undistort(img, mtx, dst, None, mtx)
+        # cv2.imwrite("/home/bkjung/undist_for_homography/pi_l/undist_"+str(time.time())+".png",undist)
+        # imgmsg=self.bridge.cv2_to_imgmsg(undist)
+        # self.pub_pi_l.publish(imgmsg)
+
         homo4= np.array([[ 2.57420243e+00,  5.85803823e+00, -4.05003547e+02],
             [-1.15034759e-01,  7.22474987e+00, -7.29546146e+02],
             [-1.92621119e-04,  8.88963498e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo4, (1280,1280))
 
 
+    def undistort_right(self, _img):
+        img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        mtx=np.array([[494.0169295185964, 0.0, 483.6710483879246], [0.0, 495.87509303786857, 336.69262125267153], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.26693726936305806, 0.05239559897759021, 0.0024912074565555443, -0.0015904998174301696])
+
+        #################DEBUG#######################333
+        # undist=cv2.undistort(img, mtx, dst, None, mtx)
+        # cv2.imwrite("/home/bkjung/undist_for_homography/pi_r/undist_"+str(time.time())+".png",undist)
+        # imgmsg=self.bridge.cv2_to_imgmsg(undist)
+        # self.pub_pi_r.publish(imgmsg)
+
+        homo4= np.array([[ 2.57420243e+00,  5.85803823e+00, -4.05003547e+02],
+            [-1.15034759e-01,  7.22474987e+00, -7.29546146e+02],
+            [-1.92621119e-04,  8.88963498e-03,  1.00000000e+00]])
+        return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo4, (1280,1280))
+
 if __name__=='__main__':
-    VisualCompensation()
+    num_pts_delete = 150 #num_of_waypoints_to_delete_in_virtualmap_after_compensation
+    VisualCompensation(num_pts_delete)

@@ -139,9 +139,11 @@ class PaintSelectfile():
         flag_start = True
         dist = 0
 
-        root = Tk()
-        path_str = tkFileDialog.askopenfilename(parent=root,initialdir=home_path,title='Please select a path file to play')
-        root.quit()
+        #root = Tk()
+        #path_str = tkFileDialog.askopenfilename(parent=root,initialdir=home_path,title='Please select a path file to play')
+        path_str=raw_input("Type Waypoint FILE PATH: ")
+
+        #root.quit()
         if os.path.isfile(path_str):
             with open(path_str, "r") as file_path:
                 for idx, line in enumerate(file_path):
