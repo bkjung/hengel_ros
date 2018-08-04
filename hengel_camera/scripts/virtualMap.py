@@ -58,18 +58,7 @@ class VisualCompensation():
         self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4,
                                              self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
 
-        #self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10, 0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_real_callback)
-
-
-        # rospy.Subscriber('/genius1/compressed', CompressedImage, self.undistort1)
-        # rospy.Subscriber('/genius2/compressed', CompressedImage, self.undistort2)
-        # rospy.Subscriber('/genius3/compressed', CompressedImage, self.undistort3)
-        # rospy.Subscriber('/genius4/compressed', CompressedImage, self.undistort4)
-        # rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.undistort_left)
-        # rospy.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage, self.undistort_right)
-
-
 
         ############################ DEBUG ################################
         self.pub_time_1=rospy.Publisher('/time1', Float32, queue_size=5)
