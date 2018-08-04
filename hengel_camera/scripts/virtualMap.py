@@ -59,7 +59,6 @@ class VisualCompensation():
                                              self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
 
         #self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10, 0.1, allow_headerless=True)
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10, 0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_real_callback)
 
 
@@ -81,6 +80,7 @@ class VisualCompensation():
         self.pub4=rospy.Publisher('/genius4/undist', Image, queue_size=5 )
         self.pub_pi_l=rospy.Publisher('/pi_left/undist', Image, queue_size=5 )
         self.pub_pi_r=rospy.Publisher('/pi_right/undist', Image, queue_size=5 )
+        self.pub_sum=rospy.Publisher('/summed_image/compressed',CompressedImage, queue_size=5)
 
 
 
@@ -114,6 +114,8 @@ class VisualCompensation():
         img1_masked=np.multiply(img1, im_mask_inv1)
         img3_masked=np.multiply(img3, im_mask_inv3)
         summed_image= img1+img2_masked+img3+img4_masked+img_white_masked
+        summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
+        self.pub_sum.publish(summed_msg)
         print("summed_image time: "+str(time.time()-_time))
 
         # self.crop_image(summed_image)
@@ -209,14 +211,10 @@ class VisualCompensation():
             [-5.52616807e-05,  6.56931832e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo1, (1280,1280))
 
+
     def undistort2(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         mtx=np.array([[396.01900903941834, 0.0, 410.8496405295566], [0.0, 396.2406539134792, 285.8932176591904], [0.0, 0.0, 1.0]])
-
-
-    def undistort2(self, _img):
-        img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[396.01900903941834, 0.0, 410.8496405295566], [0.0, 396.2406539134792, 285.8932176591904], [0.0, 0.0, 1.0])
         dst=np.array([-0.008000340519517233, -0.016478659972026452, 7.25792172844022e-05, -0.00434319738405187])
 
         # #################DEBUG#######################333
