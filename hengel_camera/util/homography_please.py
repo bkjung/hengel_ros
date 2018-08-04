@@ -4,6 +4,10 @@ import rospy
 from geometry_msgs.msg import Point
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Image, CompressedImage
+<<<<<<< HEAD
+=======
+from markRobotView import RobotView
+>>>>>>> 7deec31f1372df487ec280ec50e51328a7e96ebe
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos, asin
 import numpy as np
 import sys
@@ -13,6 +17,10 @@ import cv2
 from cv_bridge import CvBridge
 import message_filters
 import collections
+<<<<<<< HEAD
+=======
+from feature_match import FeatureMatch
+>>>>>>> 7deec31f1372df487ec280ec50e51328a7e96ebe
 from matplotlib import pyplot as plt
 
 class VisualCompensation():
@@ -22,7 +30,10 @@ class VisualCompensation():
     def initialize(self):
         rospy.init_node('hengel_camera_compensation', anonymous=False)
 
+<<<<<<< HEAD
         self.bridge= CvBridge()
+=======
+>>>>>>> 7deec31f1372df487ec280ec50e51328a7e96ebe
         rospy.Subscriber('/genius1/compressed', CompressedImage, self.undistort1)
         rospy.Subscriber('/genius2/compressed', CompressedImage, self.undistort2)
         rospy.Subscriber('/genius3/compressed', CompressedImage, self.undistort3)
