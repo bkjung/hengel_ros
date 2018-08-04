@@ -253,9 +253,9 @@ class VisualCompensation():
         # self.pub4.publish(imgmsg)
 
 
-        homo4= np.array([[-4.71948472e+00, -1.38125668e+01,  3.19225325e+03],
-            [-3.08227908e+00, -1.27649580e+01, -5.27621031e+02],
-            [-1.24587314e-02, -1.69933031e-02,  1.00000000e+00]])
+        homo4= np.array([[ 2.28317132e-01,  1.40100840e+01, -2.33867485e+03],
+            [-5.15991902e+00,  1.17501321e+01,  3.00914222e+03],
+            [ 5.65609486e-04,  1.83615756e-02,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo4, (1280,1280))
 
     def undistort_left(self, _img):
