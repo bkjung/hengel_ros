@@ -145,6 +145,7 @@ class FeatureMatch():
 
             plt.subplot(313)
             plt.imshow(img3, cmap='gray')
+            print("done")
         else:
             print("Feature Match FAILED")
 
@@ -159,7 +160,7 @@ if __name__=="__main__":
     img_virtual= cv2.imread("/home/bkjung/demo_1280.png", cv2.IMREAD_GRAYSCALE)
     img_photo= cv2.imread("/home/bkjung/LABS_6.png", cv2.IMREAD_GRAYSCALE)
 
-    app = FeatureMatch()
+    app = FeatureMatch('/home/bkjung')
 
     app.SIFT_FLANN_matching(img_photo, img_virtual)
     # SIFT_KNN_matching(img1, img2)

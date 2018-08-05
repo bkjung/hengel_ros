@@ -102,6 +102,8 @@ class VisualCompensation():
         img4 = self.undistort4(_img4)
         #img_left=self.undistort_left(_img_left)
         #img_right=self.undistort_right(_img_right)
+        while len(self.pi_left_img)==0 and len(self.pi_left_img)==0:
+            time.sleep(100)
         img_left=self.pi_left_img
         img_right=self.pi_right_img
 
