@@ -99,11 +99,11 @@ class FeatureMatch():
 
         # print("abc",kp1[good[3].queryIdx].pt)
 
-        # plt.figure(1, figsize=(10, 20))
-        # plt.subplot(311)
-        # plt.imshow(img1, cmap='gray')
-        # plt.subplot(312)
-        # plt.imshow(img2, cmap='gray')
+        plt.figure(1, figsize=(10, 20))
+        plt.subplot(311)
+        plt.imshow(img1, cmap='gray')
+        plt.subplot(312)
+        plt.imshow(img2, cmap='gray')
 
         print("sift_falnn 3 Time: "+str(time.time()-_time))
 
@@ -143,8 +143,8 @@ class FeatureMatch():
 
             # cv2.imwrite(self.folder_path+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
 
-            # plt.subplot(313)
-            # plt.imshow(img3, cmap='gray')
+            plt.subplot(313)
+            plt.imshow(img3, cmap='gray')
         else:
             print("Feature Match FAILED")
 
