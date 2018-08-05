@@ -107,6 +107,8 @@ class VisualCompensation():
         #img_right=self.undistort_right(_img_right)
         img_left=copy.deepcopy(self.pi_left_img)
         img_right=copy.deepcopy(self.pi_right_img)
+        while len(self.pi_left_img)==0 and len(self.pi_left_img)==0:
+            time.sleep(100)
 
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
