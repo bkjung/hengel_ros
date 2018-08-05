@@ -7,7 +7,6 @@ from sensor_msgs.msg import Image, CompressedImage
 from nav_msgs.msg import Path
 from visualization_msgs.msg import Marker
 from hengel_navigation.msg import ValveInput, OperationMode
-from hengel_camera.markRobotView import RobotView
 import tf
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos, asin
 from tf.transformations import euler_from_quaternion
@@ -19,7 +18,7 @@ import cv2
 import cv_bridge
 import logging
 import matplotlib.pyplot as plt
-import skimage.io as ski_io
+# import skimage.io as ski_io
 
 #import PIL.Image
 #import PIL.ImageTk
@@ -32,6 +31,9 @@ robot_size = 15  #[cm]; diameter
 
 package_base_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "../.."))
+home_path = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../../../..")
+)
 os.system("mkdir -p " + package_base_path +
         "/hengel_path_manager/output_pathmap")
 
@@ -65,7 +67,7 @@ class NavigationControl():
     #     self.initial_setting()
     #     self.run()
 
-    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _D, _img):
+    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _isStartEndIndexed, _D):
         while True:
             word = raw_input(
                     "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType :"
@@ -80,6 +82,7 @@ class NavigationControl():
         self.end_point_list = _end_point_list
         self.isPositionControl = _isPositionControl
         self.isIntensityControl = _isIntensityControl
+        self.isStartEndIndexed = _isStartEndIndexed
         self.D=_D
         self.img=np.full((2000,2000), 255)
 
@@ -94,51 +97,48 @@ class NavigationControl():
                 break
 
         if self.isPositionControl:
+            while True:
+                word = raw_input(
+                        # "There are 3 options for spray intensity.\n[1] Input from waypoint file \n[2] Constant 740 \n[3] Sinusoidal Fluctuation \nType :"
+                        "There are 2 options for spray intensity.\n[1] Input from waypoint file (or StartEnd indexed) \n[2] Constant 740 \nType :"
+                        )
+                self.intensity_option = int(word)
+                # if self.intensity_option==1 or self.intensity_option==2 or self.intensity_option==3:
+                if self.intensity_option==1 or self.intensity_option==2:
+                    break
+
+            while True:
+                word = raw_input(
+                        "There are 2 options for cam_image save.\n[1] Do NOT stop & save \n[2] DO stop & save periodically \nType :"
+                        )
+                self.option_cam_save = int(word)
+                if self.option_cam_save==1 or self.option_cam_save==2:
+                    break
+
+            if self.option_cam_save==2:
+                word = raw_input(
+                        "CAM SAVE Period (No. Waypoints) \nType :"
+                        )
+                self.cam_save_period_waypoints = int(word)
+                word = raw_input(
+                        "CAM SAVE Point (x,y, theta) \nType x: "
+                        )
+                self.cam_save_x = float(word)
+                word = raw_input(
+                        "CAM SAVE Point (x,y, theta) \nType y: "
+                        )
+                self.cam_save_y = float(word)
+                word = raw_input(
+                        "CAM SAVE Point (x,y, theta) \nType theta(deg): "
+                        )
+                self.cam_save_theta_deg = float(word)
+
             if self.simulation_option==1:
-                while True:
-                    word = raw_input(
-                            # "There are 3 options for spray intensity.\n[1] Input from waypoint file \n[2] Constant 740 \n[3] Sinusoidal Fluctuation \nType :"
-                            "There are 2 options for spray intensity.\n[1] Input from waypoint file \n[2] Constant 740 \nType :"
-                            )
-                    self.intensity_option = int(word)
-                    # if self.intensity_option==1 or self.intensity_option==2 or self.intensity_option==3:
-                    if self.intensity_option==1 or self.intensity_option==2:
-                        break
-
-                while True:
-                    word = raw_input(
-                            "There are 2 options for cam_image save.\n[1] Do NOT stop & save \n[2] DO stop & save periodically \nType :"
-                            )
-                    self.option_cam_save = int(word)
-                    if self.option_cam_save==1 or self.option_cam_save==2:
-                        break
-
-                if self.option_cam_save==2:
-                    word = raw_input(
-                            "CAM SAVE Period (No. Waypoints) \nType :"
-                            )
-                    self.cam_save_period_waypoints = int(word)
-                    word = raw_input(
-                            "CAM SAVE Point (x,y, theta) \nType x: "
-                            )
-                    self.cam_save_x = float(word)
-                    word = raw_input(
-                            "CAM SAVE Point (x,y, theta) \nType y: "
-                            )
-                    self.cam_save_y = float(word)
-                    word = raw_input(
-                            "CAM SAVE Point (x,y, theta) \nType theta(deg): "
-                            )
-                    self.cam_save_theta_deg = float(word)
-
                 self.runOffset()
             else:
                 self.saveSimulation()
         else:
-            if self.simulation_option==1:
-                self.run()
-            else:
-                print("This set of options cannot be executed. SORRY :(")
+            print("This option cannot be executed. SORRY :(")
 
     def initial_setting(self):
         self.program_start_time = time.strftime("%y%m%d_%H%M%S")
@@ -170,10 +170,11 @@ class NavigationControl():
         self.valve_status = SPRAY_OFF
 
         self.dt = 0.02  # [s]
+        #self.dt = 0.01  # [s]
         self.freq = 1.0/self.dt
         self.r = rospy.Rate(1.0/self.dt)
 
-        self.dt_sim= 0.00001  # [s]
+        self.dt_sim= 0.00000001  # [s]
         self.r_sim = rospy.Rate(1.0/self.dt)
 
         #It SHOULD BE 1 for current code.
@@ -233,12 +234,15 @@ class NavigationControl():
         self.traj_painting.action = Marker.ADD
         self.traj_painting.pose.orientation.w = 1.0
         self.traj_painting.type = Marker.LINE_STRIP
+
         self.traj_painting.scale.x = 0.01 # line width
         self.traj_painting.color.r = 0.0
         self.traj_painting.color.b = 1.0
         self.traj_painting.color.a = 1.0
 
+
         self.traj_painting.id = 0; #overwrite any existing shapes
+
         self.traj_painting.lifetime.secs = 1; #timeout for display
 
         self.traj_painting.points = []
@@ -291,8 +295,6 @@ class NavigationControl():
         #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown)
 
-        # self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
-
         self.valve_angle_publisher = rospy.Publisher(
                 '/valve_input', ValveInput, queue_size=5)
         self.valve_operation_mode_publisher = rospy.Publisher(
@@ -303,17 +305,8 @@ class NavigationControl():
         self.valve_angle_publisher.publish(
                 self.valve_angle_input)
 
-        #self.crop_map_publisher = rospy.Publisher('/cropped_predict_map', PIL.Image, queue_size=5)
-        self.offset_change_x_publisher = rospy.Publisher(
-                '/offset_change_x', Float32, queue_size=5)
-        self.offset_change_y_publisher = rospy.Publisher(
-                '/offset_change_y', Float32, queue_size=5)
-        self.offset_change_theta_publisher = rospy.Publisher(
-                '/offset_change_theta', Float32, queue_size=5)
-
-        # self.spray_intensity_publisher = rospy.Publisher(
-        #         '/spray_intensity', Float32, queue_size=5)
-
+        self.vision_offset_subscriber = rospy.Subscriber(
+                '/offset_change', Point, self.callback_vision_offset)
 
         self.pub_markers = rospy.Publisher('/robot_trajectory_visualization', Marker, queue_size=5)
         self.pub_markers_painting = rospy.Publisher('/painting_visualization', Marker, queue_size=5)
@@ -383,30 +376,7 @@ class NavigationControl():
                             ]
                     self.cnt_waypoints += 1
 
-                    ###########################################################################################
-                   # if self.waypoint_index_in_current_segment+1 == self.cnt_waypoints_in_current_segment:
-                   #     if self.segment_index+1 == self.cnt_segments_in_current_letter:
-                   #         if self.letter_index+1 == self.cnt_letter:
-                   #             self.next_letter_index = -1
-                   #             self.next_segment_index = -1
-                   #             self.next_waypoint_index_in_current_segment = -1
-                   #         else:
-                   #             self.next_letter_index = self.letter_index+1
-                   #             self.next_segment_index = 0
-                   #             self.next_waypoint_index_in_current_segment = 0
-
-                   #     else:
-                   #         self.next_letter_index = self.letter_index
-                   #         self.next_segment_index = self.segment_index+1
-                   #         self.next_waypoint_index_in_current_segment = 0
-                   # else:
-                   #     self.next_letter_index = self.letter_index
-                   #     self.next_segment_index = self.segment_index
-                   #     self.next_waypoint_index_in_current_segment = self.waypoint_index_in_current_segment+1
-                   # ###########################################################################################
-
-
-                    if self.intensity_option == 2:
+                    if self.isStartEndIndexed:
                         if (self.cnt_waypoints) in self.start_point_list:
                             self.is_moving_between_segments = False
                         elif (self.cnt_waypoints) in self.end_point_list:
@@ -426,40 +396,41 @@ class NavigationControl():
                             break
                         try:
                             if self.intensity_option==1:
-                                #For this option, is_moving_between_segments does not work!!!!
-                                input_pixel_value = int(self.arr_intensity[self.cnt_waypoints])
-                                input_pixel_value_graphic = int(self.arr_intensity[self.cnt_waypoints])
-                                if input_pixel_value >=0 and input_pixel_value<256:   #if the input is alright, then
+                                if not self.isStartEndIndexed:
+                                    #For this option, is_moving_between_segments does not work!!!!
+                                    input_pixel_value = int(self.arr_intensity[self.cnt_waypoints])
+                                    input_pixel_value_graphic = int(self.arr_intensity[self.cnt_waypoints])
+                                    if input_pixel_value >=0 and input_pixel_value<256:   #if the input is alright, then
 
-                                    #cut off value larger than 230 to 230.
-                                    input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
-                                    spray_input = 660.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
-                                    # self.spray_intensity_publisher.publish(spray_input)
-                                    self.valve_angle_input.goal_position = int(spray_input)
-                                    self.valve_angle_publisher.publish(self.valve_angle_input)
+                                        #cut off value larger than 230 to 230.
+                                        input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
+                                        spray_input = 660.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
+                                        # self.spray_intensity_publisher.publish(spray_input)
+                                        self.valve_angle_input.goal_position = int(spray_input)
+                                        self.valve_angle_publisher.publish(self.valve_angle_input)
+                                else:
+                                    if self.is_moving_between_segments==True:
+                                        # self.spray_intensity_publisher.publish(1024.0)
+                                        self.valve_angle_input.goal_position = 1024
+                                        self.valve_angle_publisher.publish(self.valve_angle_input)
+                                    else:
+                                        #self.spray_intensity_publisher.publish(660.0)
+                                        # self.spray_intensity_publisher.publish(740.0)
+                                        self.valve_angle_input.goal_position = 660
+                                        self.valve_angle_publisher.publish(self.valve_angle_input)
+
 
                             elif self.intensity_option==2:
+                                input_pixel_value_graphic=0
                                 self.valve_angle_input.goal_position = 740
                                 self.valve_angle_publisher.publish(self.valve_angle_input)
-                                #if self.is_moving_between_segments==True:
-                                #    # self.spray_intensity_publisher.publish(1024.0)
-                                #    self.valve_angle_input.goal_position = 1024
-                                #    self.valve_angle_publisher.publish(self.valve_angle_input)
-                                #else:
-                                #    #self.spray_intensity_publisher.publish(660.0)
-                                #    # self.spray_intensity_publisher.publish(740.0)
-                                #    self.valve_angle_input.goal_position = 740
-                                #    self.valve_angle_publisher.publish(self.valve_angle_input)
-
-                            # elif self.intensity_option==3:
-
 
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
+                            self.endPoint.z=float(input_pixel_value_graphic)
                             self.point.z=self.heading.data
                             self.pub_midpoint.publish(self.point)
-                            app=RobotView(self.img, self.point, self.endPoint, input_pixel_value_graphic)
-                            self.img=app.run()
+                            self.pub_endpoint.publish(self.endPoint)
 
                             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
                             print(str(self.endPoint.x)+"  "+str(self.endPoint.y))
@@ -475,10 +446,10 @@ class NavigationControl():
                             delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                             delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
 
-                            delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
-                            delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
-                            #delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.5
-                            #delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.5
+                            # delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
+                            # delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
+                            delOmega1= (1/self.R)*(delS+self.L*delOmega)
+                            delOmega2= (1/self.R)*(delS-self.L*delOmega)
 
                             if self.motor_buffer_option == 1:       #Motor Smoothing Buffer Enabled
                                 pass
@@ -689,205 +660,215 @@ class NavigationControl():
         # self.cmd_vel.publish(Twist())
 
     def saveSimulation(self):
-        pass
-        # print("--save simulation begin--")
-        # self.wait_for_seconds(5.0)
-        # # go through path array
-        # rospy.loginfo("number of letters = " + str(len(self.arr_path)))
-        # for idx_letter in range(len(self.arr_path)):
-        #     rospy.loginfo("number of letter segments in letter no." + str(idx_letter) +
-        #             " = " + str(len(self.arr_path[idx_letter])))
-        #     for idx_segment in range(len(self.arr_path[idx_letter])):
-        #         #waypoints_in_segment = []
-        #         for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
-        #             self.cnt_total_waypoints = self.cnt_total_waypoints + 1
-        #         #self.waypoints.append(waypoints_in_segment)
+        print("--save simulation begin--")
+        self.wait_for_seconds(5.0)
+        # go through path array
+        rospy.loginfo("number of letters = " + str(len(self.arr_path)))
+        for idx_letter in range(len(self.arr_path)):
+            rospy.loginfo("number of letter segments in letter no." + str(idx_letter) +
+                    " = " + str(len(self.arr_path[idx_letter])))
+            for idx_segment in range(len(self.arr_path[idx_letter])):
+                #waypoints_in_segment = []
+                for idx_waypoint in range(len(self.arr_path[idx_letter][idx_segment])):
+                    self.cnt_total_waypoints = self.cnt_total_waypoints + 1
+                #self.waypoints.append(waypoints_in_segment)
 
 
-        # print("Total Number of Waypoints : "+str(self.cnt_total_waypoints))
+        print("Total Number of Waypoints : "+str(self.cnt_total_waypoints))
 
-        # self.cnt_letter = len(self.arr_path)
-        # self.th1=0
-        # self.th2=0
+        self.cnt_letter = len(self.arr_path)
+        self.th1=0
+        self.th2=0
 
-        # pubDelta1=0         #previously published delta_1
-        # pubDelta2=0         #previously published delta_2
-        # pubIter=0
+        pubDelta1=0         #previously published delta_1
+        pubDelta2=0         #previously published delta_2
+        pubIter=0
 
-        # cnt_delta_buffer = 0
+        cnt_delta_buffer = 0
 
-        # arr_endPoint = []
-        # arr_robotPoint = []
-        # arr_leftWheel = []
-        # arr_rightWheel = []
+        arr_endPoint = []
+        arr_robotPoint = []
+        arr_leftWheel = []
+        arr_rightWheel = []
 
-        # while self.letter_index < self.cnt_letter:
-        #     if rospy.is_shutdown():
-        #         break
-        #     self.cnt_segments_in_current_letter = len(
-        #             self.arr_path[self.letter_index])
-        #     while self.segment_index < self.cnt_segments_in_current_letter:
-        #         if rospy.is_shutdown():
-        #             break
-        #         self.cnt_waypoints_in_current_segment = len(
-        #                 self.arr_path[self.letter_index][self.segment_index])
-        #         while self.waypoint_index_in_current_segment < self.cnt_waypoints_in_current_segment:
-        #             if rospy.is_shutdown():
-        #                 break
-        #             # rospy.loginfo("\n\nwaypoint index : " +
-        #             #         str(self.waypoint_index_in_current_segment) +
-        #             #         " in segment no. " + str(self.segment_index) +
-        #             #         " in letter no. " + str(self.letter_index))
+        while self.letter_index < self.cnt_letter:
+            if rospy.is_shutdown():
+                break
+            self.cnt_segments_in_current_letter = len(
+                    self.arr_path[self.letter_index])
+            while self.segment_index < self.cnt_segments_in_current_letter:
+                if rospy.is_shutdown():
+                    break
+                self.cnt_waypoints_in_current_segment = len(
+                        self.arr_path[self.letter_index][self.segment_index])
+                while self.waypoint_index_in_current_segment < self.cnt_waypoints_in_current_segment:
+                    if rospy.is_shutdown():
+                        break
+                    # rospy.loginfo("\n\nwaypoint index : " +
+                    #         str(self.waypoint_index_in_current_segment) +
+                    #         " in segment no. " + str(self.segment_index) +
+                    #         " in letter no. " + str(self.letter_index))
 
-        #             self.current_waypoint = [
-        #                     self.arr_path[self.letter_index][self.segment_index][
-        #                         self.waypoint_index_in_current_segment][0],
-        #                     self.arr_path[self.letter_index][self.segment_index][
-        #                         self.waypoint_index_in_current_segment][1]
-        #                     ]
-        #             self.cnt_waypoints += 1
-        #             # print("Waypoint Number : %d" % (self.cnt_waypoints))
+                    self.current_waypoint = [
+                            self.arr_path[self.letter_index][self.segment_index][
+                                self.waypoint_index_in_current_segment][0],
+                            self.arr_path[self.letter_index][self.segment_index][
+                                self.waypoint_index_in_current_segment][1]
+                            ]
+                    self.cnt_waypoints += 1
 
-        #             ###########################################################################################
-        #             if self.waypoint_index_in_current_segment+1 == self.cnt_waypoints_in_current_segment:
-        #                 if self.segment_index+1 == self.cnt_segments_in_current_letter:
-        #                     if self.letter_index+1 == self.cnt_letter:
-        #                         self.next_letter_index = -1
-        #                         self.next_segment_index = -1
-        #                         self.next_waypoint_index_in_current_segment = -1
-        #                     else:
-        #                         self.next_letter_index = self.letter_index+1
-        #                         self.next_segment_index = 0
-        #                         self.next_waypoint_index_in_current_segment = 0
+                    if self.isStartEndIndexed:
+                        if (self.cnt_waypoints) in self.start_point_list:
+                            self.is_moving_between_segments = False
+                        elif (self.cnt_waypoints) in self.end_point_list:
+                            self.is_moving_between_segments = True
+                        else:
+                            pass
 
-        #                 else:
-        #                     self.next_letter_index = self.letter_index
-        #                     self.next_segment_index = self.segment_index+1
-        #                     self.next_waypoint_index_in_current_segment = 0
-        #             else:
-        #                 self.next_letter_index = self.letter_index
-        #                 self.next_segment_index = self.segment_index
-        #                 self.next_waypoint_index_in_current_segment = self.waypoint_index_in_current_segment+1
-        #             ###########################################################################################
+                    # Motion Control
+                    while True:
+                        if rospy.is_shutdown():
+                            break
+                        try:
+                            if self.intensity_option==1:
+                                if not self.isStartEndIndexed:
+                                    #For this option, is_moving_between_segments does not work!!!!
+                                    original_input_pixel_value = int(self.arr_intensity[self.cnt_waypoints])
+                                    input_pixel_value = original_input_pixel_value
+                                    input_pixel_value_graphic = int(self.arr_intensity[self.cnt_waypoints])
+                                    if input_pixel_value >=0 and input_pixel_value<256:   #if the input is alright, then
 
-
-        #             if (self.cnt_waypoints) in self.start_point_list:
-        #                 self.is_moving_between_segments = False
-        #             elif (self.cnt_waypoints) in self.end_point_list:
-        #                 self.is_moving_between_segments = True
-        #             else:
-        #                 pass
-
-
-        #             # Motion Control
-        #             while True:
-        #                 if rospy.is_shutdown():
-        #                     break
-        #                 try:
-        #                     # if self.is_moving_between_segments==True:
-        #                     #     self.spray_intensity_publisher.publish(1024.0)
-        #                     # else:
-        #                     #     #self.spray_intensity_publisher.publish(660.0)
-        #                     #     self.spray_intensity_publisher.publish(740.0)
-
-        #                     self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
-        #                     self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
-
-        #                     leftWheel = Point()
-        #                     leftWheel.x=self.point.x-self.L*sin(self.heading.data)
-        #                     leftWheel.y=self.point.y+self.L*cos(self.heading.data)
-
-        #                     rightWheel = Point()
-        #                     rightWheel.x=self.point.x+self.L*sin(self.heading.data)
-        #                     rightWheel.y=self.point.y-self.L*cos(self.heading.data)
-
-        #                     arr_robotPoint.append((self.point.x, self.point.y))
-        #                     arr_endPoint.append((self.endPoint.x, self.endPoint.y))
-        #                     arr_leftWheel.append((leftWheel.x, leftWheel.y))
-        #                     arr_rightWheel.append((rightWheel.x, rightWheel.y))
-
-        #                     # print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.point.x)+"  "+str(self.point.y)+"  "+str(leftWheel.x)+"  "+str(leftWheel.y)+"  "+str(rightWheel.x)+"  "+str(rightWheel.y))
-
-        #                     #print("distance: ", distance)
-        #                     #print("waypoint: ", self.current_waypoint)
-        #                     #print("endpoint: ", self.endPoint)
-
-        #                     th = self.heading.data
-        #                     delX= self.current_waypoint[0]-self.endPoint.x
-        #                     delY= self.current_waypoint[1]-self.endPoint.y
-
-        #                     delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
-        #                     delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
-
-        #                     delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
-        #                     delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
-        #                     #delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.5
-        #                     #delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.5
-
-        #                     #Motor Smoothing Buffer Disabled
-        #                     pubDelta1 = delOmega1
-        #                     pubDelta2 = delOmega2
-        #                     # self.pub_delta_theta_1.publish(pubDelta1)
-        #                     # self.pub_delta_theta_2.publish(pubDelta2)
-        #                     delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
-        #                     delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
-        #                     self.point.x=self.point.x+delXrobotGlobal
-        #                     self.point.y=self.point.y+delYrobotGlobal
-        #                     self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
-        #                     self.pen_distance_per_loop=sqrt(
-        #                         pow(delXrobotGlobal, 2) +
-        #                         pow(delYrobotGlobal, 2)
-        #                         )
-        #                     # print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
+                                        #cut off value larger than 230 to 230.
+                                        input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
+                                        spray_input = 660.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
+                                        # self.spray_intensity_publisher.publish(spray_input)
+                                        self.valve_angle_input.goal_position = int(spray_input)
+                                        self.valve_angle_publisher.publish(self.valve_angle_input)
+                                else:
+                                    if self.is_moving_between_segments==True:
+                                        # self.spray_intensity_publisher.publish(1024.0)
+                                        self.valve_angle_input.goal_position = 1024
+                                        self.valve_angle_publisher.publish(self.valve_angle_input)
+                                    else:
+                                        #self.spray_intensity_publisher.publish(660.0)
+                                        # self.spray_intensity_publisher.publish(740.0)
+                                        self.valve_angle_input.goal_position = 660
+                                        self.valve_angle_publisher.publish(self.valve_angle_input)
 
 
-        #                     # self.plot_arr(arr_robotPoint, 'r')
-        #                     # self.plot_arr(arr_endPoint, 'g')
-        #                     # self.plot_arr(arr_leftWheel, 'b')
-        #                     # self.plot_arr(arr_rightWheel, 'k')
+                            elif self.intensity_option==2:
+                                input_pixel_value_graphic=0
+                                self.valve_angle_input.goal_position = 740
+                                self.valve_angle_publisher.publish(self.valve_angle_input)
 
-        #                     # plt.axis([-0.5, 4.5, -0.5, 4.5])
-        #                     # plt.draw()
-        #                     # plt.pause(0.00000001)
-
-        #                     self.r_sim.sleep()
-
-        #                     break
+                            #########################################################################
+                            ##### self.D (pen tip distance) can vary here #######
+                            #########################################################################
 
 
-        #                 except KeyboardInterrupt:
-        #                     print("Got KeyboardInterrupt")
-        #                     # self.cmd_vel.publish(Twist())
+                            self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
+                            self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
 
-        #                     rospy.signal_shutdown("KeyboardInterrupt")
-        #                     break
+                            leftWheel = Point()
+                            leftWheel.x=self.point.x-self.L*sin(self.heading.data)
+                            leftWheel.y=self.point.y+self.L*cos(self.heading.data)
 
-        #             self.waypoint_index_in_current_segment = self.waypoint_index_in_current_segment + 1
-        #         self.segment_index = self.segment_index + 1
-        #         self.waypoint_index_in_current_segment = 0
-
-        #     #End of current letter.
-
-        #     #it's time for next letter
-        #     self.letter_index = self.letter_index + 1
-        #     self.segment_index = 0
-        #     self.waypoint_index_in_current_segment = 0
+                            rightWheel = Point()
+                            rightWheel.x=self.point.x+self.L*sin(self.heading.data)
+                            rightWheel.y=self.point.y-self.L*cos(self.heading.data)
 
 
-        # # plt.plot(item[0] for item in arr_robotPoint, item[1] for item in arr_robotPoint, option)
-        # self.plot_arr(arr_robotPoint, 'r')
-        # self.plot_arr(arr_endPoint, 'g')
-        # self.plot_arr(arr_leftWheel, 'b')
-        # self.plot_arr(arr_rightWheel, 'k')
+                            arr_robotPoint.append((self.point.x, self.point.y))
+                            arr_leftWheel.append((leftWheel.x, leftWheel.y))
+                            arr_rightWheel.append((rightWheel.x, rightWheel.y))
 
-        # # plt.axis([-0.5, 6.0, -0.5, 6.0])
-        # plt.show()
+                            if original_input_pixel_value<=254:
+                                arr_endPoint.append((self.endPoint.x, self.endPoint.y))
+                            
+                            
+                            # print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.point.x)+"  "+str(self.point.y)+"  "+str(leftWheel.x)+"  "+str(leftWheel.y)+"  "+str(rightWheel.x)+"  "+str(rightWheel.y))
 
-        # self.wait_for_seconds(2.0)
-        # rospy.loginfo("Stopping the robot at the final destination")
+                            #print("distance: ", distance)
+                            #print("waypoint: ", self.current_waypoint)
+                            #print("endpoint: ", self.endPoint)
+
+                            th = self.heading.data
+                            delX= self.current_waypoint[0]-self.endPoint.x
+                            delY= self.current_waypoint[1]-self.endPoint.y
+
+                            delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
+                            delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
+
+                            # delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
+                            # delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
+                            delOmega1= (1/self.R)*(delS+self.L*delOmega) * 1.0
+                            delOmega2= (1/self.R)*(delS-self.L*delOmega) * 1.0
+
+                            #Motor Smoothing Buffer Disabled
+                            pubDelta1 = delOmega1
+                            pubDelta2 = delOmega2
+                            # self.pub_delta_theta_1.publish(pubDelta1)
+                            # self.pub_delta_theta_2.publish(pubDelta2)
+                            delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(delOmega1, delOmega2)
+                            delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
+                            self.point.x=self.point.x+delXrobotGlobal
+                            self.point.y=self.point.y+delYrobotGlobal
+                            self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                            self.pen_distance_per_loop=sqrt(
+                                pow(delXrobotGlobal, 2) +
+                                pow(delYrobotGlobal, 2)
+                                )
+                            # print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
+
+
+                            # self.plot_arr(arr_robotPoint, 'r')
+                            # self.plot_arr(arr_endPoint, 'g')
+                            # self.plot_arr(arr_leftWheel, 'b')
+                            # self.plot_arr(arr_rightWheel, 'k')
+
+                            # plt.axis([-0.5, 4.5, -0.5, 4.5])
+                            # plt.draw()
+                            # plt.pause(0.00000001)
+
+                            self.r_sim.sleep()
+
+                            break
+
+
+                        except KeyboardInterrupt:
+                            print("Got KeyboardInterrupt")
+                            # self.cmd_vel.publish(Twist())
+
+                            rospy.signal_shutdown("KeyboardInterrupt")
+                            break
+
+                    self.waypoint_index_in_current_segment = self.waypoint_index_in_current_segment + 1
+                self.segment_index = self.segment_index + 1
+                self.waypoint_index_in_current_segment = 0
+
+            #End of current letter.
+
+            #it's time for next letter
+            self.letter_index = self.letter_index + 1
+            self.segment_index = 0
+            self.waypoint_index_in_current_segment = 0
+
+
+        # plt.plot(item[0] for item in arr_robotPoint, item[1] for item in arr_robotPoint, option)
+        self.plot_arr(arr_robotPoint, 'r')
+        self.plot_arr(arr_endPoint, 'g')
+        self.plot_arr(arr_leftWheel, 'b')
+        self.plot_arr(arr_rightWheel, 'k')
+
+        # plt.axis([-0.5, 6.0, -0.5, 6.0])
+        plt.savefig(home_path+"/simulation_"+self.program_start_time+".png")
+        plt.show()
+
+        self.wait_for_seconds(2.0)
+        rospy.loginfo("Stopping the robot at the final destination")
         # print("Total Stiff Delta_Theta Change BUFFER = %d" % (cnt_delta_buffer))
-        # #Wait for 1 second to close valve
-        # self.quit_valve()
+        #Wait for 1 second to close valve
+        self.quit_valve()
 
     def control_motors(self, _loop_cnt, delta1, delta2):
         loop_cnt = 0
@@ -952,8 +933,6 @@ class NavigationControl():
     def save_topview_image(self):
         pass
 
-
-
     def plot_arr(self, arr, option):
         arr_1 = list(-item[0] for item in arr)
         arr_2 = list(item[1] for item in arr)
@@ -1005,3 +984,13 @@ class NavigationControl():
             self.valve_angle_input.goal_position = 1024
             self.valve_angle_publisher.publish(self.valve_angle_input)
             self.r.sleep()
+
+    def callback_vision_offset(self, _data):
+        print("Callback Vision OFFSET Received")
+        offset_x = _data.x
+        offset_y = _data.y
+        offset_theta = _data.z
+
+        self.point.x=self.point.x + offset_x
+        self.point.y=self.point.y + offset_y
+        self.heading.data = self.heading.data + offset_theta

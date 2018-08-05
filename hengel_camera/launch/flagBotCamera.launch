@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="hengel_camera" type="virtualMap.py" name="hengel_camera_compensation"  output="screen" />
+</launch>

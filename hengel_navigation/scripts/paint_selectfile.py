@@ -12,7 +12,6 @@ from PIL import Image
 import time
 import os
 from navigation_control import NavigationControl
-from hengel_camera.line_thickener import MapMaker
 import cv2
 
 from Tkinter import *
@@ -38,11 +37,31 @@ os.system("mkdir -p " + package_base_path +
 class PaintSelectfile():
     def __init__(self):
         while True:
-            word = raw_input("What is the LENGTH AND HEIGHT OF CANVAS SIDE in selected file?\n Type: ")
-            self.CANVAS_SIDE_LENGTH = float(word.split()[0])
-            self.CANVAS_SIDE_HEIGHT = float(word.split()[1])
-            break
-        print("Length, Height of Canvas Side = " + str(self.CANVAS_SIDE_LENGTH))
+            word = raw_input("Do you want to scale up input waypoints? (NO:1, YES:2)\n Type: ")
+            self.option_scale_up = int(word)
+            if self.option_scale_up==1 or self.option_scale_up==2:
+                break
+
+        if self.option_scale_up==2:
+            while True:
+                word = raw_input("What is the LENGTH AND HEIGHT OF CANVAS SIDE in selected file?\n Type: ")
+                self.CANVAS_SIDE_LENGTH = float(word.split()[0])
+                self.CANVAS_SIDE_HEIGHT = float(word.split()[1])
+                break
+            word = raw_input("What is the ratio you want to multiply waypoints? (length, height)\n Type: ")
+            self.scale_up_factor_length = float(word.split()[0])
+            self.scale_up_factor_height = float(word.split()[1])
+            self.CANVAS_SIDE_LENGTH = self.CANVAS_SIDE_LENGTH*self.scale_up_factor_length
+            self.CANVAS_SIDE_HEIGHT = self.CANVAS_SIDE_HEIGHT*self.scale_up_factor_height
+
+        if self.option_scale_up==1:
+            while True:
+                word = raw_input("What is the LENGTH AND HEIGHT OF CANVAS SIDE in selected file?\n Type: ")
+                self.CANVAS_SIDE_LENGTH = float(word.split()[0])
+                self.CANVAS_SIDE_HEIGHT = float(word.split()[1])
+                break
+
+        print("Length, Height of Canvas Side = " + str(self.CANVAS_SIDE_LENGTH)+" "+str(self.CANVAS_SIDE_HEIGHT))
         # print("Length of Padding = " + str(PADDING_LENGTH))
         # print("Distance of Viewpoint = " + str(VIEWPOINT_DISTANCE))
         self.arr_path = []
@@ -52,7 +71,6 @@ class PaintSelectfile():
         self.isIntensityControl = False
         self.isStartEndIndexed = False
 
-        self.img=np.ndarray([])
 
         while True:
             word = raw_input("[1] Position control, [2] RPM control, [3] Position control & Spray intensity control\n Type 1 or 2 or 3:")
@@ -100,48 +118,20 @@ class PaintSelectfile():
                 print("Type value(>=0.001)")
             else:
                 break
-
-        while True:
-            word=raw_input("[1]Visual Compensation [2]No :")
-            if int(word)==1:
-                self.visualCompensation=True
-                break
-            elif int(word)==2:
-                self.visualCompensation=False
-                break
-
-        self.get_path()
-        print("path creation completed")
-        print("-----------------------------------------------")
-        print("Total Waypoints = %d" %(self.cnt_points))
-        print("Total Intensity Count = %d" %(len(self.arr_intensity)))
-        # print(self.arr_path)
-        temp_cnt = 0
-        for i in range(len(self.arr_path)):
-            for j in range(len(self.arr_path[i])):
-                for k in range(len(self.arr_path[i][j])):
-                    temp_cnt +=1
-                    pass
+        #        for k in range(len(self.arr_path[i][j])):
+        #            pass
                     #print(str(self.arr_path[i][j][k][0])+" "+str(self.arr_path[i][j][k][1]))
-        print("Temp count = %d" %temp_cnt)
+        self.get_path()
         print("-----------------------------------------------")
 
 
-        ####### camera package execute #######
-        if self.visualCompensation:
-            app = MapMaker(self.arr_path, self.isIntensityControl, self.isStartEndIndexed, self.arr_intensity, self.start_point_list, self.end_point_list, self.CANVAS_SIDE_LENGTH, self.CANVAS_SIDE_HEIGHT)
-            # At this state, predict_globalmap callbacks are working as thread.
-
-            self.img= app.run()
-            #paint_selectfile
-            self.run()
-        else:
-            self.run()
+        self.run()
 
     def get_path(self):
         letter_path = []
         subletter_path=[]
-        x_last = -self.D
+        #x_last = -self.D
+        x_last = self.D
         y_last = 0.0
         self.cnt_points = 0
         #subletter_path.append([x_last, y_last])
@@ -149,9 +139,11 @@ class PaintSelectfile():
         flag_start = True
         dist = 0
 
-        root = Tk()
-        path_str = tkFileDialog.askopenfilename(parent=root,initialdir=home_path,title='Please select a path file to play')
-        root.quit()
+        #root = Tk()
+        #path_str = tkFileDialog.askopenfilename(parent=root,initialdir=home_path,title='Please select a path file to play')
+        path_str=raw_input("Type Waypoint FILE PATH: ")
+
+        #root.quit()
         if os.path.isfile(path_str):
             with open(path_str, "r") as file_path:
                 for idx, line in enumerate(file_path):
@@ -159,9 +151,18 @@ class PaintSelectfile():
                     if not len(_str) == 0:
                         # x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH)*(-1.0)
                         # y_curr=(4.0-float(_str[1]))*CANVAS_SIDE_LENGTH
-                        x_curr=(float(_str[0])*(-1.0))
-                        # y_curr=(self.CANVAS_SIDE_LENGTH-float(_str[1]))
-                        y_curr=float(_str[1])
+                        if self.option_scale_up==1:
+                            x_curr=float(_str[0])*(-1)
+                            y_curr=(self.CANVAS_SIDE_HEIGHT-float(_str[1]))
+                            #x_curr=(float(_str[0]))
+                            #y_curr=(self.CANVAS_SIDE_HEIGHT-float(_str[1]))*(-1.0)
+                            # y_curr=float(_str[1])
+                        else:
+                            #x_curr=(float(_str[0])*(-1.0))*self.scale_up_factor_length
+                            #y_curr=self.CANVAS_SIDE_HEIGHT-float(_str[1])*self.scale_up_factor_height
+                            x_curr=(float(_str[0])*(-1))*self.scale_up_factor_length
+                            y_curr=self.CANVAS_SIDE_HEIGHT-float(_str[1])*self.scale_up_factor_height
+                            # y_curr=float(_str[1])
 
 
                         #if self.option_interval==2:
@@ -229,7 +230,7 @@ class PaintSelectfile():
 
 
     def run(self):
-        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.D, self.img)
+        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.isStartEndIndexed, self.D)
 
 
 if __name__ == '__main__':
