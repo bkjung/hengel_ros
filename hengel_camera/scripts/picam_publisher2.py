@@ -17,10 +17,17 @@ class CamPublisher():
 		rospy.init_node('genius_publisher2', anonymous=True)
 
 		
+<<<<<<< HEAD
 		self.cam=cv2.VideoCapture(1)
 		self.cam2=cv2.VideoCapture(2)
 		self.cam.set(cv2.CAP_PROP_FRAME_WIDTH,800)
 		self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
+=======
+		self.cam=cv2.VideoCapture(0)
+		self.cam2=cv2.VideoCapture(1)
+		self.cam.set(cv2.CAP_PROP_FRAME_WIDTH,960)
+		self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
+>>>>>>> ce6f47b43966ab7e5ad35b1f7c82a5887bdf43f5
 		self.cam.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
 		self.cam2.set(cv2.CAP_PROP_FRAME_WIDTH,960)
 		self.cam2.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
@@ -31,6 +38,7 @@ class CamPublisher():
 		self.pub2= rospy.Publisher('/genius4/compressed', CompressedImage, queue_size=10)
 		self.rate = rospy.Rate(5)
 		self.publish()
+
 		rospy.spin()
 
 
@@ -60,10 +68,13 @@ class CamPublisher():
 				#		msg=bridge.cv2_to_compressed_imgmsg(image)
 				#		pub.publish(msg)
 			bridge=CvBridge()
+<<<<<<< HEAD
 
 			for i in xrange(4):
 				self.cam.grab()
 				self.cam2.grab()
+=======
+>>>>>>> ce6f47b43966ab7e5ad35b1f7c82a5887bdf43f5
 			_, img=self.cam.read()
 			_, img2=self.cam2.read()
 

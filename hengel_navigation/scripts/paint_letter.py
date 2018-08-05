@@ -14,7 +14,9 @@ import os
 from navigation_control import NavigationControl
 import cv2
 
-INTERVAL = 0.0001
+#INTERVAL = 0.0001
+INTERVAL = 0.003
+#INTERVAL = 0.0025
 CANVAS_SIDE_LENGTH = 1.0
 #CANVAS_SIDE_LENGTH = 1.5 * 0.58
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
@@ -158,7 +160,7 @@ class PaintLetter():
             letter_index = letter_index + 1
 
     def run(self):
-        NavigationControl(self.arr_path, [], self.start_point_list, self.end_point_list, self.isPositionControl, False, self.D)
+        NavigationControl(self.arr_path, [], self.start_point_list, self.end_point_list, self.isPositionControl, False, False, self.D)
 
 
 if __name__ == '__main__':

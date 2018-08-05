@@ -37,10 +37,31 @@ os.system("mkdir -p " + package_base_path +
 class PaintSelectfile():
     def __init__(self):
         while True:
-            word = raw_input("What is the LENGTH OF CANVAS SIDE in selected file?\n Type: ")
-            self.CANVAS_SIDE_LENGTH = float(word)
-            break
-        print("Length of Canvas Side = " + str(self.CANVAS_SIDE_LENGTH))
+            word = raw_input("Do you want to scale up input waypoints? (NO:1, YES:2)\n Type: ")
+            self.option_scale_up = int(word)
+            if self.option_scale_up==1 or self.option_scale_up==2:
+                break
+
+        if self.option_scale_up==2:
+            while True:
+                word = raw_input("What is the LENGTH AND HEIGHT OF CANVAS SIDE in selected file?\n Type: ")
+                self.CANVAS_SIDE_LENGTH = float(word.split()[0])
+                self.CANVAS_SIDE_HEIGHT = float(word.split()[1])
+                break
+            word = raw_input("What is the ratio you want to multiply waypoints? (length, height)\n Type: ")
+            self.scale_up_factor_length = float(word.split()[0])
+            self.scale_up_factor_height = float(word.split()[1])
+            self.CANVAS_SIDE_LENGTH = self.CANVAS_SIDE_LENGTH*self.scale_up_factor_length
+            self.CANVAS_SIDE_HEIGHT = self.CANVAS_SIDE_HEIGHT*self.scale_up_factor_height
+
+        if self.option_scale_up==1:
+            while True:
+                word = raw_input("What is the LENGTH AND HEIGHT OF CANVAS SIDE in selected file?\n Type: ")
+                self.CANVAS_SIDE_LENGTH = float(word.split()[0])
+                self.CANVAS_SIDE_HEIGHT = float(word.split()[1])
+                break
+
+        print("Length, Height of Canvas Side = " + str(self.CANVAS_SIDE_LENGTH)+" "+str(self.CANVAS_SIDE_HEIGHT))
         # print("Length of Padding = " + str(PADDING_LENGTH))
         # print("Distance of Viewpoint = " + str(VIEWPOINT_DISTANCE))
         self.arr_path = []
@@ -49,6 +70,7 @@ class PaintSelectfile():
         self.end_point_list = []
         self.isIntensityControl = False
         self.isStartEndIndexed = False
+
 
         while True:
             word = raw_input("[1] Position control, [2] RPM control, [3] Position control & Spray intensity control\n Type 1 or 2 or 3:")
@@ -81,50 +103,47 @@ class PaintSelectfile():
                 else:
                     break
 
-            #while True:
-            #    word=raw_input("Type the option for interval \n[1] Same as file input \n[2] Equal interval manipulation \nType: ")
-            #    self.option_interval=int(word)
-            #    if self.option_interval == 1 or self.option_interval == 2:
-            #        break
-            #
-            #if self.option_interval == 2:
-            while True:
-                word=raw_input("Type the interval(>=0.001) of waypoints: ")
+        #while True:
+        #    word=raw_input("Type the option for interval \n[1] Same as file input \n[2] Equal interval manipulation \nType: ")
+        #    self.option_interval=int(word)
+        #    if self.option_interval == 1 or self.option_interval == 2:
+        #        break
+        #
+        #if self.option_interval == 2:
+        while True:
+            word=raw_input("Type the interval(>=0.001) of waypoints: ")
 
-                self.interval=float(word)
-                if self.interval<0.001:
-                    print("Type value(>=0.001)")
-                else:
-                    break
-
-        self.get_path()
-        print("path creation completed")
-        print("-----------------------------------------------")
-        print("Total Waypoints = %d" %(self.cnt_points))
-        # print(self.arr_path)
-        for i in range(len(self.arr_path)):
-            for j in range(len(self.arr_path[i])):
-                for k in range(len(self.arr_path[i][j])):
-		    pass
+            self.interval=float(word)
+            if self.interval<0.001:
+                print("Type value(>=0.001)")
+            else:
+                break
+        #        for k in range(len(self.arr_path[i][j])):
+        #            pass
                     #print(str(self.arr_path[i][j][k][0])+" "+str(self.arr_path[i][j][k][1]))
+        self.get_path()
         print("-----------------------------------------------")
+
+
         self.run()
 
     def get_path(self):
         letter_path = []
         subletter_path=[]
-        x_last = -self.D
+        #x_last = -self.D
+        x_last = self.D
         y_last = 0.0
         self.cnt_points = 0
-        subletter_path.append([x_last, y_last])
-        self.cnt_points += 1
+        #subletter_path.append([x_last, y_last])
 
         flag_start = True
         dist = 0
 
-        root = Tk()
-        path_str = tkFileDialog.askopenfilename(parent=root,initialdir=home_path,title='Please select a path file to play')
-        root.quit()
+        #root = Tk()
+        #path_str = tkFileDialog.askopenfilename(parent=root,initialdir=home_path,title='Please select a path file to play')
+        path_str=raw_input("Type Waypoint FILE PATH: ")
+
+        #root.quit()
         if os.path.isfile(path_str):
             with open(path_str, "r") as file_path:
                 for idx, line in enumerate(file_path):
@@ -132,9 +151,18 @@ class PaintSelectfile():
                     if not len(_str) == 0:
                         # x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH)*(-1.0)
                         # y_curr=(4.0-float(_str[1]))*CANVAS_SIDE_LENGTH
-                        x_curr=(float(_str[0])*(-1.0))
-                        # y_curr=(self.CANVAS_SIDE_LENGTH-float(_str[1]))
-                        y_curr=float(_str[1])
+                        if self.option_scale_up==1:
+                            x_curr=float(_str[0])*(-1)
+                            y_curr=(self.CANVAS_SIDE_HEIGHT-float(_str[1]))
+                            #x_curr=(float(_str[0]))
+                            #y_curr=(self.CANVAS_SIDE_HEIGHT-float(_str[1]))*(-1.0)
+                            # y_curr=float(_str[1])
+                        else:
+                            #x_curr=(float(_str[0])*(-1.0))*self.scale_up_factor_length
+                            #y_curr=self.CANVAS_SIDE_HEIGHT-float(_str[1])*self.scale_up_factor_height
+                            x_curr=(float(_str[0])*(-1))*self.scale_up_factor_length
+                            y_curr=self.CANVAS_SIDE_HEIGHT-float(_str[1])*self.scale_up_factor_height
+                            # y_curr=float(_str[1])
 
 
                         #if self.option_interval==2:
@@ -154,7 +182,7 @@ class PaintSelectfile():
                                         else:
                                             print("Spray intenstiy field empty!!!!!")
                                             sys.exit("Spray intenstiy field empty!!!!!")
-                                            self.cnt_points += 1
+                                self.cnt_points += 1
                             x_last=x
                             y_last=y
                         else:
@@ -202,12 +230,15 @@ class PaintSelectfile():
 
 
     def run(self):
-        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.D)
+        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.isStartEndIndexed, self.D)
 
 
 if __name__ == '__main__':
     try:
-        PaintLetter()
+        #PaintLetter()
+        app = PaintSelectfile()
+        app.run()
+
 
         print("End of Main Function")
 

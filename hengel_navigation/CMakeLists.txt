@@ -45,7 +45,7 @@ generate_messages(
 # Catkin specific configuration
 ################################################################################
 catkin_package(
-  CATKIN_DEPENDS message_runtime rospy geometry_msgs visualization_msgs nav_msgs std_msgs
+  CATKIN_DEPENDS message_runtime rospy geometry_msgs visualization_msgs nav_msgs std_msgs hengel_camera
   )
 
 ################################################################################
@@ -58,7 +58,6 @@ catkin_package(
 catkin_install_python(PROGRAMS
   scripts/main_program.py
   scripts/navigation_control.py
-  scripts/odometry_publisher.py
   scripts/paint_drawing.py
   scripts/paint_letter.py
 
