@@ -4,16 +4,16 @@ matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import numpy as np
 import cv2
-from os.path import expanduser
 import time
 
+
 class FeatureMatch():
-    def __init__(self):
+    def __init__(self, _folder_path):
         self.status = False
         self.delta_x = 0.0
         self.delta_y = 0.0
         self.delta_theta = 0.0
-        self.home_path = expanduser("~")
+        self.folder_path  = _folder_path
 
     def SIFT_KNN_matching(self, img1, img2):
         sift = cv2.xfeatures2d.SIFT_create()
@@ -22,7 +22,7 @@ class FeatureMatch():
 
         bf=cv2.BFMatcher()
         matches=bf.knnMatch(des2, des1, k=2)
-        
+
         # Apply ratio test
         good = []
         for m, n in matches:
@@ -68,23 +68,23 @@ class FeatureMatch():
 
         # print("img1: "+str(img1.shape)+", img2: "+str(img2.shape))
 
-        print("sift_falnn 0 Time: "+str(time.time()-_time))        
+        print("sift_falnn 0 Time: "+str(time.time()-_time))
 
         ############ Slow Part ############
         kp1, des1 = sift.detectAndCompute(img1, None)
         kp2, des2 = sift.detectAndCompute(img2, None)
         ############ Slow Part ############
 
-        print("sift_falnn 1 Time: "+str(time.time()-_time))        
+        print("sift_falnn 1 Time: "+str(time.time()-_time))
 
         MIN_MATCH_COUNT=10
         FLANN_INDEX_KDTREE=0
 
         index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
         search_params = dict(checks=50)   # or pass empty dictionary
-        
+
         flann = cv2.FlannBasedMatcher(index_params,search_params)
-        
+
         matches = flann.knnMatch(des1,des2,k=2)
 
         print("sift_falnn 2 Time: "+str(time.time()-_time))
@@ -105,8 +105,8 @@ class FeatureMatch():
         # plt.subplot(312)
         # plt.imshow(img2, cmap='gray')
 
-        print("sift_falnn 3 Time: "+str(time.time()-_time))        
-        
+        print("sift_falnn 3 Time: "+str(time.time()-_time))
+
         if len(good)>MIN_MATCH_COUNT:
             self.status = True
             print([m.queryIdx for m in good])
@@ -140,15 +140,15 @@ class FeatureMatch():
                             matchesMask = matchesMask,
                             flags = 0)
             img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
-            
-            # cv2.imwrite(self.home_path+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
+
+            # cv2.imwrite(self.folder_path+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
 
             # plt.subplot(313)
             # plt.imshow(img3, cmap='gray')
         else:
             print("Feature Match FAILED")
 
-        # plt.savefig(self.home_path+"/FEATURE_MATCH_running_fig.png")
+        plt.savefig(self.folder_path+"/SIFT_FLANN_"+time.strftime("%y%m%d_%H%M%S")+".png")
 
         # plt.draw()
         # plt.pause(0.00000000001)
@@ -167,4 +167,4 @@ if __name__=="__main__":
 
     # surf = cv2.xfeatures2d.SURF_create()
 
-    
+

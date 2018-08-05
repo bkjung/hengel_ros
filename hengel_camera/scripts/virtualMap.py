@@ -10,6 +10,7 @@ import numpy as np
 import sys
 import time
 import os
+from os.path import expanduser
 import cv2
 from cv_bridge import CvBridge
 import message_filters
@@ -25,7 +26,12 @@ class VisualCompensation():
         self.num_pts_delete = _num_pts_delete
         self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
 
+        self.home_path = expanduser("~")
+        self.folder_path = self.home_path + "/FEATURE_MATCH_" + time.strftime("%y%m%d_%H%M%S")
+        os.system("mkdir -p " + self.folder_path)
+
         self.initialize()
+
 
     def initialize(self):
         rospy.init_node('hengel_camera_compensation', anonymous=False)
@@ -111,7 +117,7 @@ class VisualCompensation():
 
         #################
         try:
-            fm = FeatureMatch()
+            fm = FeatureMatch(self.folder_path)
             # print("img1: "+str(self.img.shape)+", img2: "+str(summed_image.shape))
             if self.img is None or summed_image is None:
                 print("IMAGE EMPTY")
@@ -236,7 +242,7 @@ class VisualCompensation():
             [ 1.64193237e-02,  5.25578879e+00, -4.40829402e+02],
             [ 1.60923552e-05,  6.47353214e-03,  1.00000000e+00]])
 
-            
+
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo3, (1280,1280))
 
 
