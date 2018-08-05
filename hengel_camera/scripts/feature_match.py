@@ -1,7 +1,9 @@
 #!/usr/bin/env python
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 import numpy as np
 import cv2
-from matplotlib import pyplot as plt
 from os.path import expanduser
 import time
 
@@ -11,6 +13,7 @@ class FeatureMatch():
         self.delta_x = 0.0
         self.delta_y = 0.0
         self.delta_theta = 0.0
+        self.home_path = expanduser("~")
 
     def SIFT_KNN_matching(self, img1, img2):
         sift = cv2.xfeatures2d.SIFT_create()
@@ -55,15 +58,24 @@ class FeatureMatch():
         cv2.destroyAllWindows()
 
     def SIFT_FLANN_matching(self, img1, img2):
+        _time=time.time()
+
         self.status = False
         sift=cv2.xfeatures2d.SIFT_create()
+
         # cv2.imwrite("/home/bkjung/img1.png", img1)
         # cv2.imwrite("/home/bkjung/img2.png", img2)
 
         # print("img1: "+str(img1.shape)+", img2: "+str(img2.shape))
 
+        print("sift_falnn 0 Time: "+str(time.time()-_time))        
+
+        ############ Slow Part ############
         kp1, des1 = sift.detectAndCompute(img1, None)
         kp2, des2 = sift.detectAndCompute(img2, None)
+        ############ Slow Part ############
+
+        print("sift_falnn 1 Time: "+str(time.time()-_time))        
 
         MIN_MATCH_COUNT=10
         FLANN_INDEX_KDTREE=0
@@ -75,6 +87,8 @@ class FeatureMatch():
         
         matches = flann.knnMatch(des1,des2,k=2)
 
+        print("sift_falnn 2 Time: "+str(time.time()-_time))
+
         #store all the good matches as per Lowe's ratio test
         good=[]
         for m,n in matches:
@@ -85,11 +99,13 @@ class FeatureMatch():
 
         # print("abc",kp1[good[3].queryIdx].pt)
 
-        plt.figure(1, figsize=(10, 20))
-        plt.subplot(311)
-        plt.imshow(img1, cmap='gray')
-        plt.subplot(312)
-        plt.imshow(img2, cmap='gray')
+        # plt.figure(1, figsize=(10, 20))
+        # plt.subplot(311)
+        # plt.imshow(img1, cmap='gray')
+        # plt.subplot(312)
+        # plt.imshow(img2, cmap='gray')
+
+        print("sift_falnn 3 Time: "+str(time.time()-_time))        
         
         if len(good)>MIN_MATCH_COUNT:
             self.status = True
@@ -124,17 +140,20 @@ class FeatureMatch():
                             matchesMask = matchesMask,
                             flags = 0)
             img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
-            home = expanduser("~")
-            cv2.imwrite(home+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
-            # plt.imshow(img3,),plt.show()
-            plt.subplot(313)
-            plt.imshow(img3, cmap='gray')
+            
+            # cv2.imwrite(self.home_path+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
+
+            # plt.subplot(313)
+            # plt.imshow(img3, cmap='gray')
         else:
             print("Feature Match FAILED")
 
-        plt.draw()
-        plt.pause(0.00000000001)
+        # plt.savefig(self.home_path+"/FEATURE_MATCH_running_fig.png")
 
+        # plt.draw()
+        # plt.pause(0.00000000001)
+
+        print("sift_falnn 4 Time: "+str(time.time()-_time))
 
 if __name__=="__main__":
     img_virtual= cv2.imread("/home/bkjung/demo_1280.png", cv2.IMREAD_GRAYSCALE)
