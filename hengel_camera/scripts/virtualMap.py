@@ -10,6 +10,7 @@ import numpy as np
 import sys
 import time
 import os
+import copy
 from os.path import expanduser
 import cv2
 from cv_bridge import CvBridge
@@ -86,9 +87,11 @@ class VisualCompensation():
         rospy.spin()
 
     def callback_left(self, _img):
+        print("left")
         self.pi_left_img=self.undistort_left(_img)
 
     def callback_right(self, _img):
+        print("right")
         self.pi_right_img=self.undistort_right(_img)
 
 
@@ -102,8 +105,8 @@ class VisualCompensation():
         img4 = self.undistort4(_img4)
         #img_left=self.undistort_left(_img_left)
         #img_right=self.undistort_right(_img_right)
-        img_left=self.pi_left_img
-        img_right=self.pi_right_img
+        img_left=copy.deepcopy(self.pi_left_img)
+        img_right=copy.deepcopy(self.pi_right_img)
 
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
@@ -118,15 +121,19 @@ class VisualCompensation():
         im_mask24=cv2.bitwise_and(np.array(im_mask2), np.array(im_mask4))
         im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
 
-        img_white_masked=np.multiply(img_white, im_mask1234)
+        img_white_masked=np.multiply(np.multiply(np.multiply(img_white, im_mask1234), im_mask_l), im_mask_r)
         img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4)
         img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask2)
         img1_masked=np.multiply(img1, im_mask_inv1)
         img3_masked=np.multiply(img3, im_mask_inv3)
         img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r)
-        img_right_masked=np.multiply(np.multipily(img_right, im_mask1234), im_mask_l)
+        img_right_masked=np.multiply(np.multiply(img_right, im_mask1234), im_mask_l)
+        cv2.imwrite("/home/hengel/left_masked.png", img_left_masked)
+        cv2.imwrite("/home/hengel/left.png", img2)
+
         summed_image=img1_masked+img2_masked+img3_masked+img4_masked+img_white_masked+img_left_masked+img_right_masked
         summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
+
         self.pub_sum.publish(summed_msg)
         print("summed_image time: "+str(time.time()-_time))
 
