@@ -58,17 +58,18 @@ class VisualCompensation():
         self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
         self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
         self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
-        self.callback_pi_left=message_filters.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage)
-        self.callback_pi_right=message_filters.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage)
+        #self.callback_pi_left=message_filters.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage)
+        #self.callback_pi_right=message_filters.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage)
 
-       # self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4, self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
+        rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.callback_left)
+        rospy.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage, self.callback_right)
+
+        #self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4, self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
 
         self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_real_callback)
 
         ############################ DEBUG ################################
-        self.pub_time_1=rospy.Publisher('/time1', Float32, queue_size=5)
-        self.pub_time_2=rospy.Publisher('/time2', Float32, queue_size=5)
         self.pub1=rospy.Publisher('/genius1/undist', Image, queue_size=5 )
         self.pub2=rospy.Publisher('/genius2/undist', Image, queue_size=5 )
         self.pub3=rospy.Publisher('/genius3/undist', Image, queue_size=5 )
@@ -80,6 +81,12 @@ class VisualCompensation():
 
 
         rospy.spin()
+
+    def callback_left(self, _img):
+
+        print("left")
+    def callback_right(self, _img):
+        print("right")
 
 #    def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
@@ -183,7 +190,6 @@ class VisualCompensation():
         self.img = self.app_robotview.img
         ttime=Float32()
         ttime.data=float(time.time()-_time)
-        self.pub_time_2.publish(ttime)
 
         # bridge=CvBridge()
         # virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.img)
