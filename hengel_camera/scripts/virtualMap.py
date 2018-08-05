@@ -22,7 +22,6 @@ class VisualCompensation():
         word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
         self.width=float(word.split()[0])
         self.height=float(word.split()[1])
-        
         self.num_pts_delete = _num_pts_delete
         self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
 
@@ -53,33 +52,39 @@ class VisualCompensation():
         self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
         self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
         self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
-        # self.callback_pi_left=message_filters.Subscriber('/pi_cam_left/compressed', CompressedImage)
-        # self.callback_pi_right=message_filters.Subscriber('/pi_cam_right/compressed', CompressedImage)
+        self.callback_pi_left=message_filters.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage)
+        self.callback_pi_right=message_filters.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage)
 
-        # self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4,
-        #                                      self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
+       # self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4, self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
 
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10, 0.1, allow_headerless=True)
+        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_real_callback)
-
 
         ############################ DEBUG ################################
         self.pub_time_1=rospy.Publisher('/time1', Float32, queue_size=5)
         self.pub_time_2=rospy.Publisher('/time2', Float32, queue_size=5)
+        self.pub1=rospy.Publisher('/genius1/undist', Image, queue_size=5 )
+        self.pub2=rospy.Publisher('/genius2/undist', Image, queue_size=5 )
+        self.pub3=rospy.Publisher('/genius3/undist', Image, queue_size=5 )
+        self.pub4=rospy.Publisher('/genius4/undist', Image, queue_size=5 )
+        self.pub_pi_l=rospy.Publisher('/pi_left/undist', Image, queue_size=5 )
+        self.pub_pi_r=rospy.Publisher('/pi_right/undist', Image, queue_size=5 )
+        self.pub_sum=rospy.Publisher('/summed_image/compressed',CompressedImage, queue_size=5)
+
 
 
         rospy.spin()
 
-    # def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
+#    def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
         _time=time.time()
-        # print("sync real")
+        print("sync")
         img1 = self.undistort1(_img1)
         img2 = self.undistort2(_img2)
         img3 = self.undistort3(_img3)
         img4 = self.undistort4(_img4)
-        # img_left=self.undistort_left(_img_left)
-        # img_right=self.undistort_right(_img_right)
+        #img_left=self.undistort_left(_img_left)
+        #img_right=self.undistort_right(_img_right)
 
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
@@ -88,27 +93,19 @@ class VisualCompensation():
 
         img_white=np.full((1280, 1280,3), 255)
 
-        # im_mask13=cv2.bitwise_and(np.array(im_mask1), np.array(im_mask3))
-        # im_mask24=cv2.bitwise_and(np.array(im_mask2), np.array(im_mask4))
-        # im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
+        im_mask13=cv2.bitwise_and(np.array(im_mask1), np.array(im_mask3))
+        im_mask24=cv2.bitwise_and(np.array(im_mask2), np.array(im_mask4))
+        im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
 
-        # img_white_masked=np.multiply(img_white, im_mask1234)
-        # img2_masked=np.multiply(img2, im_mask13)
-        # img4_masked=np.multiply(img4, im_mask13)
-        img1_masked=np.multiply(img1, im_mask_inv1).astype('uint8')
-        img2_masked=np.multiply(np.multiply(img2, im_mask1), im_mask3).astype('uint8')
-        img3_masked=np.multiply(img3, im_mask_inv3).astype('uint8')
-        img4_masked=np.multiply(np.multiply(img4, im_mask1), im_mask3).astype('uint8')
-        img_white_masked=np.multiply(np.multiply(np.multiply(np.multiply(img_white, im_mask1), im_mask2),im_mask3),im_mask4).astype('uint8')
-        
+        img_white_masked=np.multiply(img_white, im_mask1234)
+        img2_masked=np.multiply(img2, im_mask13)
+        img4_masked=np.multiply(img4, im_mask13)
+        img1_masked=np.multiply(img1, im_mask_inv1)
+        img3_masked=np.multiply(img3, im_mask_inv3)
         summed_image= img1+img2_masked+img3+img4_masked+img_white_masked
-
-        # ttime=Float32()
-
-        # print(str(time.time()-_time))
-        # ttime.data=float(time.time()-_time)
-        # self.pub_time_2.publish(ttime)
-
+        summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
+        self.pub_sum.publish(summed_msg)
+        print("summed_image time: "+str(time.time()-_time))
 
         # self.crop_image(summed_image)
 
@@ -141,7 +138,6 @@ class VisualCompensation():
             print(e)
             sys.exit("Feature Match error")
 
-        
         #################
 
         print("Cam Input -> Visual Calc / Total Time: "+str(time.time()-_time))
@@ -163,11 +159,9 @@ class VisualCompensation():
     def find_mask(self, img):
         _time=time.time()
         black_range1=np.array([0,0,0])
-        im_mask=(cv2.inRange(img, black_range1, black_range1)).astype('bool')
-        # im_mask=(cv2.inRange(img, black_range1, black_range1))
+        im_mask=(cv2.inRange(img, black_range1, black_range1))
         im_mask=np.dstack((im_mask, im_mask, im_mask))
-        im_mask_inv=(1-im_mask).astype('bool')
-        # im_mask_inv=(1-im_mask)
+        im_mask_inv=(1-im_mask)
         return im_mask_inv, im_mask
 
     def sync_virtual_callback(self, _endPoint, _midPoint):
@@ -191,41 +185,77 @@ class VisualCompensation():
 
     def undistort1(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[390.6235286774559, 0.0, 380.6630283824523], [0.0, 391.05153994713896, 317.8133925380764], [0.0, 0.0, 1.0]])
-        dst=np.array([0.006484855348017496, -0.019610851268822574, 0.0009123195786112891, -0.00424460183636266])
-        # cv2.undistort(img, mt, dst, None, mtx)
-        homo1= np.array([[-1.67130692e-01,  5.99743615e+00, -5.29293784e+02],
-            [-2.40710331e+00,  4.76090267e+00,  1.55119117e+03],
-            [-2.21043846e-04,  7.30990701e-03,  1.00000000e+00]])
+        mtx=np.array([[393.8666817683925, 0.0, 399.6813895086665], [0.0, 394.55108358870405, 259.84676565717876], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.0032079005049939543, -0.020856072501002923, 0.000252242294186179, -0.0021042704510431365])
+
+        # #################DEBUG#######################333
+        # undist=cv2.undistort(img, mtx, dst, None, mtx)
+        # cv2.imwrite("/home/bkjung/undist_for_homography/genius1/undist_"+str(time.time())+".png",undist)
+
+        # imgmsg=self.bridge.cv2_to_imgmsg(undist)
+        # self.pub1.publish(imgmsg)
+
+        homo1= np.array([[-1.99133283e+00,  3.96335542e+00,  1.43529996e+03],
+            [ 1.26013904e-02,  3.20665968e+00,  1.58076675e+03],
+            [-5.52616807e-05,  6.56931832e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo1, (1280,1280))
+
+
+
 
 
     def undistort2(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[394.88382527431764, 0.0, 423.8584744100752], [0.0, 396.53524728115286, 359.4130870937376], [0.0, 0.0, 1.0]])
-        dst=np.array([0.012819138964185638, -0.02474738869007743, 0.005214333503327388, -0.0028437261374924037])
-        homo2= np.array([[-2.36547415e+00,  4.44589419e+00,  1.65240597e+03],
-            [-1.11902669e-02,  2.88055561e+00,  2.03902843e+03],
-            [-5.36747061e-06,  6.70728023e-03,  1.00000000e+00]])
+        mtx=np.array([[396.01900903941834, 0.0, 410.8496405295566], [0.0, 396.2406539134792, 285.8932176591904], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.008000340519517233, -0.016478659972026452, 7.25792172844022e-05, -0.00434319738405187])
+
+        # #################DEBUG#######################333
+        # undist=cv2.undistort(img, mtx, dst, None, mtx)
+        # cv2.imwrite("/home/bkjung/undist_for_homography/genius2/undist_"+str(time.time())+".png",undist)
+        # imgmsg=self.bridge.cv2_to_imgmsg(undist)
+        # self.pub2.publish(imgmsg)
+
+        homo2= np.array([[-1.74979870e-01,  2.54748382e+00,  1.50601223e+03],
+            [ 1.58754865e+00,  3.68531885e+00, -7.91871465e+01],
+            [-2.64765872e-04,  5.74538321e-03,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo2, (1280,1280))
 
     def undistort3(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[384.740566000322766, 0, 416.6703696819],[0, 386.64723334, 297.593178440],[0,0,1]])
-        dst=np.array([-0.0048592546, -0.02278286, 0.00255238134, -0.002026589])
-        homo3= np.array([[ 2.55132452e-01,  9.82372337e+00,  4.09600642e+03],
-            [ 6.45201391e+00,  1.30885948e+01, -1.66201249e+03],
-            [ 3.88669729e-04,  2.00259308e-02,  1.00000000e+00]])
+        mtx=np.array([[387.8191999285985, 0.0, 392.3078288789019],[ 0.0, 382.1093651210362, 317.43368009853674], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.008671221810333559, -0.013546386893040543, -0.00016537575030651431, 0.002659594999360673])
+
+
+        # #################DEBUG#######################333
+        # undist=cv2.undistort(img, mtx, dst, None, mtx)
+        # cv2.imwrite("/home/bkjung/undist_for_homography/genius3/undist_"+str(time.time())+".png",undist)
+        # imgmsg=self.bridge.cv2_to_imgmsg(undist)
+        # self.pub3.publish(imgmsg)
+
+        homo3= np.array([[ 2.04906162e+00,  3.92623252e+00, -1.90107542e+02],
+            [ 1.64193237e-02,  5.25578879e+00, -4.40829402e+02],
+            [ 1.60923552e-05,  6.47353214e-03,  1.00000000e+00]])
+
+            
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo3, (1280,1280))
 
 
     def undistort4(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        mtx=np.array([[387.43952147965115, 0.0, 412.56131546398876], [0.0, 389.1761911600528, 259.39190229663814], [0.0, 0.0, 1.0]])
-        dst=np.array([0.005292760390926921, -0.025832001932141472, 0.0005161396135159652, -0.00047231070184728226])
-        homo4= np.array([[ 2.57420243e+00,  5.85803823e+00, -4.05003547e+02],
-            [-1.15034759e-01,  7.22474987e+00, -7.29546146e+02],
-            [-1.92621119e-04,  8.88963498e-03,  1.00000000e+00]])
+        mtx=np.array([[384.2121883964654, 0.0, 423.16727407803353], [0.0, 386.8188468139677, 359.5190506678551], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.0056866549555025896, -0.019460881544303938, 0.0012937686026747307, -0.0031999317338443087])
+
+
+        #################DEBUG#######################333
+        # undist=cv2.undistort(img, mtx, dst, None, mtx)
+        # cv2.imwrite("/home/bkjung/undist_for_homography/genius4/undist_"+str(time.time())+".png",undist)
+        # imgmsg=self.bridge.cv2_to_imgmsg(undist)
+        # self.pub4.publish(imgmsg)
+
+
+        homo4= np.array([[ 2.28317132e-01,  1.40100840e+01, -2.33867485e+03],
+            [-5.15991902e+00,  1.17501321e+01,  3.00914222e+03],
+            [ 5.65609486e-04,  1.83615756e-02,  1.00000000e+00]])
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo4, (1280,1280))
 
     def undistort_left(self, _img):
@@ -233,10 +263,34 @@ class VisualCompensation():
         mtx=np.array([[496.88077412085187, 0.0, 486.19161191113693], [0.0, 497.77308359203073, 348.482250144119], [0.0, 0.0, 1.0]])
         dst=np.array([-0.27524035766660704, 0.055346669640229516, 0.002041430748143387, -0.0012188333190676689])
 
+        #################DEBUG#######################333
+        # undist=cv2.undistort(img, mtx, dst, None, mtx)
+        # cv2.imwrite("/home/bkjung/undist_for_homography/pi_l/undist_"+str(time.time())+".png",undist)
+        # imgmsg=self.bridge.cv2_to_imgmsg(undist)
+        # self.pub_pi_l.publish(imgmsg)
+
+        homo4= np.array([[-8.70731094e-02,  1.47816011e+00,  4.02882375e+02],
+            [-3.60449157e-01,  1.38082612e+00,  7.28709159e+02],
+            [-1.63990036e-04,  2.28324521e-03,  1.00000000e+00]])
+        return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo4, (1280,1280))
+
+
     def undistort_right(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         mtx=np.array([[494.0169295185964, 0.0, 483.6710483879246], [0.0, 495.87509303786857, 336.69262125267153], [0.0, 0.0, 1.0]])
         dst=np.array([-0.26693726936305806, 0.05239559897759021, 0.0024912074565555443, -0.0015904998174301696])
+
+        #################DEBUG#######################333
+        # undist=cv2.undistort(img, mtx, dst, None, mtx)
+        # cv2.imwrite("/home/bkjung/undist_for_homography/pi_r/undist_"+str(time.time())+".png",undist)
+        # imgmsg=self.bridge.cv2_to_imgmsg(undist)
+        # self.pub_pi_r.publish(imgmsg)
+
+        homo4= np.array([[-1.85451252e-03,  1.48625255e+00,  4.00372407e+02],
+            [-2.81151513e-01,  1.55607938e+00,  7.91845451e+02],
+            [-2.73379929e-05,  2.29141415e-03,  1.00000000e+00]])
+        return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo4, (1280,1280))
+
 if __name__=='__main__':
     num_pts_delete = 150 #num_of_waypoints_to_delete_in_virtualmap_after_compensation
     VisualCompensation(num_pts_delete)
