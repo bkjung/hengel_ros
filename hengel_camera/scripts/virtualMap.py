@@ -24,10 +24,10 @@ class VisualCompensation():
         self.width=float(word.split()[0])
         self.height=float(word.split()[1])
         self.num_pts_delete = _num_pts_delete
-        self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
+        self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
 
         self.home_path = expanduser("~")
-        self.folder_path = self.home_path + "/FEATURE_MATCH_" + time.strftime("%y%m%d_%H%M%S")
+        self.folder_path = self.home_path + "/FEATURE_MATCH/" + time.strftime("%y%m%d_%H%M%S")
         os.system("mkdir -p " + self.folder_path)
 
         self.initialize()
@@ -139,7 +139,7 @@ class VisualCompensation():
                     self.img = self.app_robotview.img
 
                     #Initialize Queue
-                    self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],_num_pts_delete)
+                    self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
         except Exception as e:
             print(e)
             sys.exit("Feature Match error")
