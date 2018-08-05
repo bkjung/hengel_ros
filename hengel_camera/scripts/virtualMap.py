@@ -40,6 +40,9 @@ class VisualCompensation():
         self.pixMetRatio=500
 
         self.img=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
+        self.pi_left_img=np.array([])
+        self.pi_right_img=np.array([])
+
         self.app_robotview=RobotView(self.img) # Add the endpoint into the virtual map
 
         self.mid_predict_canvas_x=0
@@ -83,10 +86,11 @@ class VisualCompensation():
         rospy.spin()
 
     def callback_left(self, _img):
+        self.pi_left_img=self.undistort_left(_img)
 
-        print("left")
     def callback_right(self, _img):
-        print("right")
+        self.pi_right_img=self.undistort_right(_img)
+
 
 #    def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
@@ -98,11 +102,15 @@ class VisualCompensation():
         img4 = self.undistort4(_img4)
         #img_left=self.undistort_left(_img_left)
         #img_right=self.undistort_right(_img_right)
+        img_left=self.pi_left_img
+        img_right=self.pi_right_img
 
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
         _, im_mask2=self.find_mask(img2)
         _, im_mask4=self.find_mask(img4)
+        _, im_mask_l=self.find_mask(img_left)
+        _, im_mask_r=self.find_mask(img_right)
 
         img_white=np.full((1280, 1280,3), 255)
 
@@ -111,11 +119,13 @@ class VisualCompensation():
         im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
 
         img_white_masked=np.multiply(img_white, im_mask1234)
-        img2_masked=np.multiply(img2, im_mask13)
-        img4_masked=np.multiply(img4, im_mask13)
+        img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4)
+        img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask2)
         img1_masked=np.multiply(img1, im_mask_inv1)
         img3_masked=np.multiply(img3, im_mask_inv3)
-        summed_image= img1+img2_masked+img3+img4_masked+img_white_masked
+        img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r)
+        img_right_masked=np.multiply(np.multipily(img_right, im_mask1234), im_mask_l)
+        summed_image=img1_masked+img2_masked+img3_masked+img4_masked+img_white_masked+img_left_masked+img_right_masked
         summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
         self.pub_sum.publish(summed_msg)
         print("summed_image time: "+str(time.time()-_time))
