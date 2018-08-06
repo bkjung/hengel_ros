@@ -228,6 +228,7 @@ class VisualCompensation():
 
     def undistort1(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mtx=np.array([[393.8666817683925, 0.0, 399.6813895086665], [0.0, 394.55108358870405, 259.84676565717876], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0032079005049939543, -0.020856072501002923, 0.000252242294186179, -0.0021042704510431365])
 
@@ -249,6 +250,7 @@ class VisualCompensation():
 
     def undistort2(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mtx=np.array([[396.01900903941834, 0.0, 410.8496405295566], [0.0, 396.2406539134792, 285.8932176591904], [0.0, 0.0, 1.0]])
         dst=np.array([-0.008000340519517233, -0.016478659972026452, 7.25792172844022e-05, -0.00434319738405187])
 
@@ -265,6 +267,7 @@ class VisualCompensation():
 
     def undistort3(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mtx=np.array([[387.8191999285985, 0.0, 392.3078288789019],[ 0.0, 382.1093651210362, 317.43368009853674], [0.0, 0.0, 1.0]])
         dst=np.array([-0.008671221810333559, -0.013546386893040543, -0.00016537575030651431, 0.002659594999360673])
 
@@ -285,6 +288,7 @@ class VisualCompensation():
 
     def undistort4(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mtx=np.array([[384.2121883964654, 0.0, 423.16727407803353], [0.0, 386.8188468139677, 359.5190506678551], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0056866549555025896, -0.019460881544303938, 0.0012937686026747307, -0.0031999317338443087])
 
