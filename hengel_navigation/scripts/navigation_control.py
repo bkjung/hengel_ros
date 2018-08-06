@@ -707,6 +707,7 @@ class NavigationControl():
 
             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
             print(str(self.endPoint.x)+"  "+str(self.endPoint.y))
+            # print(str(self.point.x)+"  "+str(self.point.y)+"  "+str(self.heading.data*180.0/pi))
 
             #print("distance: ", distance)
             #print("waypoint: ", current_destination)
