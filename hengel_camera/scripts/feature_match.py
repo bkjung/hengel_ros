@@ -60,6 +60,7 @@ class FeatureMatch():
     def SIFT_FLANN_matching(self, img1, img2):
         #img1: virtual
         #img2: photo
+        M=None
         _time=time.time()
 
         self.status = False
@@ -113,7 +114,7 @@ class FeatureMatch():
             self.status = True
             print("FEATURE MATCH COUNT > MIN_MATCH_COUNT")
             print([m.queryIdx for m in good])
-            
+
             # print(np.float32([ kp1[m.queryIdx].pt for m in good ]))
             src_pts=np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
             dst_pts=np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)

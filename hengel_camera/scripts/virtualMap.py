@@ -112,12 +112,12 @@ class VisualCompensation():
         print("img3: "+str(_img3.header.stamp)+", img4: "+str(_img4.header.stamp))
         #img_left=self.undistort_left(_img_left)
         #img_right=self.undistort_right(_img_right)
-        while len(self.pi_left_img)==0 or len(self.pi_left_img)==0:
+        while len(self.pi_left_img)==0 or len(self.pi_right_img)==0:
             time.sleep(100)
 
         img_left=copy.deepcopy(self.pi_left_img)
         img_right=copy.deepcopy(self.pi_right_img)
-        
+
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
         _, im_mask2=self.find_mask(img2)
@@ -125,7 +125,7 @@ class VisualCompensation():
         _, im_mask_l=self.find_mask(img_left)
         _, im_mask_r=self.find_mask(img_right)
 
-        img_white=np.full((1280, 1280,3), 255)
+        img_white=np.full((1280, 1280), 255)
 
         im_mask13=cv2.bitwise_and(np.array(im_mask1), np.array(im_mask3))
         im_mask24=cv2.bitwise_and(np.array(im_mask2), np.array(im_mask4))
@@ -197,8 +197,9 @@ class VisualCompensation():
                         [mid_predict_img_x+half_map_size]])
 
     def find_mask(self, img):
+        print(img.shape)
         _time=time.time()
-        black_range1=np.array([0,0,0])
+        black_range1=np.array([0])
         im_mask=(cv2.inRange(img, black_range1, black_range1))
         # im_mask=np.dstack((im_mask, im_mask, im_mask))
         im_mask_inv=(1-im_mask)
@@ -265,8 +266,8 @@ class VisualCompensation():
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo2, (1280,1280))
 
     def undistort3(self, _img):
-        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mtx=np.array([[387.8191999285985, 0.0, 392.3078288789019],[ 0.0, 382.1093651210362, 317.43368009853674], [0.0, 0.0, 1.0]])
         dst=np.array([-0.008671221810333559, -0.013546386893040543, -0.00016537575030651431, 0.002659594999360673])
 
