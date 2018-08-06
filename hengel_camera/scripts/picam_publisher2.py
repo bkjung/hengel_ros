@@ -28,9 +28,9 @@ class CamPublisher():
 		self.cam2.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
 
 		rospy.Subscriber('/initiator', Bool, self.initiator)
-		# self.pub = rospy.Publisher('/genius3/compressed', CompressedImage, queue_size=10)
-		# self.pub2= rospy.Publisher('/genius4/compressed', CompressedImage, queue_size=10)
-		self.pub= rospy.Publisher('/pi3_imgs/compressed', CmpImg, queue_size=10)
+		self.pub = rospy.Publisher('/genius3/compressed', CompressedImage, queue_size=10)
+		self.pub2= rospy.Publisher('/genius4/compressed', CompressedImage, queue_size=10)
+		#self.pub= rospy.Publisher('/pi3_imgs/compressed', CmpImg, queue_size=10)
 		self.rate = rospy.Rate(5)
 		self.publish()
 
@@ -68,21 +68,29 @@ class CamPublisher():
 				self.cam.grab()
 				self.cam2.grab()
 			_, img=self.cam.read()
-			t1=float(time.time())
+			t1=rospy.Time.now()
 			_, img2=self.cam2.read()
-			t2=float(time.time())
+			t2=rospy.Time.now()
 
-			msg=CmpImg()
-			msg.img1=bridge.cv2_to_compressed_imgmsg(img)
-			msg.img2=bridge.cv2_to_compressed_imgmsg(img2)
-			msg.timestamp1=t1
-			msg.timestamp2=t2
+			#msg=CmpImg()
+			#msg.img1=bridge.cv2_to_compressed_imgmsg(img)
+			#msg.img2=bridge.cv2_to_compressed_imgmsg(img2)
+			#msg.timestamp1=t1
+			#msg.timestamp2=t2
 
-			# msg1=bridge.cv2_to_compressed_imgmsg(img)
-			# msg2=bridge.cv2_to_compressed_imgmsg(img2)
-			# self.pub.publish(msg1)
-			# self.pub2.publish(msg2)
-			self.pub.publish(msg)
+			#print("t1: "+str(msg.timestamp1)+", t2: "+str(msg.timestamp2))
+
+			msg1=bridge.cv2_to_compressed_imgmsg(img)
+			#msg1.header.stamp=t1
+			#msg1.format="jpeg"
+			#msg1.data=np.array(cv2.imencode('.jpg', img)[1]).tostring()
+			msg2=bridge.cv2_to_compressed_imgmsg(img2)
+			#msg2.header.stamp=t2
+			#msg2.format="jpeg"
+			#msg2.data=np.array(cv2.imencode('.jpg', img2)[1]).tostring()
+			self.pub.publish(msg1)
+			self.pub2.publish(msg2)
+			#self.pub.publish(msg)
 			self.rate.sleep()
 
 if __name__=='__main__':
