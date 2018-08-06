@@ -174,6 +174,10 @@ class VisualCompensation():
 
                     #Initialize Queue
                     self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
+
+                    self.relocalization(M)
+
+
         except Exception as e:
             print(e)
             sys.exit("Feature Match error")
@@ -186,6 +190,8 @@ class VisualCompensation():
         # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
         # self.sum_pub.publish(summed_msg)
 
+    def relocalization(self, homography):
+        
     def crop_image(self, _img):
         mid_predict_img_x = self.mid_predict_canvas_x * self.pixMetRatio
         mid_predict_img_y = _img.shape[0] - self.mid_predict_canvas_y * self.pixMetRatio
