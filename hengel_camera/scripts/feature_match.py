@@ -111,7 +111,6 @@ class FeatureMatch():
         print("sift_falnn 3 Time: "+str(time.time()-_time))
 
         if len(good)>MIN_MATCH_COUNT:
-            self.status = True
             print("FEATURE MATCH COUNT > MIN_MATCH_COUNT")
             print([m.queryIdx for m in good])
 
@@ -126,6 +125,7 @@ class FeatureMatch():
             if M==None:
                 print("Homography mtx M is None !!!!")
             else:
+                self.status = True
                 print(M)
 
                 # print("DEBUG-1")
