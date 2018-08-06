@@ -60,8 +60,11 @@ class VisualCompensation():
         self.vision_offset_publisher = rospy.Publisher('/offset_change', Point, queue_size=10)
         self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
         self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
-        self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
-        self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
+        # self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
+        # self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
+
+        self.callback34=message_filters.Subscriber('/pi3_imgs/compressed', CmpImg)
+    
         #self.callback_pi_left=message_filters.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage)
         #self.callback_pi_right=message_filters.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage)
 
@@ -70,7 +73,8 @@ class VisualCompensation():
 
         #self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4, self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
 
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=True)
+        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback34], 10,0.1, allow_headerless=True)
+        # self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_real_callback)
 
         ############################ DEBUG ################################
@@ -96,13 +100,15 @@ class VisualCompensation():
 
 
 #    def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
-    def sync_real_callback(self, _img1, _img2, _img3, _img4):
+    # def sync_real_callback(self, _img1, _img2, _img3, _img4):
+    def sync_real_callback(self, _img1, _img2, _img34):
         _time=time.time()
         print("sync")
         img1 = self.undistort1(_img1)
         img2 = self.undistort2(_img2)
-        img3 = self.undistort3(_img3)
-        img4 = self.undistort4(_img4)
+        img3 = self.undistort3(_img34.img1)
+        img4 = self.undistort4(_img34.img2)
+        print("img3: "+str(_img34.timestamp1)+", img4: "+str(_img34.timestamp2))
         #img_left=self.undistort_left(_img_left)
         #img_right=self.undistort_right(_img_right)
         img_left=copy.deepcopy(self.pi_left_img)
