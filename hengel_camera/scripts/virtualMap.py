@@ -18,6 +18,7 @@ import message_filters
 import collections
 from feature_match import FeatureMatch
 from matplotlib import pyplot as plt
+from hengel_camera.msg import CmpImg
 
 class VisualCompensation():
     def __init__(self, _num_pts_delete):
@@ -64,7 +65,7 @@ class VisualCompensation():
         # self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
 
         self.callback34=message_filters.Subscriber('/pi3_imgs/compressed', CmpImg)
-    
+
         #self.callback_pi_left=message_filters.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage)
         #self.callback_pi_right=message_filters.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage)
 
