@@ -210,7 +210,6 @@ endif(FLANN_CFLAGS)
 # )
 
 catkin_install_python(PROGRAMS
-  scripts/picam_undistort1.py
   scripts/virtualMap.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

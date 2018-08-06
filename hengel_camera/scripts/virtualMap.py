@@ -112,12 +112,12 @@ class VisualCompensation():
         print("img3: "+str(_img3.header.stamp)+", img4: "+str(_img4.header.stamp))
         #img_left=self.undistort_left(_img_left)
         #img_right=self.undistort_right(_img_right)
-        while len(self.pi_left_img)==0 or len(self.pi_left_img)==0:
+        while len(self.pi_left_img)==0 or len(self.pi_right_img)==0:
             time.sleep(100)
 
         img_left=copy.deepcopy(self.pi_left_img)
         img_right=copy.deepcopy(self.pi_right_img)
-        
+
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
         _, im_mask2=self.find_mask(img2)
@@ -125,7 +125,7 @@ class VisualCompensation():
         _, im_mask_l=self.find_mask(img_left)
         _, im_mask_r=self.find_mask(img_right)
 
-        img_white=np.full((1280, 1280,3), 255)
+        img_white=np.full((1280, 1280), 255)
 
         im_mask13=cv2.bitwise_and(np.array(im_mask1), np.array(im_mask3))
         im_mask24=cv2.bitwise_and(np.array(im_mask2), np.array(im_mask4))
@@ -162,7 +162,7 @@ class VisualCompensation():
                 _img2 = np.uint8(summed_image)
 
                 # _img1 = cv2.cvtColor(_img1, cv2.COLOR_BGR2GRAY)
-                _img2 = cv2.cvtColor(_img2, cv2.COLOR_BGR2GRAY)
+                # _img2 = cv2.cvtColor(_img2, cv2.COLOR_BGR2GRAY)
 
 
 
@@ -197,10 +197,11 @@ class VisualCompensation():
                         [mid_predict_img_x+half_map_size]])
 
     def find_mask(self, img):
+        print(img.shape)
         _time=time.time()
-        black_range1=np.array([0,0,0])
+        black_range1=np.array([0])
         im_mask=(cv2.inRange(img, black_range1, black_range1))
-        im_mask=np.dstack((im_mask, im_mask, im_mask))
+        # im_mask=np.dstack((im_mask, im_mask, im_mask))
         im_mask_inv=(1-im_mask)
         return im_mask_inv, im_mask
 
@@ -265,8 +266,8 @@ class VisualCompensation():
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo2, (1280,1280))
 
     def undistort3(self, _img):
-        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mtx=np.array([[387.8191999285985, 0.0, 392.3078288789019],[ 0.0, 382.1093651210362, 317.43368009853674], [0.0, 0.0, 1.0]])
         dst=np.array([-0.008671221810333559, -0.013546386893040543, -0.00016537575030651431, 0.002659594999360673])
 
@@ -287,6 +288,7 @@ class VisualCompensation():
 
     def undistort4(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mtx=np.array([[384.2121883964654, 0.0, 423.16727407803353], [0.0, 386.8188468139677, 359.5190506678551], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0056866549555025896, -0.019460881544303938, 0.0012937686026747307, -0.0031999317338443087])
 
@@ -305,6 +307,7 @@ class VisualCompensation():
 
     def undistort_left(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mtx=np.array([[496.88077412085187, 0.0, 486.19161191113693], [0.0, 497.77308359203073, 348.482250144119], [0.0, 0.0, 1.0]])
         dst=np.array([-0.27524035766660704, 0.055346669640229516, 0.002041430748143387, -0.0012188333190676689])
 
@@ -322,6 +325,7 @@ class VisualCompensation():
 
     def undistort_right(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mtx=np.array([[494.0169295185964, 0.0, 483.6710483879246], [0.0, 495.87509303786857, 336.69262125267153], [0.0, 0.0, 1.0]])
         dst=np.array([-0.26693726936305806, 0.05239559897759021, 0.0024912074565555443, -0.0015904998174301696])
 

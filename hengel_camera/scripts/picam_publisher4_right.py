@@ -25,7 +25,7 @@ class CamPublisher():
 		self.cam2.set(cv2.CAP_PROP_FRAME_WIDTH,800)
 		self.cam2.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
 		self.cam2.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
-		
+
 		rospy.Subscriber('/initiator', Bool, self.initiator)
 		self.pub = rospy.Publisher('/genius1/compressed', CompressedImage, queue_size=10)
 		self.pub2= rospy.Publisher('/genius2/compressed', CompressedImage, queue_size=10)
@@ -33,14 +33,14 @@ class CamPublisher():
 
 		self.publish()
 		rospy.spin()
-	
+
 	def initiator(self,msg):
 		self.publish()
 
-	
+
 	def publish(self):
 		print("pi4 initiated, time: "+str(time.time()))
-	
+
 
 		while True:
 			if rospy.is_shutdown():
@@ -68,6 +68,9 @@ class CamPublisher():
 				self.cam2.grab()
 			_, img=self.cam.read()
 			_, img2=self.cam2.read()
+                        #img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                        #img2=cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+
 			msg1=bridge.cv2_to_compressed_imgmsg(img)
 			msg2=bridge.cv2_to_compressed_imgmsg(img2)
 			self.pub.publish(msg1)
