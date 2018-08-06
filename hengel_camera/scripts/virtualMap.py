@@ -138,8 +138,8 @@ class VisualCompensation():
         img3_masked=np.multiply(img3, im_mask_inv3)
         img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r)
         img_right_masked=np.multiply(np.multiply(img_right, im_mask1234), im_mask_l)
-        cv2.imwrite("/home/hengel/left_masked.png", img_left_masked)
-        cv2.imwrite("/home/hengel/left.png", img2)
+        # cv2.imwrite("/home/hengel/left_masked.png", img_left_masked)
+        # cv2.imwrite("/home/hengel/left.png", img2)
 
         summed_image=img1_masked+img2_masked+img3_masked+img4_masked+img_white_masked+img_left_masked+img_right_masked
         summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
