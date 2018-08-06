@@ -109,11 +109,12 @@ class FeatureMatch():
 
         if len(good)>MIN_MATCH_COUNT:
             self.status = True
+            print("FEATURE MATCH COUNT > MIN_MATCH_COUNT")
             print([m.queryIdx for m in good])
+            
             # print(np.float32([ kp1[m.queryIdx].pt for m in good ]))
             src_pts=np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
             dst_pts=np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
-
 
             M, mask= cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
 

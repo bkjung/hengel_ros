@@ -57,7 +57,7 @@ class RobotView():
         # cv2.imwrite("/home/hengel/robotview.png", self.markedImg)
         # cv2.imwrite("/home/hengel/robotview2.png", self.img)
 
-        return self.img
+        # return self.img
 
     def add_endpoint(self):
         # print("endpoint add")

@@ -41,11 +41,11 @@ class VisualCompensation():
         self.bridge=CvBridge()
         self.pixMetRatio=500
 
-        self.img=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
+        self.virtual_map=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
         self.pi_left_img=np.array([])
         self.pi_right_img=np.array([])
 
-        self.app_robotview=RobotView(self.img) # Add the endpoint into the virtual map
+        self.app_robotview=RobotView(self.virtual_map) # Add the endpoint into the virtual map
 
         self.mid_predict_canvas_x=0
         self.mid_predict_canvas_y=0
@@ -104,7 +104,7 @@ class VisualCompensation():
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
     #def sync_real_callback(self, _img1, _img2, _img34):
         _time=time.time()
-        print("sync")
+        print("sync real")
         img1 = self.undistort1(_img1)
         img2 = self.undistort2(_img2)
         img3 = self.undistort3(_img3)
@@ -112,11 +112,12 @@ class VisualCompensation():
         print("img3: "+str(_img3.header.stamp)+", img4: "+str(_img4.header.stamp))
         #img_left=self.undistort_left(_img_left)
         #img_right=self.undistort_right(_img_right)
-        img_left=copy.deepcopy(self.pi_left_img)
-        img_right=copy.deepcopy(self.pi_right_img)
-        while len(self.pi_left_img)==0 and len(self.pi_left_img)==0:
+        while len(self.pi_left_img)==0 or len(self.pi_left_img)==0:
             time.sleep(100)
 
+        img_left=copy.deepcopy(self.pi_left_img)
+        img_right=copy.deepcopy(self.pi_right_img)
+        
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
         _, im_mask2=self.find_mask(img2)
@@ -151,13 +152,13 @@ class VisualCompensation():
         #################
         try:
             fm = FeatureMatch(self.folder_path)
-            # print("img1: "+str(self.img.shape)+", img2: "+str(summed_image.shape))
-            if self.img is None or summed_image is None:
+            # print("img1: "+str(self.virtual_map.shape)+", img2: "+str(summed_image.shape))
+            if self.virtual_map is None or summed_image is None:
                 print("IMAGE EMPTY")
                 raise Exeption("Image Empty")
             else:
-                # print("img1 "+str(self.img.dtype)+" "+"img2 "+str(summed_image.dtype))
-                _img1 = np.uint8(self.img)
+                # print("img1 "+str(self.virtual_map.dtype)+" "+"img2 "+str(summed_image.dtype))
+                _img1 = np.uint8(self.virtual_map)
                 _img2 = np.uint8(summed_image)
 
                 # _img1 = cv2.cvtColor(_img1, cv2.COLOR_BGR2GRAY)
@@ -169,7 +170,7 @@ class VisualCompensation():
                 if fm.status == True:
                     self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                     self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
-                    self.img = self.app_robotview.img
+                    self.virtual_map = self.app_robotview.img
 
                     #Initialize Queue
                     self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
@@ -204,6 +205,7 @@ class VisualCompensation():
         return im_mask_inv, im_mask
 
     def sync_virtual_callback(self, _endPoint, _midPoint):
+        # print("sync virtual")
         _time=time.time()
 
         self.mid_predict_canvas_x=_midPoint.x
@@ -212,14 +214,15 @@ class VisualCompensation():
 
         self.recent_pts.appendleft((_midPoint.x, _midPoint.y))
 
+        # self.virtual_map = self.app_robotview.run(_midPoint, _endPoint)
         self.app_robotview.run(_midPoint, _endPoint)
-        self.img = self.app_robotview.img
+        self.virtual_map = self.app_robotview.img
         ttime=Float32()
         ttime.data=float(time.time()-_time)
 
-        # bridge=CvBridge()
-        # virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.img)
-        # self.pub_virtual_map.publish(virtual_map_msg)
+        bridge=CvBridge()
+        virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.virtual_map)
+        self.pub_virtual_map.publish(virtual_map_msg)
 
     def undistort1(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
