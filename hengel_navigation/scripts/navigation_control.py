@@ -441,7 +441,7 @@ class NavigationControl():
             self.waypoint_index_in_current_segment = 0
 
 
-        self.shutdown_for_seconds(2.0)
+        self.shutdown_for_seconds(10.0)
         rospy.loginfo("Stopping the robot at the final destination")
         print("Total Stiff Delta_Theta Change BUFFER = %d" % (cnt_delta_buffer))
         #Wait for 1 second to close valve

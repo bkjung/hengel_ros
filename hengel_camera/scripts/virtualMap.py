@@ -22,9 +22,11 @@ from hengel_camera.msg import CmpImg
 
 class VisualCompensation():
     def __init__(self, _num_pts_delete):
-        word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
-        self.width=float(word.split()[0])
-        self.height=float(word.split()[1])
+        while True:
+            word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
+            self.width=float(word.split()[0])
+            self.height=float(word.split()[1])
+            break
         self.num_pts_delete = _num_pts_delete
         self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
 
