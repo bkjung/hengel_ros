@@ -17,7 +17,7 @@ class CamPublisher():
 	def __init__(self):
 		rospy.init_node('genius_publisher2', anonymous=True)
 
-		
+
 		self.cam=cv2.VideoCapture(1)
 		self.cam2=cv2.VideoCapture(2)
 		self.cam.set(cv2.CAP_PROP_FRAME_WIDTH,800)
@@ -79,7 +79,8 @@ class CamPublisher():
 			#msg.timestamp2=t2
 
 			#print("t1: "+str(msg.timestamp1)+", t2: "+str(msg.timestamp2))
-
+                        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                        img2=cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 			msg1=bridge.cv2_to_compressed_imgmsg(img)
 			#msg1.header.stamp=t1
 			#msg1.format="jpeg"
