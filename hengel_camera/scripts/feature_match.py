@@ -122,7 +122,7 @@ class FeatureMatch():
 
             print("DEBUG-0")
             M, mask= cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-            if M==None:
+            if M is None:
                 print("Homography mtx M is None !!!!")
             else:
                 self.status = True
