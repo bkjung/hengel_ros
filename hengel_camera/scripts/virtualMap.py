@@ -44,24 +44,40 @@ class VisualCompensation():
         self.pi_left_img=np.array([])
         self.pi_right_img=np.array([])
 
+        self.genius1_img=np.array([])
+        self.genius2_img=np.array([])
+        self.genius3_img=np.array([])
+        self.genius4_img=np.array([])
+
+        self.endpoint=Point()
+        self.midpoint=Point()
+
         self.app_robotview=RobotView(self.img) # Add the endpoint into the virtual map
 
         self.mid_predict_canvas_x=0
         self.mid_predict_canvas_y=0
         self.mid_predict_canvas_th=0
 
-        self.endPoint_callback=message_filters.Subscriber('/endpoint', Point)
-        self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
+        # self.endPoint_callback=message_filters.Subscriber('/endpoint', Point)
+        # self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
 
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.endPoint_callback, self.midPoint_callback], 10, 0.1, allow_headerless=True)
-        self.ts.registerCallback(self.sync_virtual_callback)
+        # self.ts=message_filters.ApproximateTimeSynchronizer([self.endPoint_callback, self.midPoint_callback], 10, 0.1, allow_headerless=True)
+        # self.ts.registerCallback(self.sync_virtual_callback)
 
         self.pub_virtual_map=rospy.Publisher('/virtual_map', CompressedImage, queue_size=3)
         self.vision_offset_publisher = rospy.Publisher('/offset_change', Point, queue_size=10)
-        self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
-        self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
-        self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
-        self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
+        # self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
+        # self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
+        # self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
+        # self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
+        rospy.Subscriber('/genius1/compressed', CompressedImage, self.callback_genius1)
+        rospy.Subscriber('/genius2/compressed', CompressedImage, self.callback_genius2)
+        rospy.Subscriber('/genius3/compressed', CompressedImage, self.callback_genius3)
+        rospy.Subscriber('/genius4/compressed', CompressedImage, self.callback_genius4)
+        
+        rospy.Subscriber('/endpoint', Point, self.callback_endpoint)
+        rospy.Subscriber('/midpoint', Point, self.callback_midpoint)
+
         #self.callback_pi_left=message_filters.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage)
         #self.callback_pi_right=message_filters.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage)
 
@@ -94,8 +110,21 @@ class VisualCompensation():
         print("right")
         self.pi_right_img=self.undistort_right(_img)
 
+    def callback_geinus1(self, _img):
+        self.genius1_img=self.undistort1(_img)
+    
+    def callback_geinus2(self, _img):
+        self.genius2_img=self.undistort2(_img)
+
+    def callback_geinus3(self, _img):
+        self.genius3_img=self.undistort3(_img)
+
+    def callback_geinus4(self, _img):
+        self.genius4_img=self.undistort4(_img)
+
 
 #    def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
+'''
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
         _time=time.time()
         print("sync")
@@ -177,6 +206,7 @@ class VisualCompensation():
         # bridge=CvBridge()
         # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
         # self.sum_pub.publish(summed_msg)
+'''
 
     def crop_image(self, _img):
         mid_predict_img_x = self.mid_predict_canvas_x * self.pixMetRatio
@@ -195,7 +225,7 @@ class VisualCompensation():
         im_mask=np.dstack((im_mask, im_mask, im_mask))
         im_mask_inv=(1-im_mask)
         return im_mask_inv, im_mask
-
+'''
     def sync_virtual_callback(self, _endPoint, _midPoint):
         _time=time.time()
 
@@ -213,6 +243,7 @@ class VisualCompensation():
         # bridge=CvBridge()
         # virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.img)
         # self.pub_virtual_map.publish(virtual_map_msg)
+'''
 
     def undistort1(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
