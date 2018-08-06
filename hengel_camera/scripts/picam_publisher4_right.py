@@ -71,8 +71,8 @@ class CamPublisher():
                         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                         img2=cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
-			msg1=bridge.cv2_to_compressed_imgmsg(img)
-			msg2=bridge.cv2_to_compressed_imgmsg(img2)
+			msg1=bridge.cv2_to_compressed_imgmsg(img, "mono8")
+			msg2=bridge.cv2_to_compressed_imgmsg(img2, "mono8")
 			self.pub.publish(msg1)
 			self.pub2.publish(msg2)
 			self.rate.sleep()

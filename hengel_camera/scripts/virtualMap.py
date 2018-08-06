@@ -303,6 +303,7 @@ class VisualCompensation():
 
     def undistort_left(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mtx=np.array([[496.88077412085187, 0.0, 486.19161191113693], [0.0, 497.77308359203073, 348.482250144119], [0.0, 0.0, 1.0]])
         dst=np.array([-0.27524035766660704, 0.055346669640229516, 0.002041430748143387, -0.0012188333190676689])
 
@@ -320,6 +321,7 @@ class VisualCompensation():
 
     def undistort_right(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mtx=np.array([[494.0169295185964, 0.0, 483.6710483879246], [0.0, 495.87509303786857, 336.69262125267153], [0.0, 0.0, 1.0]])
         dst=np.array([-0.26693726936305806, 0.05239559897759021, 0.0024912074565555443, -0.0015904998174301696])
 
