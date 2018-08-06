@@ -79,13 +79,13 @@ class CamPublisher():
 			#msg.timestamp2=t2
 
 			#print("t1: "+str(msg.timestamp1)+", t2: "+str(msg.timestamp2))
-                        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                        img2=cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-			msg1=bridge.cv2_to_compressed_imgmsg(img, "mono8")
+                        #img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                        #img2=cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+			msg1=bridge.cv2_to_compressed_imgmsg(img)
 			#msg1.header.stamp=t1
 			#msg1.format="jpeg"
 			#msg1.data=np.array(cv2.imencode('.jpg', img)[1]).tostring()
-			msg2=bridge.cv2_to_compressed_imgmsg(img2, "mono8")
+			msg2=bridge.cv2_to_compressed_imgmsg(img2)
 			#msg2.header.stamp=t2
 			#msg2.format="jpeg"
 			#msg2.data=np.array(cv2.imencode('.jpg', img2)[1]).tostring()
