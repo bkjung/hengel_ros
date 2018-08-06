@@ -68,8 +68,8 @@ class CamPublisher():
 				self.cam2.grab()
 			_, img=self.cam.read()
 			_, img2=self.cam2.read()
-                        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                        img2=cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+                        #img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                        #img2=cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
 			msg1=bridge.cv2_to_compressed_imgmsg(img)
 			msg2=bridge.cv2_to_compressed_imgmsg(img2)
