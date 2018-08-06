@@ -68,9 +68,9 @@ class CamPublisher():
 				self.cam.grab()
 				self.cam2.grab()
 			_, img=self.cam.read()
-			t1=time.time()
+			t1=float(time.time())
 			_, img2=self.cam2.read()
-			t2=time.time()
+			t2=float(time.time())
 
 			msg=CmpImg()
 			msg.img1=bridge.cv2_to_compressed_imgmsg(img)
