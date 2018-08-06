@@ -79,12 +79,12 @@ class VisualCompensation():
         self.ts.registerCallback(self.sync_real_callback)
 
         ############################ DEBUG ################################
-        self.pub1=rospy.Publisher('/genius1/undist', Image, queue_size=5 )
-        self.pub2=rospy.Publisher('/genius2/undist', Image, queue_size=5 )
-        self.pub3=rospy.Publisher('/genius3/undist', Image, queue_size=5 )
-        self.pub4=rospy.Publisher('/genius4/undist', Image, queue_size=5 )
-        self.pub_pi_l=rospy.Publisher('/pi_left/undist', Image, queue_size=5 )
-        self.pub_pi_r=rospy.Publisher('/pi_right/undist', Image, queue_size=5 )
+        # self.pub1=rospy.Publisher('/genius1/undist', Image, queue_size=5 )
+        # self.pub2=rospy.Publisher('/genius2/undist', Image, queue_size=5 )
+        # self.pub3=rospy.Publisher('/genius3/undist', Image, queue_size=5 )
+        # self.pub4=rospy.Publisher('/genius4/undist', Image, queue_size=5 )
+        # self.pub_pi_l=rospy.Publisher('/pi_left/undist', Image, queue_size=5 )
+        # self.pub_pi_r=rospy.Publisher('/pi_right/undist', Image, queue_size=5 )
         self.pub_sum=rospy.Publisher('/summed_image/compressed',CompressedImage, queue_size=5)
 
 
