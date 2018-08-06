@@ -9,6 +9,7 @@ import numpy as numpy
 from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
 from std_msgs.msg import Bool
+from hengel_camera.msg import CmpImg
 
 package="/home/mjlee/catkin_ws/src/hengel_ros/hengel_camera/"
 
@@ -22,13 +23,14 @@ class CamPublisher():
 		self.cam.set(cv2.CAP_PROP_FRAME_WIDTH,800)
 		self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
 		self.cam.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
-		self.cam2.set(cv2.CAP_PROP_FRAME_WIDTH,960)
-		self.cam2.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
+		self.cam2.set(cv2.CAP_PROP_FRAME_WIDTH,800)
+		self.cam2.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
 		self.cam2.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
 
 		rospy.Subscriber('/initiator', Bool, self.initiator)
-		self.pub = rospy.Publisher('/genius3/compressed', CompressedImage, queue_size=10)
-		self.pub2= rospy.Publisher('/genius4/compressed', CompressedImage, queue_size=10)
+		# self.pub = rospy.Publisher('/genius3/compressed', CompressedImage, queue_size=10)
+		# self.pub2= rospy.Publisher('/genius4/compressed', CompressedImage, queue_size=10)
+		self.pub= rospy.Publisher('/pi3_imgs/compressed', CmpImg, queue_size=10)
 		self.rate = rospy.Rate(5)
 		self.publish()
 
@@ -68,10 +70,15 @@ class CamPublisher():
 			_, img=self.cam.read()
 			_, img2=self.cam2.read()
 
-			msg1=bridge.cv2_to_compressed_imgmsg(img)
-			msg2=bridge.cv2_to_compressed_imgmsg(img2)
-			self.pub.publish(msg1)
-			self.pub2.publish(msg2)
+			msg=CmpImg()
+			msg.img1=bridge.cv2_to_compressed_imgmsg(img)
+			msg.img2=bridge.cv2_to_compressed_imgmsg(img2)
+
+			# msg1=bridge.cv2_to_compressed_imgmsg(img)
+			# msg2=bridge.cv2_to_compressed_imgmsg(img2)
+			# self.pub.publish(msg1)
+			# self.pub2.publish(msg2)
+			self.pub.publish(msg)
 			self.rate.sleep()
 
 if __name__=='__main__':
