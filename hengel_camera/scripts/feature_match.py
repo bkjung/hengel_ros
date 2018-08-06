@@ -58,6 +58,8 @@ class FeatureMatch():
         cv2.destroyAllWindows()
 
     def SIFT_FLANN_matching(self, img1, img2):
+        #img1: virtual
+        #img2: photo
         _time=time.time()
 
         self.status = False
@@ -117,9 +119,9 @@ class FeatureMatch():
             dst_pts=np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
             M, mask= cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+            
 
-            img1_homo=cv2.warpPerspective(img1, M, (1280, 1280))
-            img2_homo=cv2.warpPerspective(img2, M, (1280, 1280))
+            # img1_homo=cv2.warpPerspective(img1, M, (1280, 1280))
 
             # cv2.imwrite("/home/bkjung/img1_homo.png", img1_homo)
             # cv2.imwrite("/home/bkjung/img2_homo.png", img2_homo)
