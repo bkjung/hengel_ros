@@ -220,9 +220,10 @@ class VisualCompensation():
         ttime=Float32()
         ttime.data=float(time.time()-_time)
 
-        bridge=CvBridge()
-        virtual_map_msg=bridge.cv2_to_compressed_imgmsg(self.virtual_map)
-        self.pub_virtual_map.publish(virtual_map_msg)
+
+        #PUBLISHING VIRTUAL MAP, but currently the msg cannot be viewed at rqt (supposedly because of msgtype mismatch)
+        # virtual_map_msg=self.bridge.cv2_to_compressed_imgmsg(self.virtual_map)
+        # self.pub_virtual_map.publish(virtual_map_msg)
 
     def undistort1(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
