@@ -10,6 +10,7 @@ import numpy as np
 import sys
 import time
 import os
+import copy
 from os.path import expanduser
 import cv2
 from cv_bridge import CvBridge
@@ -59,8 +60,11 @@ class VisualCompensation():
         self.vision_offset_publisher = rospy.Publisher('/offset_change', Point, queue_size=10)
         self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
         self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
-        self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
-        self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
+        # self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
+        # self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
+
+        self.callback34=message_filters.Subscriber('/pi3_imgs/compressed', CmpImg)
+    
         #self.callback_pi_left=message_filters.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage)
         #self.callback_pi_right=message_filters.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage)
 
@@ -69,7 +73,8 @@ class VisualCompensation():
 
         #self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4, self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
 
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=True)
+        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback34], 10,0.1, allow_headerless=True)
+        # self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_real_callback)
 
         ############################ DEBUG ################################
@@ -86,24 +91,30 @@ class VisualCompensation():
         rospy.spin()
 
     def callback_left(self, _img):
+        print("left")
         self.pi_left_img=self.undistort_left(_img)
 
     def callback_right(self, _img):
+        print("right")
         self.pi_right_img=self.undistort_right(_img)
 
 
 #    def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
-    def sync_real_callback(self, _img1, _img2, _img3, _img4):
+    # def sync_real_callback(self, _img1, _img2, _img3, _img4):
+    def sync_real_callback(self, _img1, _img2, _img34):
         _time=time.time()
         print("sync")
         img1 = self.undistort1(_img1)
         img2 = self.undistort2(_img2)
-        img3 = self.undistort3(_img3)
-        img4 = self.undistort4(_img4)
+        img3 = self.undistort3(_img34.img1)
+        img4 = self.undistort4(_img34.img2)
+        print("img3: "+str(_img34.timestamp1)+", img4: "+str(_img34.timestamp2))
         #img_left=self.undistort_left(_img_left)
         #img_right=self.undistort_right(_img_right)
-        img_left=self.pi_left_img
-        img_right=self.pi_right_img
+        img_left=copy.deepcopy(self.pi_left_img)
+        img_right=copy.deepcopy(self.pi_right_img)
+        while len(self.pi_left_img)==0 and len(self.pi_left_img)==0:
+            time.sleep(100)
 
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
@@ -118,15 +129,19 @@ class VisualCompensation():
         im_mask24=cv2.bitwise_and(np.array(im_mask2), np.array(im_mask4))
         im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
 
-        img_white_masked=np.multiply(img_white, im_mask1234)
+        img_white_masked=np.multiply(np.multiply(np.multiply(img_white, im_mask1234), im_mask_l), im_mask_r)
         img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4)
         img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask2)
         img1_masked=np.multiply(img1, im_mask_inv1)
         img3_masked=np.multiply(img3, im_mask_inv3)
         img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r)
-        img_right_masked=np.multiply(np.multipily(img_right, im_mask1234), im_mask_l)
+        img_right_masked=np.multiply(np.multiply(img_right, im_mask1234), im_mask_l)
+        cv2.imwrite("/home/hengel/left_masked.png", img_left_masked)
+        cv2.imwrite("/home/hengel/left.png", img2)
+
         summed_image=img1_masked+img2_masked+img3_masked+img4_masked+img_white_masked+img_left_masked+img_right_masked
         summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
+
         self.pub_sum.publish(summed_msg)
         print("summed_image time: "+str(time.time()-_time))
 
