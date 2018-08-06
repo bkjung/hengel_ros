@@ -60,13 +60,6 @@ def angle_difference(angle1, angle2):
 
 
 class NavigationControl():
-    # def __init__(self, _arr_path, _draw_start_index):
-    #     self.arr_path = _arr_path
-    #     self.draw_start_index  = _draw_start_index
-
-    #     self.initial_setting()
-    #     self.run()
-
     def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _isStartEndIndexed, _D):
         while True:
             word = raw_input(
@@ -295,7 +288,7 @@ class NavigationControl():
         self.map_img = np.ndarray(self.map_img)
 
         #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
-        rospy.on_shutdown(self.shutdown)
+        rospy.on_shutdown(self.shutdown_everything)
 
         self.valve_angle_publisher = rospy.Publisher(
                 '/valve_input', ValveInput, queue_size=5)
@@ -325,7 +318,7 @@ class NavigationControl():
 
     def runOffset(self):
         print("--runOffset begin--")
-        self.wait_for_seconds(5.0)
+        self.shutdown_for_seconds(5.0)
         # go through path array
         rospy.loginfo("number of letters = " + str(len(self.arr_path)))
         for idx_letter in range(len(self.arr_path)):
@@ -388,7 +381,7 @@ class NavigationControl():
                         
                         # if the acquired offset is too large, dismiss it.
                         if dist>0.5:
-                            print("VISUAL OFFSET is too LARGE!!! (Dismissing the calculated offset)"
+                            print("VISUAL OFFSET is too LARGE!!! (Dismissing the calculated offset)")
                             pass
                             
                         elif dist>0.001*2.0:
@@ -412,6 +405,9 @@ class NavigationControl():
 
                         self.offset_accepted = False
 
+                    else:
+                        pass
+
                     if self.isStartEndIndexed:
                         if (self.cnt_waypoints) in self.start_point_list:
                             self.is_moving_between_segments = False
@@ -425,8 +421,7 @@ class NavigationControl():
                             self.go_to_point_and_come_back(self.cam_save_x, self.cam_save_y, self.cam_save_theta_deg)
 
                     # Motion Control
-                    while True:
-                        self.robotNavigationLoop(self.current_waypoint)
+                    self.robotNavigationLoop(self.current_waypoint)
 
                     #Arrived at the waypoint
                     #rospy.loginfo("CURRENT: " + str(self.point.x) + ", " +
@@ -446,11 +441,11 @@ class NavigationControl():
             self.waypoint_index_in_current_segment = 0
 
 
-        self.wait_for_seconds(2.0)
+        self.shutdown_for_seconds(2.0)
         rospy.loginfo("Stopping the robot at the final destination")
         print("Total Stiff Delta_Theta Change BUFFER = %d" % (cnt_delta_buffer))
         #Wait for 1 second to close valve
-        self.quit_valve()
+        # self.shutdown_everything()
         #turn to view letters at the final global map view point
         #self.look_opposite_side()
         #stop the robot
@@ -458,7 +453,7 @@ class NavigationControl():
 
     def saveSimulation(self):
         print("--save simulation begin--")
-        self.wait_for_seconds(5.0)
+        self.shutdown_for_seconds(5.0)
         # go through path array
         rospy.loginfo("number of letters = " + str(len(self.arr_path)))
         for idx_letter in range(len(self.arr_path)):
@@ -661,15 +656,17 @@ class NavigationControl():
         plt.savefig(home_path+"/simulation_"+self.program_start_time+".png")
         plt.show()
 
-        self.wait_for_seconds(2.0)
+        self.shutdown_for_seconds(2.0)
         rospy.loginfo("Stopping the robot at the final destination")
         # print("Total Stiff Delta_Theta Change BUFFER = %d" % (cnt_delta_buffer))
         #Wait for 1 second to close valve
-        self.quit_valve()
+        # self.quit_valve()
 
     def robotNavigationLoop(self, current_destination):
         if rospy.is_shutdown():
-            break
+            print("rospy.is_shutdown()")
+            self.shutdown_for_seconds(2.0)
+            sys.exit("Terminate Program after shutdown everything for 2.0 sec")
         try:
             if self.intensity_option==1:
                 if not self.isStartEndIndexed:
@@ -900,15 +897,11 @@ class NavigationControl():
 
                 self.r.sleep()
 
-                break
-
-
         except KeyboardInterrupt:
             print("Got KeyboardInterrupt")
             # self.cmd_vel.publish(Twist())
 
             rospy.signal_shutdown("KeyboardInterrupt")
-            break
 
     def control_motors_by_direct_input(self, _loop_cnt, delta1, delta2):
         loop_cnt = 0
@@ -996,33 +989,19 @@ class NavigationControl():
             delY=0
         return delX, delY
 
-    def quit_valve(self):
-        for ind_quit in range(int(1/self.dt)):
-            self.valve_angle_input.goal_position = SPRAY_OFF
-            self.valve_angle_publisher.publish(self.valve_angle_input)
-
-            ind_quit = ind_quit + 1
-            self.r.sleep()
-
-    def shutdown(self):
+    def shutdown_everything(self):
         # self.cmd_vel.publish(Twist())
         self.pub_delta_theta_1.publish(0.0)
         self.pub_delta_theta_2.publish(0.0)
         # self.spray_intensity_publisher.publish(1024.0)
         self.valve_angle_input.goal_position = 1024
         self.valve_angle_publisher.publish(self.valve_angle_input)
-        rospy.sleep(1)
+        self.r.sleep()
 
-    def wait_for_seconds(self, _input):
+    def shutdown_for_seconds(self, _input):
         cnt_loop = (int)(_input / self.dt)
         for i in range(cnt_loop):
-            # self.cmd_vel.publish(Twist())
-            self.pub_delta_theta_1.publish(0.0)
-            self.pub_delta_theta_2.publish(0.0)
-            # self.spray_intensity_publisher.publish(1024.0)
-            self.valve_angle_input.goal_position = 1024
-            self.valve_angle_publisher.publish(self.valve_angle_input)
-            self.r.sleep()
+            self.shutdown_everything()
 
     def callback_vision_offset(self, _data):
         print("Callback Vision OFFSET Received")
