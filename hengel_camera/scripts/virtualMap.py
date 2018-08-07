@@ -139,8 +139,8 @@ class VisualCompensation():
         im_mask24=cv2.bitwise_and(np.array(im_mask2), np.array(im_mask4))
         im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
 
-        img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4).astype('uint8')
         # img_white_masked=np.multiply(np.multiply(np.multiply(img_white, im_mask1234), im_mask_l), im_mask_r).astype('uint8')
+        img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4).astype('uint8')
         img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask2).astype('uint8')
         img1_masked=np.multiply(img1, im_mask_inv1).astype('uint8')
         img3_masked=np.multiply(img3, im_mask_inv3).astype('uint8')
@@ -281,7 +281,7 @@ class VisualCompensation():
                     [x_mid_crop+half_map_size_diagonal*cos(pi/4+self.mid_predict_img_th), y_mid_crop-half_map_size_diagonal*sin(pi/4+self.mid_predict_img_th)]]
         
         imgPts_padding=[[a[0]+padding, a[1]+padding] for a in imgPts]
-        print("points: "+str(imgPts_padding))
+        # print("points: "+str(imgPts_padding))
         
         imgPts_padding=np.array(imgPts_padding)
 
@@ -292,7 +292,7 @@ class VisualCompensation():
         return cv2.warpPerspective(img_padding, homography,(1280,1280))
 
     def find_mask(self, img):
-        print(img.shape)
+        # print(img.shape)
         _time=time.time()
         black_range1=np.array([0])
         im_mask=(cv2.inRange(img, black_range1, black_range1))
