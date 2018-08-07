@@ -230,7 +230,7 @@ class VisualCompensation():
             # homography_virtual_map_masked=np.multiply(homography_virtual_map, np.array(im_mask_inv))
             # self.cropped_virtual_map=(homography_virtual_map_masked+im_white_masked).astype('uint8')
 
-##################################################################################
+##### 3  #############################################################################
             im_mask_inv1, im_mask1=self.find_mask(img1)
             im_mask_inv3, im_mask3=self.find_mask(img3)
             im_mask_inv2, im_mask2=self.find_mask(img2)
@@ -242,21 +242,21 @@ class VisualCompensation():
 
             im_mask13=cv2.bitwise_and(np.array(im_mask1).astype('uint8'), np.array(im_mask3).astype('uint8'))
             im_mask24=cv2.bitwise_and(np.array(im_mask2).astype('uint8'), np.array(im_mask4).astype('uint8'))
-            im_mask_inv_13=cv2.bitwise_and(np.array(im_mask_inv1).astype('uint8'), np.array(im_mask_inv3).astype('uint8'))
-            im_mask_inv_24=cv2.bitwise_and(np.array(im_mask_inv2).astype('uint8'), np.array(im_mask_inv4).astype('uint8'))
+            # im_mask_inv_13=cv2.bitwise_and(np.array(im_mask_inv1).astype('uint8'), np.array(im_mask_inv3).astype('uint8'))
+            # im_mask_inv_24=cv2.bitwise_and(np.array(im_mask_inv2).astype('uint8'), np.array(im_mask_inv4).astype('uint8'))
             im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
-            im_mask_inv1234=cv2.bitwise_and(im_mask_inv_13, im_mask_inv_24)
+            # im_mask_inv1234=cv2.bitwise_and(im_mask_inv_13, im_mask_inv_24)
 
             img_white_masked=np.multiply(img_white, im_mask1234).astype('uint8')
             img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4).astype('uint8')
             img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask2).astype('uint8')
-            img1_masked=np.multiply(img1, im_mask_inv1).astype('uint8')
-            img3_masked=np.multiply(img3, im_mask_inv3).astype('uint8')
+            # img1_masked=np.multiply(img1, im_mask_inv1).astype('uint8')
+            # img3_masked=np.multiply(img3, im_mask_inv3).astype('uint8')
             # img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r).astype('uint8')
             # img_right_masked=np.multiply(np.multiply(img_right, im_mask1234), im_mask_l).astype('uint8')
             
             # summed_image=img_white_masked
-            summed_image=img1_masked+img2_masked+img3_masked+img4_masked+img_white_masked
+            summed_image=img1+img2_masked+img3+img4_masked+img_white_masked
             summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
 
             self.pub_sum.publish(summed_msg)
@@ -268,11 +268,13 @@ class VisualCompensation():
 
             im_white=np.full((1280,1280),255).astype('uint8')
             im_white_masked=np.multiply(im_white, np.array(im_mask)).astype('uint8')
-            homography_virtual_map_masked=np.multiply(homography_virtual_map, im_mask_inv).astype('uint8')
+            # homography_virtual_map_masked=np.multiply(homography_virtual_map, im_mask_inv).astype('uint8')
+
             # self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
-            self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
+            self.cropped_virtual_map=im_white_masked+homography_virtual_map
          
-         
+##################################################################################
+
             try:
                 fm = FeatureMatch(self.folder_path)
                 # print("img1: "+str(self.virtual_map.shape)+", img2: "+str(summed_image.shape))
