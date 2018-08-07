@@ -118,9 +118,9 @@ class VisualCompensation():
         img3 = self.undistort3(_img3)
         img4 = self.undistort4(_img4)
 
-        while len(self.pi_left_img)==0 or len(self.pi_right_img)==0:
-            print("empty pi_left or pi_right")
-            time.sleep(100)
+        # while len(self.pi_left_img)==0 or len(self.pi_right_img)==0:
+        #     print("empty pi_left or pi_right")
+        #     time.sleep(100)
 
         # img_left=copy.deepcopy(self.pi_left_img)
         # img_right=copy.deepcopy(self.pi_right_img)
@@ -142,8 +142,8 @@ class VisualCompensation():
         # print("im_mask24.dtype : "+str(im_mask24.dtype))
         # print("im_mask1234.dtype : "+str(im_mask1234.dtype))
 
-        img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4).astype('uint8')
         # img_white_masked=np.multiply(np.multiply(np.multiply(img_white, im_mask1234), im_mask_l), im_mask_r).astype('uint8')
+        img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4).astype('uint8')
         img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask2).astype('uint8')
         img1_masked=np.multiply(img1, im_mask_inv1).astype('uint8')
         img3_masked=np.multiply(img3, im_mask_inv3).astype('uint8')
@@ -163,6 +163,7 @@ class VisualCompensation():
         try:
             fm = FeatureMatch(self.folder_path)
             # print("img1: "+str(self.virtual_map.shape)+", img2: "+str(summed_image.shape))
+            # if self.cropped_virtual_map is None or summed_image is None:
             if self.cropped_virtual_map is None or summed_image is None:
                 print("IMAGE EMPTY")
                 raise Exeption("Image Empty")
@@ -311,13 +312,13 @@ class VisualCompensation():
 
         homography_virtual_map=self.crop_image(self.virtual_map) #background is black
 
-        im_mask, im_mask_inv = self.find_mask(homography_virtual_map)
+        # im_mask, im_mask_inv = self.find_mask(homography_virtual_map)
 
         # im_white=np.full((1280,1280),255)
         # im_white_masked=np.uint8(np.multiply(im_white, im_mask))
-        homography_virtual_map_masked=np.uint8(np.multiply(homography_virtual_map, im_mask_inv))
+        # homography_virtual_map_masked=np.uint8(np.multiply(homography_virtual_map, im_mask_inv))
         # self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
-        self.cropped_virtual_map=homography_virtual_map_masked
+        self.cropped_virtual_map=homography_virtual_map.astype('uint8')
 
         
         ttime=Float32()
@@ -353,7 +354,7 @@ class VisualCompensation():
 
     def crop_image(self, _img):
         padding=int(ceil(640*sqrt(2)))
-        img_padding=np.full((_img.shape[0]+padding*2, _img.shape[1]+padding*2),0)
+        img_padding=np.full((_img.shape[0]+padding*2, _img.shape[1]+padding*2),0).astype('uint8')
 
         img_test=img_padding[padding:padding+_img.shape[0],padding:padding+_img.shape[1]]
 
