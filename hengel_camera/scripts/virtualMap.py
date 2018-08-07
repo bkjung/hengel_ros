@@ -2,7 +2,7 @@
 
 import rospy
 from geometry_msgs.msg import Point
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, Time, Header
 from sensor_msgs.msg import Image, CompressedImage
 from markRobotView import RobotView
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos, asin,ceil
@@ -19,6 +19,14 @@ import collections
 from feature_match import FeatureMatch
 from matplotlib import pyplot as plt
 from hengel_camera.msg import CmpImg
+
+# def ros_time_to_float(msg_time):
+#     # print(type(msg_time))
+#     # print(type(msg_time.data))
+#     # print(type(msg_time.secs))
+#     print(msg_time)
+#     print(msg_time.data)
+#     return msg_time.sec+msg_time.nsec*0.000000001
 
 class VisualCompensation():
     def __init__(self, _num_pts_delete):
@@ -63,7 +71,7 @@ class VisualCompensation():
         self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
         self.midPoint_time_callback=message_filters.Subscriber('/midpoint_time', Time)
 
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.endPoint_callback, self.midPoint_callback], 10, 0.1, allow_headerless=True)
+        self.ts=message_filters.ApproximateTimeSynchronizer([self.endPoint_callback, self.midPoint_callback, self.midPoint_time_callback], 10, 0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_virtual_callback)
 
         self.pub_virtual_map=rospy.Publisher('/virtual_map', CompressedImage, queue_size=3)
@@ -108,15 +116,28 @@ class VisualCompensation():
         self.pi_right_img=self.undistort_right(_img)
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
-        if self.isNavigationStarted:     
+        if self.isNavigationStarted:
+            image_time = (_img1.header.stamp.to_nsec()+_img2.header.stamp.to_nsec()+_img3.header.stamp.to_nsec()+_img4.header.stamp.to_nsec())/4.0
+
+            min_diff = 999999999999999.9
+            min_index = -1
+            for i in range(len(self.mid_predict_canvas_time)):
+                curr_diff = abs(self.mid_predict_canvas_time[i]-image_time)
+                if (curr_diff < min_diff):
+                    min_diff = curr_diff
+                    min_index = i
+
+            self.mid_predict_img_x=-self.mid_predict_canvas_x[min_index] *self.pixMetRatio
+            self.mid_predict_img_y=self.virtual_map.shape[0]-self.mid_predict_canvas_y[min_index]*self.pixMetRatio
+            self.mid_predict_img_th=-self.mid_predict_canvas_th[min_index]
+                    
+
             _time=time.time()
             print("sync real")
             img1 = self.undistort1(_img1)
             img2 = self.undistort2(_img2)
             img3 = self.undistort3(_img3)
             img4 = self.undistort4(_img4)
-
-            image_time = np.mean(img1.header.stamp.to_sec(), img2.header.stamp.to_sec(), img3.header.stamp.to_sec(), img4.header.stamp.to_sec())
 
             # while len(self.pi_left_img)==0 or len(self.pi_right_img)==0:
             #     print("empty pi_left or pi_right")
@@ -193,7 +214,7 @@ class VisualCompensation():
                         #Initialize Queue
                         self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
 
-                        self.relocalization(M, image_time)
+                        self.relocalization(M)
 
 
             except Exception as e:
@@ -222,7 +243,8 @@ class VisualCompensation():
         self.mid_predict_canvas_x.append(_midPoint.x)
         self.mid_predict_canvas_y.append(_midPoint.y)
         self.mid_predict_canvas_th.append(_midPoint.z)
-        self.mid_predict_canvas_time.append(_midPointTime.to_sec())
+        # self.mid_predict_canvas_time.append(ros_time_to_float(_midPointTime))
+        self.mid_predict_canvas_time.append(_midPointTime.data.to_nsec())
 
         self.recent_pts.appendleft((_midPoint.x, _midPoint.y))
 
@@ -243,19 +265,7 @@ class VisualCompensation():
         # self.pub_virtual_map.publish(virtual_map_msg)
 
 
-    def relocalization(self, homography, _image_time):
-        min_diff = 999999999999999.9
-        min_index = -1
-        for i in range(len(self.mid_predict_canvas_time)):
-            curr_diff = abs(self.mid_predict_canvas_time[i]-_image_time)
-            if (curr_diff < min):
-                min = curr_diff
-                min_index = i
-
-        self.mid_predict_img_x=-self.mid_predict_canvas_x[min_index] *self.pixMetRatio
-        self.mid_predict_img_y=self.virtual_map.shape[0]-self.mid_predict_canvas_y[min_index]*self.pixMetRatio
-        self.mid_predict_img_th=-self.mid_predict_canvas_th[min_index]
-                
+    def relocalization(self, homography):
         mid_real_virtual_x, mid_real_virtual_y, _= np.matmul(homography, [self.mid_real_photo_x, self.mid_real_photo_y, 1])
         del_x_virtual=mid_real_virtual_x-self.mid_real_photo_x
         del_y_virtual=mid_real_virtual_y-self.mid_real_photo_y
