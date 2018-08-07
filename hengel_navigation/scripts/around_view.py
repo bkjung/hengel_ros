@@ -124,6 +124,7 @@ class AroundImage:
 
             #MULTIPLY WARPED IMAGE, THEN ADD TO BLANK IMAGE
             im_mask_inv, im_mask = self.find_mask(im_top)
+            
             middle_masked=np.multiply(im_middle, im_mask).astype('uint8')
             top_masked=np.multiply(im_top, im_mask_inv).astype('uint8')
             tmp_img= middle_masked+top_masked
