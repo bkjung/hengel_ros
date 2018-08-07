@@ -67,12 +67,16 @@ class CamPublisher():
 				self.cam.grab()
 				self.cam2.grab()
 			_, img=self.cam.read()
+			t1=rospy.Time.now()
 			_, img2=self.cam2.read()
+			t2=rospy.Time.now()
                         #img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                         #img2=cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
 			msg1=bridge.cv2_to_compressed_imgmsg(img)
+			msg1.header.stamp=t1
 			msg2=bridge.cv2_to_compressed_imgmsg(img2)
+			msg2.header.stamp=t2
 			self.pub.publish(msg1)
 			self.pub2.publish(msg2)
 			self.rate.sleep()

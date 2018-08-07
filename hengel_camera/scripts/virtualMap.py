@@ -22,9 +22,11 @@ from hengel_camera.msg import CmpImg
 
 class VisualCompensation():
     def __init__(self, _num_pts_delete):
-        word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
-        self.width=float(word.split()[0])
-        self.height=float(word.split()[1])
+        while True:
+            word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
+            self.width=float(word.split()[0])
+            self.height=float(word.split()[1])
+            break
         self.num_pts_delete = _num_pts_delete
         self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
 
@@ -71,15 +73,18 @@ class VisualCompensation():
         self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
         self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
 
-        #self.callback_pi_left=message_filters.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage)
-        #self.callback_pi_right=message_filters.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage)
+        self.callback_pi_left=message_filters.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage)
+        self.callback_pi_right=message_filters.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage)
 
-        rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.callback_left)
-        rospy.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage, self.callback_right)
+        # rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.callback_left)
+        # rospy.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage, self.callback_right)
 
         #self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4, self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
 
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=True)
+        #self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback34], 10,0.1, allow_headerless=True)
+        # self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=False)
+        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4, self.callback_pi_left, self.callback_pi_right], 10,0.1, allow_headerless=False)
+        # self.ts=message_filters.TimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 1)
         self.ts.registerCallback(self.sync_real_callback)
 
 
@@ -92,17 +97,17 @@ class VisualCompensation():
 
         rospy.spin()
 
-    def callback_left(self, _img):
-        print("left")
-        self.pi_left_img=self.undistort_left(_img)
+    # def callback_left(self, _img):
+    #     print("left")
+    #     self.pi_left_img=self.undistort_left(_img)
 
-    def callback_right(self, _img):
-        print("right")
-        self.pi_right_img=self.undistort_right(_img)
+    # def callback_right(self, _img):
+    #     print("right")
+    #     self.pi_right_img=self.undistort_right(_img)
 
 
-#    def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
-    def sync_real_callback(self, _img1, _img2, _img3, _img4):
+    def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
+    # def sync_real_callback(self, _img1, _img2, _img3, _img4):
     #def sync_real_callback(self, _img1, _img2, _img34):
         _time=time.time()
         print("sync real")
@@ -110,14 +115,16 @@ class VisualCompensation():
         img2 = self.undistort2(_img2)
         img3 = self.undistort3(_img3)
         img4 = self.undistort4(_img4)
-        print("img3: "+str(_img3.header.stamp)+", img4: "+str(_img4.header.stamp))
-        #img_left=self.undistort_left(_img_left)
-        #img_right=self.undistort_right(_img_right)
-        while len(self.pi_left_img)==0 or len(self.pi_right_img)==0:
-            time.sleep(100)
+        # print("img1: "+str(_img1.header.stamp)+", img2: "+str(_img2.header.stamp))
+        # print("img3: "+str(_img3.header.stamp)+", img4: "+str(_img4.header.stamp))
+        img_left=self.undistort_left(_img_left)
+        img_right=self.undistort_right(_img_right)
+        # while len(self.pi_left_img)==0 or len(self.pi_right_img)==0:
+            # print("empty pi_left or pi_right")
+            # time.sleep(100)
 
-        img_left=copy.deepcopy(self.pi_left_img)
-        img_right=copy.deepcopy(self.pi_right_img)
+        # img_left=copy.deepcopy(self.pi_left_img)
+        # img_right=copy.deepcopy(self.pi_right_img)
 
         im_mask_inv1, im_mask1=self.find_mask(img1)
         im_mask_inv3, im_mask3=self.find_mask(img3)
