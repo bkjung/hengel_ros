@@ -325,7 +325,7 @@ def homography_matrix(index):
     [-5,30],
     [-20,35],[-15,35],[-10,35],[-5,35],[0,35],[10,35],
     [-20,45],[0,45]])
-    objPts = [[[point_r[1]*(-5.0)+640.0, point_r[0]*(-5.0)+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
+    objPts = [[[point_r[1]*(5.0)+640.0, point_r[0]*(5.0)+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
 
     #pi_right
     imgPtsArr.append([[1.5,373],[177.5,368],[349,360.5],[525.3,354.4],[694.5,348.7],
@@ -340,7 +340,7 @@ def homography_matrix(index):
 
 
 if __name__=="__main__":
-    homography_matrix(4)
+    homography_matrix(6)
     # Undistort()
     # cv2.destroyAllWindows()
 
