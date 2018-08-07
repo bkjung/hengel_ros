@@ -10,9 +10,6 @@ import time
 class FeatureMatch():
     def __init__(self, _folder_path):
         self.status = False
-        self.delta_x = 0.0
-        self.delta_y = 0.0
-        self.delta_theta = 0.0
         self.folder_path  = _folder_path
 
     def SIFT_KNN_matching(self, img1, img2):
@@ -78,14 +75,14 @@ class FeatureMatch():
 
         # print("img1: "+str(img1.shape)+", img2: "+str(img2.shape))
 
-        print("sift_falnn 0 Time: "+str(time.time()-_time))
+        # print("sift_flann 0 Time: "+str(time.time()-_time))
 
         ############ Slow Part ############
         kp1, des1 = sift.detectAndCompute(img1, None)
         kp2, des2 = sift.detectAndCompute(img2, None)
         ############ Slow Part ############
 
-        print("sift_falnn 1 Time: "+str(time.time()-_time))
+        # print("sift_flann 1 Time: "+str(time.time()-_time))
 
         MIN_MATCH_COUNT=10
         FLANN_INDEX_KDTREE=0
@@ -98,7 +95,7 @@ class FeatureMatch():
         if des1 is not None and des2 is not None:
             matches = flann.knnMatch(des1,des2,k=2)
 
-            print("sift_falnn 2 Time: "+str(time.time()-_time))
+            # print("sift_flann 2 Time: "+str(time.time()-_time))
 
             #store all the good matches as per Lowe's ratio test
             good=[]
@@ -111,7 +108,7 @@ class FeatureMatch():
             # print("abc",kp1[good[3].queryIdx].pt)
 
 
-            print("sift_falnn 3 Time: "+str(time.time()-_time))
+            # print("sift_flann 3 Time: "+str(time.time()-_time))
 
             if len(good)>MIN_MATCH_COUNT:
                 print("FEATURE MATCH COUNT > MIN_MATCH_COUNT")
@@ -167,7 +164,7 @@ class FeatureMatch():
         # plt.draw()
         # plt.pause(0.00000000001)
 
-        print("sift_falnn 4 Time: "+str(time.time()-_time))
+        # print("sift_flann 4 Time: "+str(time.time()-_time))
 
         return M
 

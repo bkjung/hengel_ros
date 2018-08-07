@@ -67,7 +67,6 @@ class VisualCompensation():
         self.ts.registerCallback(self.sync_virtual_callback)
 
         self.pub_virtual_map=rospy.Publisher('/virtual_map', CompressedImage, queue_size=3)
-        self.vision_offset_publisher = rospy.Publisher('/offset_change', Point, queue_size=10)
         self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
         self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
         self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
@@ -103,11 +102,11 @@ class VisualCompensation():
 
 #################################################################
     def callback_left(self, _img):
-        print("left")
+        # print("left")
         self.pi_left_img=self.undistort_left(_img)
 
     def callback_right(self, _img):
-        print("right")
+        # print("right")
         self.pi_right_img=self.undistort_right(_img)
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
@@ -179,7 +178,7 @@ class VisualCompensation():
                 # M = fm.SIFT_FLANN_matching(_img1, _img2)
                 M = fm.SIFT_FLANN_matching(_img2, _img1)
                 if fm.status == True:
-                    self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
+                    # self.pub_offset.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                     self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
                     self.virtual_map = self.app_robotview.img
 
@@ -345,6 +344,8 @@ class VisualCompensation():
         offset.x=del_x_canvas
         offset.y=del_y_canvas
         offset.z=del_th_virtual
+
+        print(offset)
 
         self.pub_offset.publish(offset)
         
