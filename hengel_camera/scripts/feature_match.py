@@ -111,8 +111,8 @@ class FeatureMatch():
             # print("sift_flann 3 Time: "+str(time.time()-_time))
 
             if len(good)>MIN_MATCH_COUNT:
-                print("FEATURE MATCH COUNT > MIN_MATCH_COUNT")
-                print([m.queryIdx for m in good])
+                # print("FEATURE MATCH COUNT > MIN_MATCH_COUNT")
+                # print([m.queryIdx for m in good])
 
                 # print(np.float32([ kp1[m.queryIdx].pt for m in good ]))
                 src_pts=np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
@@ -142,6 +142,7 @@ class FeatureMatch():
 
                     # Need to draw only good matches, so create a mask
                     matchesMask = [[0,0] for i in xrange(len(matches))]
+                    print("debug1")
                     # ratio test as per Lowe's paper
                     for i,(m,n) in enumerate(matches):
                         if m.distance < 0.7*n.distance:
@@ -150,14 +151,21 @@ class FeatureMatch():
                                     singlePointColor = (255,0,0),
                                     matchesMask = matchesMask,
                                     flags = 0)
+                    print("debug2")
                     img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
+                    # img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,flags=2)
+                    print("debug3")
 
                     # cv2.imwrite(self.folder_path+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
 
                     plt.subplot(313)
                     plt.imshow(img3, cmap='gray')
+
+                    print("sift_flann match finished")
             else:
-                print("Feature Match FAILED")
+                print("Feature Match FAILED (Not enough features)")
+        else:
+            print("Feature Match FAILED (Empty Descriptor)")
 
         plt.savefig(self.folder_path+"/SIFT_FLANN_"+time.strftime("%y%m%d_%H%M%S")+".png")
 

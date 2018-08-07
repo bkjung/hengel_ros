@@ -160,8 +160,6 @@ class VisualCompensation():
 
             homography_virtual_map=self.crop_image(self.virtual_map) #background is black
 
-            print("DEBUG111")
-
             # im_mask, im_mask_inv = self.find_mask(homography_virtual_map)
 
             # im_white=np.full((1280,1280),255)
@@ -170,8 +168,6 @@ class VisualCompensation():
             # self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
             self.cropped_virtual_map=homography_virtual_map.astype('uint8')
 
-            print("DEBUG222")
-
             #################
             try:
                 fm = FeatureMatch(self.folder_path)
@@ -179,7 +175,7 @@ class VisualCompensation():
                 # if self.cropped_virtual_map is None or summed_image is None:
                 if self.cropped_virtual_map is None or summed_image is None:
                     print("IMAGE EMPTY")
-                    raise Exeption("Image Empty")
+                    raise Exception("Image Empty")
                 else:
 
                     
