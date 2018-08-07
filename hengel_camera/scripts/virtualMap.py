@@ -168,15 +168,15 @@ class VisualCompensation():
                 raise Exeption("Image Empty")
             else:
                 # print("img1 "+str(self.virtual_map.dtype)+" "+"img2 "+str(summed_image.dtype))
-                _img1 = np.uint8(self.cropped_virtual_map)
+                # _img1 = np.uint8(self.cropped_virtual_map)
+                _img1 = np.uint8(self.virtual_map)
                 _img2 = np.uint8(summed_image)
 
                 # _img1 = cv2.cvtColor(_img1, cv2.COLOR_BGR2GRAY)
                 # _img2 = cv2.cvtColor(_img2, cv2.COLOR_BGR2GRAY)
 
-
-
-                M = fm.SIFT_FLANN_matching(_img1, _img2)
+                # M = fm.SIFT_FLANN_matching(_img1, _img2)
+                M = fm.SIFT_FLANN_matching(_img2, _img1)
                 if fm.status == True:
                     self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                     self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
