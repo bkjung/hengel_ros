@@ -179,8 +179,8 @@ class VisualCompensation():
                 M = fm.SIFT_FLANN_matching(_img2, _img1)
                 if fm.status == True:
                     # self.pub_offset.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
-                    self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
-                    self.virtual_map = self.app_robotview.img
+                    # self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
+                    # self.virtual_map = self.app_robotview.img
 
                     #Initialize Queue
                     self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
@@ -317,7 +317,7 @@ class VisualCompensation():
         # im_white_masked=np.uint8(np.multiply(im_white, im_mask))
         # homography_virtual_map_masked=np.uint8(np.multiply(homography_virtual_map, im_mask_inv))
         # self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
-        self.cropped_virtual_map=homography_virtual_map.astype('uint8')
+        # self.cropped_virtual_map=homography_virtual_map.astype('uint8')
 
         
         ttime=Float32()
@@ -329,14 +329,17 @@ class VisualCompensation():
 
 
     def relocalization(self, homography):
-        mid_real_virtual_x, mid_real_virtual_y, _= np.multiply(homography, [self.mid_real_photo_x, self.mid_real_photo_y, 1])
+        mid_real_virtual_x, mid_real_virtual_y, _= np.matmul(homography, [self.mid_real_photo_x, self.mid_real_photo_y, 1])
         del_x_virtual=mid_real_virtual_x-self.mid_real_photo_x
         del_y_virtual=mid_real_virtual_y-self.mid_real_photo_y
         del_th_virtual=-atan2(homography[0][1],homography[0][0])
 
         rotation=np.array([[cos(self.mid_predict_canvas_th), -sin(self.mid_predict_canvas_th)],
                             [sin(self.mid_predict_canvas_th), cos(self.mid_predict_canvas_th)]])
-        del_x_canvas, del_y_canvas = np.multiply(rotation, [-del_x_virtual, -del_y_virtual])
+
+        print(rotation.shape)
+        print(del_x_virtual.shape)
+        del_x_canvas, del_y_canvas = np.matmul(rotation, [-del_x_virtual, -del_y_virtual])
         # *(-1) in del_x_virtual for calibration of x waypoint coordinate
         # *(-1) in del_y_virtual for calibration of image coordiate to canvas coordinate
         
@@ -348,9 +351,6 @@ class VisualCompensation():
         print(offset)
 
         self.pub_offset.publish(offset)
-        
-        
-
         
 
     def crop_image(self, _img):
