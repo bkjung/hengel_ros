@@ -34,6 +34,8 @@ class RobotView():
         self.end_y=self.img.shape[0]-_endpoint.y*self.pixMetRatio
         #self.spray_intensity=_spray.goal_position
         self.spray_intensity=_endpoint.z
+        if self.spray_intensity ==0 :
+            self.spray_intensity=1
         # print("end_x: "+str( self.end_x)+", end_y: "+str(self.end_y)+", spray: "+str(self.spray_intensity))
 
         # print(self.end_x, self.img.shape[1], self.end_y, self.img.shape[0])

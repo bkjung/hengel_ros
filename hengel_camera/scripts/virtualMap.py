@@ -133,16 +133,12 @@ class VisualCompensation():
 
             img_white=np.full((1280, 1280), 255)
 
-            im_mask13=cv2.bitwise_and(np.array(im_mask1), np.array(im_mask3))
-            im_mask24=cv2.bitwise_and(np.array(im_mask2), np.array(im_mask4))
-            im_mask_inv_13=cv2.bitwise_and(np.array(im_mask_inv1), np.array(im_mask_inv3))
-            im_mask_inv_24=cv2.bitwise_and(np.array(im_mask_inv2), np.array(im_mask_inv4))
+            im_mask13=cv2.bitwise_and(np.array(im_mask1).astype('uint8'), np.array(im_mask3).astype('uint8'))
+            im_mask24=cv2.bitwise_and(np.array(im_mask2).astype('uint8'), np.array(im_mask4).astype('uint8'))
+            im_mask_inv_13=cv2.bitwise_and(np.array(im_mask_inv1).astype('uint8'), np.array(im_mask_inv3).astype('uint8'))
+            im_mask_inv_24=cv2.bitwise_and(np.array(im_mask_inv2).astype('uint8'), np.array(im_mask_inv4).astype('uint8'))
             im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
             im_mask_inv1234=cv2.bitwise_and(im_mask_inv_13, im_mask_inv_24)
-
-            # print("im_mask13.dtype : "+str(im_mask13.dtype))
-            # print("im_mask24.dtype : "+str(im_mask24.dtype))
-            # print("im_mask1234.dtype : "+str(im_mask1234.dtype))
 
             img_white_masked=np.multiply(img_white, im_mask_inv1234).astype('uint8')
             img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4).astype('uint8')
@@ -162,19 +158,18 @@ class VisualCompensation():
 
 
             homography_virtual_map=self.crop_image(self.virtual_map) #background is black
-
             im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
-            print("DEBUG111")
-
             # im_mask, im_mask_inv = self.find_mask(homography_virtual_map)
 
-            im_white=np.full((1280,1280),255)
-            im_white_masked=np.uint8(np.multiply(im_white, im_mask_inv))
-            homography_virtual_map_masked=np.uint8(np.multiply(homography_virtual_map, im_mask))
-            self.cropped_virtual_map=(im_white_masked+homography_virtual_map_masked).astype('uint8')
+            im_white=np.full((1280,1280),255).astype('uint8')
+            im_white_masked=np.multiply(im_white, np.array(im_mask)).astype('uint8')
+            homography_virtual_map_masked=np.multiply(homography_virtual_map, im_mask_inv).astype('uint8')
+            # self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
+            self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
+            # self.cropped_virtual_map=im_white
+
             # self.cropped_virtual_map=homography_virtual_map.astype('uint8')
 
-            print("DEBUG222")
 
             #################
             try:
@@ -183,12 +178,10 @@ class VisualCompensation():
                 # if self.cropped_virtual_map is None or summed_image is None:
                 if self.cropped_virtual_map is None or summed_image is None:
                     print("IMAGE EMPTY")
-                    raise Exeption("Image Empty")
+                    raise Exception("Image Empty")
                 else:
-
-                    
                     M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
-                    # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
+                    # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtusal_map)
                     if fm.status == True:
                         # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                         # self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
@@ -306,9 +299,9 @@ class VisualCompensation():
         # print(img.shape)
         _time=time.time()
         black_range1=np.array([0])
-        im_mask=(cv2.inRange(img, black_range1, black_range1))
+        im_mask=(cv2.inRange(img, black_range1, black_range1)).astype('bool')
         # im_mask=np.dstack((im_mask, im_mask, im_mask))
-        im_mask_inv=(1-im_mask)
+        im_mask_inv=(1-im_mask).astype('bool')
         return im_mask_inv, im_mask
 
     def undistort1(self, _img):

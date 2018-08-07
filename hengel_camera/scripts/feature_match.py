@@ -60,6 +60,8 @@ class FeatureMatch():
 
         plt.figure(1, figsize=(10, 20))
         plt.subplot(311)
+        # cv2.imshow("white", img1)
+        # cv2.waitKey(3)
         plt.imshow(img1, cmap='gray')
         plt.subplot(312)
         plt.imshow(img2, cmap='gray')
