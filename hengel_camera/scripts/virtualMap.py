@@ -68,7 +68,6 @@ class VisualCompensation():
         self.ts.registerCallback(self.sync_virtual_callback)
 
         self.pub_virtual_map=rospy.Publisher('/virtual_map', CompressedImage, queue_size=3)
-        self.vision_offset_publisher = rospy.Publisher('/offset_change', Point, queue_size=10)
         self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
         self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
         self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
@@ -100,15 +99,13 @@ class VisualCompensation():
         rospy.spin()
 
 
-
-
 #################################################################
     def callback_left(self, _img):
-        print("left")
+        # print("left")
         self.pi_left_img=self.undistort_left(_img)
 
     def callback_right(self, _img):
-        print("right")
+        # print("right")
         self.pi_right_img=self.undistort_right(_img)
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
@@ -164,10 +161,12 @@ class VisualCompensation():
             print("summed_image time: "+str(time.time()-_time))
 
 
-
             homography_virtual_map=self.crop_image(self.virtual_map) #background is black
 
             im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
+            print("DEBUG111")
+
+            # im_mask, im_mask_inv = self.find_mask(homography_virtual_map)
 
             im_white=np.full((1280,1280),255)
             im_white_masked=np.uint8(np.multiply(im_white, im_mask_inv))
@@ -175,6 +174,7 @@ class VisualCompensation():
             self.cropped_virtual_map=(im_white_masked+homography_virtual_map_masked).astype('uint8')
             # self.cropped_virtual_map=homography_virtual_map.astype('uint8')
 
+            print("DEBUG222")
 
             #################
             try:
@@ -186,11 +186,13 @@ class VisualCompensation():
                     raise Exeption("Image Empty")
                 else:
 
+                    
                     M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
+                    # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
                     if fm.status == True:
-                        self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
-                        self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
-                        self.virtual_map = self.app_robotview.img
+                        # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
+                        # self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
+                        # self.virtual_map = self.app_robotview.img
 
                         #Initialize Queue
                         self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
@@ -209,96 +211,10 @@ class VisualCompensation():
             # bridge=CvBridge()
             # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
             # self.sum_pub.publish(summed_msg)
+
+        else:
+            print("Navigation not started yet")
 #################################################################
-
-    # def sync_real_callback(self, _img1, _img2, _img3, _img4, _img_left, _img_right):
-    #     _time=time.time()
-    #     print("sync real")
-    #     img1 = self.undistort1(_img1)
-    #     img2 = self.undistort2(_img2)
-    #     img3 = self.undistort3(_img3)
-    #     img4 = self.undistort4(_img4)
-    #     # print("img1: "+str(_img1.header.stamp)+", img2: "+str(_img2.header.stamp))
-    #     # print("img3: "+str(_img3.header.stamp)+", img4: "+str(_img4.header.stamp))
-    #     img_left=self.undistort_left(_img_left)
-    #     img_right=self.undistort_right(_img_right)
-    #     # while len(self.pi_left_img)==0 or len(self.pi_right_img)==0:
-    #         # print("empty pi_left or pi_right")
-    #         # time.sleep(100)
-
-    #     # img_left=copy.deepcopy(self.pi_left_img)
-    #     # img_right=copy.deepcopy(self.pi_right_img)
-
-    #     im_mask_inv1, im_mask1=self.find_mask(img1)
-    #     im_mask_inv3, im_mask3=self.find_mask(img3)
-    #     _, im_mask2=self.find_mask(img2)
-    #     _, im_mask4=self.find_mask(img4)
-    #     _, im_mask_l=self.find_mask(img_left)
-    #     _, im_mask_r=self.find_mask(img_right)
-
-    #     img_white=np.full((1280, 1280), 255)
-
-    #     im_mask13=cv2.bitwise_and(np.array(im_mask1), np.array(im_mask3))
-    #     im_mask24=cv2.bitwise_and(np.array(im_mask2), np.array(im_mask4))
-    #     im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
-
-    #     img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4).astype('uint8')
-    #     # img_white_masked=np.multiply(np.multiply(np.multiply(img_white, im_mask1234), im_mask_l), im_mask_r).astype('uint8')
-    #     img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask2).astype('uint8')
-    #     img1_masked=np.multiply(img1, im_mask_inv1).astype('uint8')
-    #     img3_masked=np.multiply(img3, im_mask_inv3).astype('uint8')
-    #     img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r).astype('uint8')
-    #     img_right_masked=np.multiply(np.multiply(img_right, im_mask1234), im_mask_l).astype('uint8')
-        
-    #     # summed_image=img1_masked+img2_masked+img3_masked+img4_masked+img_white_masked+img_left_masked+img_right_masked
-    #     summed_image=img1_masked+img2_masked+img3_masked+img4_masked+img_left_masked+img_right_masked
-    #     summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
-
-    #     self.pub_sum.publish(summed_msg)
-    #     print("summed_image time: "+str(time.time()-_time))
-
-
-    #     #################
-    #     try:
-    #         fm = FeatureMatch(self.folder_path)
-    #         # print("img1: "+str(self.virtual_map.shape)+", img2: "+str(summed_image.shape))
-    #         if self.cropped_virtual_map is None or summed_image is None:
-    #             print("IMAGE EMPTY")
-    #             raise Exeption("Image Empty")
-    #         else:
-    #             # print("img1 "+str(self.virtual_map.dtype)+" "+"img2 "+str(summed_image.dtype))
-    #             _img1 = np.uint8(self.cropped_virtual_map)
-    #             _img2 = np.uint8(summed_image)
-
-    #             # _img1 = cv2.cvtColor(_img1, cv2.COLOR_BGR2GRAY)
-    #             # _img2 = cv2.cvtColor(_img2, cv2.COLOR_BGR2GRAY)
-
-
-
-    #             M = fm.SIFT_FLANN_matching(_img1, _img2)
-    #             if fm.status == True:
-    #                 self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
-    #                 self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
-    #                 self.virtual_map = self.app_robotview.img
-
-    #                 #Initialize Queue
-    #                 self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
-
-    #                 self.relocalization(M)
-
-
-    #     except Exception as e:
-    #         print(e)
-    #         sys.exit("Feature Match error")
-
-    #     #################
-
-    #     print("Cam Input -> Visual Calc / Total Time: "+str(time.time()-_time))
-
-    #     # bridge=CvBridge()
-    #     # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
-    #     # self.sum_pub.publish(summed_msg)
-
 
 
     def sync_virtual_callback(self, _endPoint, _midPoint):
@@ -347,10 +263,9 @@ class VisualCompensation():
         offset.y=del_y_canvas
         offset.z=del_th_virtual
 
-        self.pub_offset.publish(offset)
-        
-        
+        print(offset)
 
+        self.pub_offset.publish(offset)
         
 
     def crop_image(self, _img):

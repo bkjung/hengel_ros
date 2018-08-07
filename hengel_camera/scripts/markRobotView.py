@@ -40,7 +40,7 @@ class RobotView():
 
         if self.end_x>=0 and self.end_x<self.img.shape[1] and self.end_y>=0 and self.end_y<self.img.shape[0]:
             
-            # print("run")
+            # print("add run")
             self.add_endpoint()
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
 
