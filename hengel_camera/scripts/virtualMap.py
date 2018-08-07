@@ -129,22 +129,25 @@ class VisualCompensation():
 
             im_mask_inv1, im_mask1=self.find_mask(img1)
             im_mask_inv3, im_mask3=self.find_mask(img3)
-            _, im_mask2=self.find_mask(img2)
-            _, im_mask4=self.find_mask(img4)
+            im_mask_inv2, im_mask2=self.find_mask(img2)
+            im_mask_inv4, im_mask4=self.find_mask(img4)
             # _, im_mask_l=self.find_mask(img_left)
             # _, im_mask_r=self.find_mask(img_right)
 
-            # img_white=np.full((1280, 1280), 255)
+            img_white=np.full((1280, 1280), 255)
 
             im_mask13=cv2.bitwise_and(np.array(im_mask1), np.array(im_mask3))
             im_mask24=cv2.bitwise_and(np.array(im_mask2), np.array(im_mask4))
+            im_mask_inv_13=cv2.bitwise_and(np.array(im_mask_inv1), np.array(im_mask_inv3))
+            im_mask_inv_24=cv2.bitwise_and(np.array(im_mask_inv2), np.array(im_mask_inv4))
             im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
+            im_mask_inv1234=cv2.bitwise_and(im_mask_inv_13, im_mask_inv_24)
 
             # print("im_mask13.dtype : "+str(im_mask13.dtype))
             # print("im_mask24.dtype : "+str(im_mask24.dtype))
             # print("im_mask1234.dtype : "+str(im_mask1234.dtype))
 
-            # img_white_masked=np.multiply(np.multiply(np.multiply(img_white, im_mask1234), im_mask_l), im_mask_r).astype('uint8')
+            img_white_masked=np.multiply(img_white, im_mask_inv1234).astype('uint8')
             img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4).astype('uint8')
             img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask2).astype('uint8')
             img1_masked=np.multiply(img1, im_mask_inv1).astype('uint8')
@@ -154,7 +157,7 @@ class VisualCompensation():
             
             # summed_image=img1_masked+img2_masked+img3_masked+img4_masked+img_white_masked+img_left_masked+img_right_masked
             # summed_image=img1_masked+img2_masked+img3_masked+img4_masked+img_left_masked+img_right_masked
-            summed_image=img1_masked+img2_masked+img3_masked+img4_masked
+            summed_image=img1_masked+img2_masked+img3_masked+img4_masked+img_white_masked
             summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
 
             self.pub_sum.publish(summed_msg)
@@ -164,13 +167,13 @@ class VisualCompensation():
 
             homography_virtual_map=self.crop_image(self.virtual_map) #background is black
 
-            # im_mask, im_mask_inv = self.find_mask(homography_virtual_map)
+            im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
 
-            # im_white=np.full((1280,1280),255)
-            # im_white_masked=np.uint8(np.multiply(im_white, im_mask))
-            # homography_virtual_map_masked=np.uint8(np.multiply(homography_virtual_map, im_mask_inv))
-            # self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
-            self.cropped_virtual_map=homography_virtual_map.astype('uint8')
+            im_white=np.full((1280,1280),255)
+            im_white_masked=np.uint8(np.multiply(im_white, im_mask_inv))
+            homography_virtual_map_masked=np.uint8(np.multiply(homography_virtual_map, im_mask))
+            self.cropped_virtual_map=(im_white_masked+homography_virtual_map_masked).astype('uint8')
+            # self.cropped_virtual_map=homography_virtual_map.astype('uint8')
 
 
             #################
