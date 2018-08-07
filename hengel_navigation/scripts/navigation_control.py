@@ -2,7 +2,7 @@
 
 import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, Time
 from sensor_msgs.msg import Image, CompressedImage
 from nav_msgs.msg import Path
 from visualization_msgs.msg import Marker
@@ -313,6 +313,7 @@ class NavigationControl():
         self.pub_distance = rospy.Publisher('/distance', Float32, queue_size=5)
         self.pub_endpoint = rospy.Publisher('/endpoint', Point, queue_size=5)
         self.pub_midpoint = rospy.Publisher('/midpoint', Point, queue_size=5)
+        self.pub_midpoint_time = rospy.Publisher('/midpoint_time', Time, queue_size=5)
 
         print("Initialize Done")
 
@@ -704,6 +705,9 @@ class NavigationControl():
             self.point.z=self.heading.data
             self.pub_midpoint.publish(self.point)
             self.pub_endpoint.publish(self.endPoint)
+            msg_time = Time()
+            msg_time.data = rospy.Time.now()
+            self.pub_midpoint_time.publish(msg_time)
 
             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
             print(str(self.endPoint.x)+"  "+str(self.endPoint.y))
