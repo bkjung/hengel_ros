@@ -77,7 +77,8 @@ class VisualCompensation():
         #self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4, self.callback_pi_left, self.callback_pi_right ], 10, 0.1, allow_headerless=True)
 
         #self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback34], 10,0.1, allow_headerless=True)
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=True)
+        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 1,0.1, allow_headerless=False)
+        # self.ts=message_filters.TimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 1)
         self.ts.registerCallback(self.sync_real_callback)
 
         ############################ DEBUG ################################
