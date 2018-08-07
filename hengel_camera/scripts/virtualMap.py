@@ -2,7 +2,7 @@
 
 import rospy
 from geometry_msgs.msg import Point
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, Time, Header
 from sensor_msgs.msg import Image, CompressedImage
 from markRobotView import RobotView
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos, asin,ceil
@@ -19,6 +19,14 @@ import collections
 from feature_match import FeatureMatch
 from matplotlib import pyplot as plt
 from hengel_camera.msg import CmpImg
+
+# def ros_time_to_float(msg_time):
+#     # print(type(msg_time))
+#     # print(type(msg_time.data))
+#     # print(type(msg_time.secs))
+#     print(msg_time)
+#     print(msg_time.data)
+#     return msg_time.sec+msg_time.nsec*0.000000001
 
 class VisualCompensation():
     def __init__(self, _num_pts_delete):
@@ -48,23 +56,22 @@ class VisualCompensation():
         self.virtual_map=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
         self.app_robotview=RobotView(self.virtual_map) # Add the endpoint into the virtual map
 
-
         self.pi_left_img=np.array([])
         self.pi_right_img=np.array([])
 
-        
-
-        self.mid_predict_canvas_x=0
-        self.mid_predict_canvas_y=0
-        self.mid_predict_canvas_th=0
+        self.mid_predict_canvas_x=[]
+        self.mid_predict_canvas_y=[]
+        self.mid_predict_canvas_th=[]
+        self.mid_predict_canvas_time=[]
 
         self.mid_real_photo_x=640+55.77116996/2
         self.mid_real_photo_y=640
 
         self.endPoint_callback=message_filters.Subscriber('/endpoint', Point)
         self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
+        self.midPoint_time_callback=message_filters.Subscriber('/midpoint_time', Time)
 
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.endPoint_callback, self.midPoint_callback], 10, 0.1, allow_headerless=True)
+        self.ts=message_filters.ApproximateTimeSynchronizer([self.endPoint_callback, self.midPoint_callback, self.midPoint_time_callback], 10, 0.1, allow_headerless=True)
         self.ts.registerCallback(self.sync_virtual_callback)
 
         self.pub_virtual_map=rospy.Publisher('/virtual_map', CompressedImage, queue_size=3)
@@ -109,7 +116,22 @@ class VisualCompensation():
         self.pi_right_img=self.undistort_right(_img)
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
-        if self.isNavigationStarted:     
+        if self.isNavigationStarted:
+            image_time = (_img1.header.stamp.to_nsec()+_img2.header.stamp.to_nsec()+_img3.header.stamp.to_nsec()+_img4.header.stamp.to_nsec())/4.0
+
+            min_diff = 999999999999999.9
+            min_index = -1
+            for i in range(len(self.mid_predict_canvas_time)):
+                curr_diff = abs(self.mid_predict_canvas_time[i]-image_time)
+                if (curr_diff < min_diff):
+                    min_diff = curr_diff
+                    min_index = i
+
+            self.mid_predict_img_x=-self.mid_predict_canvas_x[min_index] *self.pixMetRatio
+            self.mid_predict_img_y=self.virtual_map.shape[0]-self.mid_predict_canvas_y[min_index]*self.pixMetRatio
+            self.mid_predict_img_th=-self.mid_predict_canvas_th[min_index]
+                    
+
             _time=time.time()
             print("sync real")
             img1 = self.undistort1(_img1)
@@ -159,7 +181,6 @@ class VisualCompensation():
 
             homography_virtual_map=self.crop_image(self.virtual_map) #background is black
             im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
-            # im_mask, im_mask_inv = self.find_mask(homography_virtual_map)
 
             im_white=np.full((1280,1280),255).astype('uint8')
             im_white_masked=np.multiply(im_white, np.array(im_mask)).astype('uint8')
@@ -169,7 +190,6 @@ class VisualCompensation():
             # self.cropped_virtual_map=im_white
 
             # self.cropped_virtual_map=homography_virtual_map.astype('uint8')
-
 
             #################
             try:
@@ -210,15 +230,17 @@ class VisualCompensation():
 #################################################################
 
 
-    def sync_virtual_callback(self, _endPoint, _midPoint):
+    def sync_virtual_callback(self, _endPoint, _midPoint, _midPointTime):
         if not self.isNavigationStarted:
             self.isNavigationStarted = True
         # print("sync virtual")
-        _time=time.time()
+        # _time=time.time()
 
-        self.mid_predict_canvas_x=_midPoint.x
-        self.mid_predict_canvas_y=_midPoint.y
-        self.mid_predict_canvas_th=_midPoint.z
+        self.mid_predict_canvas_x.append(_midPoint.x)
+        self.mid_predict_canvas_y.append(_midPoint.y)
+        self.mid_predict_canvas_th.append(_midPoint.z)
+        # self.mid_predict_canvas_time.append(ros_time_to_float(_midPointTime))
+        self.mid_predict_canvas_time.append(_midPointTime.data.to_nsec())
 
         self.recent_pts.appendleft((_midPoint.x, _midPoint.y))
 
@@ -226,13 +248,13 @@ class VisualCompensation():
         self.app_robotview.run(_midPoint, _endPoint)
         self.virtual_map = self.app_robotview.img
 
-        self.mid_predict_img_x=-self.mid_predict_canvas_x *self.pixMetRatio
-        self.mid_predict_img_y=self.virtual_map.shape[0]-self.mid_predict_canvas_y*self.pixMetRatio
-        self.mid_predict_img_th=-self.mid_predict_canvas_th
+        # self.mid_predict_img_x=-self.mid_predict_canvas_x *self.pixMetRatio
+        # self.mid_predict_img_y=self.virtual_map.shape[0]-self.mid_predict_canvas_y*self.pixMetRatio
+        # self.mid_predict_img_th=-self.mid_predict_canvas_th
 
         
-        ttime=Float32()
-        ttime.data=float(time.time()-_time)
+        # ttime=Float32()
+        # ttime.data=float(time.time()-_time)
 
         #PUBLISHING VIRTUAL MAP, but currently the msg cannot be viewed at rqt (supposedly because of msgtype mismatch)
         # virtual_map_msg=self.bridge.cv2_to_compressed_imgmsg(self.virtual_map)
