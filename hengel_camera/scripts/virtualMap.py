@@ -286,6 +286,8 @@ class VisualCompensation():
 
             # self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
             self.cropped_virtual_map=im_white_masked+homography_virtual_map
+
+            print("crop image time: "+str(time.time()-_time))
          
 ##################################################################################
 
@@ -316,7 +318,7 @@ class VisualCompensation():
 
             #################
 
-            print("Total Time (visaul feedback): "+str(time.time()-_time))
+            print("Total Time (visual feedback): "+str(time.time()-_time))
 
             # bridge=CvBridge()
             # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)

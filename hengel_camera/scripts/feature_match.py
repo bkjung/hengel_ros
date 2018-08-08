@@ -81,6 +81,7 @@ class FeatureMatch():
         # kp2, des2=orb.detectAndCompute(img2, None)
 
         # print("sift_flann 1 Time: "+str(time.time()-_time))
+        print("sift_flann 1 Time: "+str(time.time()-_time))
 
         MIN_MATCH_COUNT=10
         FLANN_INDEX_KDTREE=0
@@ -93,7 +94,7 @@ class FeatureMatch():
         if des1 is not None and des2 is not None:
             matches = flann.knnMatch(des1,des2,k=2)
 
-            # print("sift_flann 2 Time: "+str(time.time()-_time))
+            print("sift_flann 2 Time: "+str(time.time()-_time))
 
             #store all the good matches as per Lowe's ratio test
             good=[]
@@ -106,7 +107,7 @@ class FeatureMatch():
             # print("abc",kp1[good[3].queryIdx].pt)
 
 
-            # print("sift_flann 3 Time: "+str(time.time()-_time))
+            print("sift_flann 3 Time: "+str(time.time()-_time))
 
             if len(good)>MIN_MATCH_COUNT:
                 # print("FEATURE MATCH COUNT > MIN_MATCH_COUNT")

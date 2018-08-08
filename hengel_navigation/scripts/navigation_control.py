@@ -375,7 +375,7 @@ class NavigationControl():
                         new_point_theta = self.heading.data + self.offset_theta
 
                         new_endpoint_x=new_point_x-self.D*cos(self.heading.data)
-                        new_endpoint_y=new_opint_y-self.D*sin(self.heading.data)
+                        new_endpoint_y=new_point_y-self.D*sin(self.heading.data)
                         new_endpoint_z=0.0
 
                         dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
