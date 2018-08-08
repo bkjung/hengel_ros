@@ -281,7 +281,7 @@ class VisualCompensation():
             # self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
             self.cropped_virtual_map=im_white_masked+homography_virtual_map
 
-            print("summed_image time: "+str(time.time()-_time))
+            print("crop image time: "+str(time.time()-_time))
          
 ##################################################################################
 
