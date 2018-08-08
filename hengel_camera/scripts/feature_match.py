@@ -71,9 +71,6 @@ class FeatureMatch():
         self.status = False
         sift=cv2.xfeatures2d.SIFT_create()
 
-        # cv2.imwrite("/home/bkjung/img1.png", img1)
-        # cv2.imwrite("/home/bkjung/img2.png", img2)
-
         # print("img1: "+str(img1.shape)+", img2: "+str(img2.shape))
 
         # print("sift_flann 0 Time: "+str(time.time()-_time))
@@ -119,12 +116,12 @@ class FeatureMatch():
                 src_pts=np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
                 dst_pts=np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
-                M, mask= cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+                M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
                 if M is None:
                     print("Homography mtx M is None !!!!")
                 else:
                     self.status = True
-                    print(M)
+                    # print(M)
 
                     # print("DEBUG-1")
                     # img1_homo=cv2.warpPerspective(img1, M, (1280, 1280))
