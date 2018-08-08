@@ -130,11 +130,15 @@ class VisualCompensation():
                     min_diff = curr_diff
                     min_index = i
 
-            self.mid_predict_img_x=-self.mid_predict_canvas_x[min_index] *self.pixMetRatio
-            self.mid_predict_img_y=self.virtual_map.shape[0]-self.mid_predict_canvas_y[min_index]*self.pixMetRatio
-            self.mid_predict_img_th=-self.mid_predict_canvas_th[min_index]
-
+            self.current_mid_predict_canvas_x = self.mid_predict_canvas_x[min_index]
+            self.current_mid_predict_canvas_y = self.mid_predict_canvas_y[min_index]
+            self.current_mid_predict_canvas_th = self.mid_predict_canvas_th[min_index]
             self.isProcessingVirtualmapTime = False
+
+            self.mid_predict_img_x=-self.current_mid_predict_canvas_x *self.pixMetRatio
+            self.mid_predict_img_y=self.virtual_map.shape[0]-self.current_mid_predict_canvas_y*self.pixMetRatio
+            self.mid_predict_img_th=-self.current_mid_predict_canvas_th
+
             print("Processing Virtualmap Sync Time: "+str(time.time()-_time))
                     
 
@@ -337,11 +341,6 @@ class VisualCompensation():
             self.app_robotview.run(_midPoint, _endPoint)
             self.virtual_map = self.app_robotview.img
 
-            # self.mid_predict_img_x=-self.mid_predict_canvas_x *self.pixMetRatio
-            # self.mid_predict_img_y=self.virtual_map.shape[0]-self.mid_predict_canvas_y*self.pixMetRatio
-            # self.mid_predict_img_th=-self.mid_predict_canvas_th
-
-            
             # ttime=Float32()
             # ttime.data=float(time.time()-_time)
 
@@ -354,14 +353,16 @@ class VisualCompensation():
         print("debug1")
         mid_real_virtual_x, mid_real_virtual_y, _= np.matmul(homography, [self.mid_real_photo_x, self.mid_real_photo_y, 1])
         print("debug2")
+        print(mid_real_virtual_x)
+        print(self.mid_real_photo_x)
         del_x_virtual=mid_real_virtual_x-self.mid_real_photo_x
         print("debug3")
         del_y_virtual=mid_real_virtual_y-self.mid_real_photo_y
         print("debug4")
         del_th_virtual=-atan2(homography[0][1],homography[0][0])
         print("debug5")
-        rotation=np.array([[cos(self.mid_predict_canvas_th), -sin(self.mid_predict_canvas_th)],
-                            [sin(self.mid_predict_canvas_th), cos(self.mid_predict_canvas_th)]])
+        rotation=np.array([[cos(self.current_mid_predict_canvas_th), -sin(self.current_mid_predict_canvas_th)],
+                            [sin(self.current_mid_predict_canvas_th), cos(self.current_mid_predict_canvas_th)]])
         print("debug6")
         del_x_canvas, del_y_canvas = np.matmul(rotation, [-del_x_virtual, -del_y_virtual])
         # *(-1) in del_x_virtual for calibration of x waypoint coordinate
