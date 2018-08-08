@@ -303,8 +303,9 @@ class VisualCompensation():
                         #Initialize Queue
                         # self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
 
+                        __time=time.time()
                         self.relocalization(M)
-
+                        print("relocation time: "+str(time.time()-__time))
 
             except Exception as e:
                 print(e)

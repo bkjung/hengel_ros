@@ -172,7 +172,7 @@ class FeatureMatch():
         # plt.draw()
         # plt.pause(0.00000000001)
 
-        # print("sift_flann 4 Time: "+str(time.time()-_time))
+        print("sift_flann 4 Time: "+str(time.time()-_time))
 
         return M
 
