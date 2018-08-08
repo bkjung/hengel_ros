@@ -69,16 +69,16 @@ class FeatureMatch():
         _time=time.time()
 
         self.status = False
+
         sift=cv2.xfeatures2d.SIFT_create()
-
-        # print("img1: "+str(img1.shape)+", img2: "+str(img2.shape))
-
-        # print("sift_flann 0 Time: "+str(time.time()-_time))
-
         ############ Slow Part ############
         kp1, des1 = sift.detectAndCompute(img1, None)
         kp2, des2 = sift.detectAndCompute(img2, None)
         ############ Slow Part ############
+
+        # orb=cv2.ORB_create(nfeatures=1500)
+        # kp1,des1=orb.detectAndCompute(img1, None)
+        # kp2, des2=orb.detectAndCompute(img2, None)
 
         # print("sift_flann 1 Time: "+str(time.time()-_time))
 
