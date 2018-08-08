@@ -140,7 +140,7 @@ class VisualCompensation():
             self.mid_predict_img_y=self.virtual_map.shape[0]-self.current_mid_predict_canvas_y*self.pixMetRatio
             self.mid_predict_img_th=-self.current_mid_predict_canvas_th
 
-            print("Processing Virtualmap Sync Time: "+str(time.time()-_time))
+            # print("Processing Virtualmap Sync Time: "+str(time.time()-_time))
 
             img1 = self.undistort1(_img1)
             img2 = self.undistort2(_img2)
@@ -274,7 +274,19 @@ class VisualCompensation():
             summed_image[631:650, 900:980]=165
             # cv2.imwrite('/home/bkjung/summed_image.png', summed_image)
             
-            print("summed_image time: "+str(time.time()-_time))
+            # print("summed_image time: "+str(time.time()-_time))
+
+            # for i in range(len(summed_image)):
+            #     for j in range(len(summed_image[i])):
+            #         if summed_image[i][j] >= 90:
+            #             summed_image[i][j] = 255
+            #         else:
+            #             summed_image[i][j] = 0
+            # summed_image = (summed_image <80) * summed_image
+            # summed_image= cv2.threshold(summed_image, 70, 255, cv2.THRESH_BINARY)[1]
+            # summed_image= cv2.threshold(summed_image, 90, 255, cv2.THRESH_BINARY)[1]
+            summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
+            # print(summed_image.shape)
 
 
             homography_virtual_map=self.crop_image(self.virtual_map) #background is black
@@ -287,7 +299,7 @@ class VisualCompensation():
             # self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
             self.cropped_virtual_map=im_white_masked+homography_virtual_map
 
-            print("crop image time: "+str(time.time()-_time))
+            print("sum & crop image time: "+str(time.time()-_time))
          
 ##################################################################################
 
