@@ -265,9 +265,15 @@ class VisualCompensation():
             
             # summed_image=img_white_masked
             summed_image=img1+img2_masked+img3+img4_masked+img_white_masked
-            summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
-
-            self.pub_sum.publish(summed_msg)
+            summed_image[531:571,497:577]=156
+            summed_image[535:570,597:706]=150
+            summed_image[620:651, 510:547]=176
+            summed_image[723: 744, 617: 708]=135
+            summed_image[608:659, 778:887]=153
+            summed_image[659:692, 866:935]=158
+            summed_image[631:650, 900:980]=165
+            # cv2.imwrite('/home/bkjung/summed_image.png', summed_image)
+            
             print("summed_image time: "+str(time.time()-_time))
 
 
@@ -322,7 +328,6 @@ class VisualCompensation():
         else:
             print("Navigation not started yet")
 #################################################################
-
 
     def sync_virtual_callback(self, _endPoint, _midPoint, _midPointTime):
         if not self.isNavigationStarted:
