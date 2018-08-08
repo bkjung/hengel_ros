@@ -55,7 +55,7 @@ class FeatureMatch():
         cv2.destroyAllWindows()
 
     def SIFT_FLANN_matching(self, img1, img2):
-        #(self, virtual_image, real_image)
+        #(self, real_image, virtual_image)
 
         plt.figure(1, figsize=(10, 20))
         plt.subplot(311)
