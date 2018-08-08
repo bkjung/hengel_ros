@@ -155,6 +155,7 @@ class NavigationControl():
         self.pen_distance_per_loop = Float32()
         self.endPoint= Point()
         self.heading = Float32()
+        self.heading.data = pi
         self.heading_encoder = Float32()
         self.move_cmd = Twist()
 
