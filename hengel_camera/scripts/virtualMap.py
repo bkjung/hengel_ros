@@ -388,7 +388,6 @@ class VisualCompensation():
 
         img_padding[padding:padding+_img.shape[0],padding:padding+_img.shape[1]]=_img
 
-        # cv2.imwrite("/home/bkjung/img_padding.png", img_padding)
         half_map_size_diagonal = 1280/sqrt(2)
         midpnt_offset=55.77116996/2 # in virtual map coordiate
 
