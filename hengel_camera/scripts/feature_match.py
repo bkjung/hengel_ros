@@ -12,7 +12,7 @@ class FeatureMatch():
         self.status = False
         self.folder_path  = _folder_path
 
-    def SIFT_KNN_matching(self, img1, img2):
+    def SIFT_BF_matching(self, img1, img2):
         sift = cv2.xfeatures2d.SIFT_create()
         kp1, des1= sift.detectAndCompute(img1, None)
         kp2, des2= sift.detectAndCompute(img2, None)
@@ -33,8 +33,6 @@ class FeatureMatch():
     def ORB_BF_matching(self, img1, img2):
         plt.figure(1, figsize=(10, 20))
         plt.subplot(311)
-        # cv2.imshow("white", img1)
-        # cv2.waitKey(3)
         plt.imshow(img1, cmap='gray')
         plt.subplot(312)
         plt.imshow(img2, cmap='gray')
@@ -57,49 +55,31 @@ class FeatureMatch():
             # Match descriptors
             matches = bf.match(des2, des1)
             # Sort them in the order of their distance
-            # matches = sorted(matches, key=lambda x:x.distance)
-
-            good=[]
-            print("debug0")
-            print(matches)
-            for m,n in matches:
-                print("debug1")
-                if m.distance < 0.7*n.distance:
-                    pring("debug2")
-                    good.append(m)
-
-            if len(good)>MIN_MATCH_COUNT:
-                src_pts=np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
-                dst_pts=np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
-
-                M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
-                if M is None:
-                    print("Homography mtx M is None !!!!")
-                else:
-                    self.status = True
-                    matchesMask = [[0,0] for i in xrange(len(matches))]
-                    # ratio test as per Lowe's paper
-                    for i,(m,n) in enumerate(matches):
-                        if m.distance < 0.7*n.distance:
-                            matchesMask[i]=[1,0]
-                    draw_params = dict(matchColor = (0,255,0),
-                                    singlePointColor = (255,0,0),
-                                    matchesMask = matchesMask,
-                                    flags = 0)
-                    img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
-                    # img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,flags=2)
-
-                    plt.subplot(313)
-                    plt.imshow(img3, cmap='gray')
-
-                    print("sift_flann match finished")
+            matches = sorted(matches, key=lambda x:x.distance)
+            src_pts=np.float32([ kp2[m.queryIdx].pt for m in matches]).reshape(-1,1,2)
+            dst_pts=np.float32([ kp1[m.trainIdx].pt for m in matches]).reshape(-1,1,2)
+            M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+            if M is None:
+                print("Homography mtx M is None !!!!")
             else:
-                print("Feature Match FAILED (Not enough features)")
+                self.status = True
+                matchesMask = [[0,0] for i in xrange(len(matches))]
+                draw_params = dict(matchColor = (0,255,0),
+                                singlePointColor = (255,0,0),
+                                flags = 0)
+                img3 = cv2.drawMatches(img2,kp2,img1,kp1,matches[:10],None,**draw_params)
+                plt.subplot(313) 
+                plt.imshow(img3, cmap='gray')
+
+                print("sift_flann match finished")
+            # else:
+            #     print("Feature Match FAILED (Not enough features)")
         else:
             print("Feature Match FAILED (Empty Descriptor)")
 
         file_time = time.strftime("%y%m%d_%H%M%S")
         plt.savefig(self.folder_path+"/SIFT_FLANN_"+file_time+".png")
+        plt.close("all")
         print("FeatureMatch Saved to "+file_time)
 
         return M
@@ -160,13 +140,6 @@ class FeatureMatch():
                 if m.distance < 0.8*n.distance:
                     good.append(m)
                     matchesMask[i]=[1,0]
-
-            # print(len(kp1))
-
-            # print("abc",kp1[good[3].queryIdx].pt)
-
-
-            # print("sift_flann 3 Time: "+str(time.time()-_time))
 
             if len(good)>MIN_MATCH_COUNT:
                 # print("FEATURE MATCH COUNT > MIN_MATCH_COUNT")

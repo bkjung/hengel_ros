@@ -312,7 +312,7 @@ class VisualCompensation():
                     raise Exception("Image Empty")
                 else:
                     # M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
-                    M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
+                    M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
                     # M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
                     if fm.status == True:
                         # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
