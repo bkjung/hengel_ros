@@ -168,7 +168,9 @@ class FeatureMatch():
         else:
             print("Feature Match FAILED (Empty Descriptor)")
 
-        plt.savefig(self.folder_path+"/SIFT_FLANN_"+time.strftime("%y%m%d_%H%M%S")+".png")
+        file_time = time.strftime("%y%m%d_%H%M%S")
+        plt.savefig(self.folder_path+"/SIFT_FLANN_"+file_time+".png")
+        print("FeatureMatch Saved to "+file_time)
 
         # plt.draw()
         # plt.pause(0.00000000001)
@@ -186,7 +188,6 @@ if __name__=="__main__":
     app.SIFT_FLANN_matching(img_photo, img_virtual)
     # SIFT_KNN_matching(img1, img2)
     # ORB_BF_matching(img1, img2)
-
     # surf = cv2.xfeatures2d.SURF_create()
 
 

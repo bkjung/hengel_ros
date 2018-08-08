@@ -59,10 +59,11 @@ class VisualCompensation():
         self.pi_left_img=np.array([])
         self.pi_right_img=np.array([])
 
-        self.mid_predict_canvas_x=[]
-        self.mid_predict_canvas_y=[]
-        self.mid_predict_canvas_th=[]
-        self.mid_predict_canvas_time=[]
+        self.isProcessingVirtualmapTime = False
+        self.mid_predict_canvas_x=collections.deque(300*[0.0],300)
+        self.mid_predict_canvas_y=collections.deque(300*[0.0],300)
+        self.mid_predict_canvas_th=collections.deque(300*[0.0],300)
+        self.mid_predict_canvas_time=collections.deque(300*[0.0],300)
 
         self.mid_real_photo_x=640+55.77116996/2
         self.mid_real_photo_y=640
@@ -117,10 +118,12 @@ class VisualCompensation():
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
         if self.isNavigationStarted:
+            _time = time.time()
             image_time = (_img1.header.stamp.to_nsec()+_img2.header.stamp.to_nsec()+_img3.header.stamp.to_nsec()+_img4.header.stamp.to_nsec())/4.0
 
             min_diff = 999999999999999.9
             min_index = -1
+            self.isProcessingVirtualmapTime = True
             for i in range(len(self.mid_predict_canvas_time)):
                 curr_diff = abs(self.mid_predict_canvas_time[i]-image_time)
                 if (curr_diff < min_diff):
@@ -130,6 +133,9 @@ class VisualCompensation():
             self.mid_predict_img_x=-self.mid_predict_canvas_x[min_index] *self.pixMetRatio
             self.mid_predict_img_y=self.virtual_map.shape[0]-self.mid_predict_canvas_y[min_index]*self.pixMetRatio
             self.mid_predict_img_th=-self.mid_predict_canvas_th[min_index]
+
+            self.isProcessingVirtualmapTime = False
+            print("Processing Virtualmap Sync Time: "+str(time.time()-_time))
                     
 
             _time=time.time()
@@ -291,18 +297,18 @@ class VisualCompensation():
                         # self.virtual_map = self.app_robotview.img
 
                         #Initialize Queue
-                        self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
+                        # self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
 
                         self.relocalization(M)
 
 
             except Exception as e:
                 print(e)
-                sys.exit("Feature Match error")
+                sys.exit("Feature Match error - debug1")
 
             #################
 
-            print("Cam Input -> Visual Calc / Total Time: "+str(time.time()-_time))
+            print("Total Time (visaul feedback): "+str(time.time()-_time))
 
             # bridge=CvBridge()
             # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
@@ -319,39 +325,44 @@ class VisualCompensation():
         # print("sync virtual")
         # _time=time.time()
 
-        self.mid_predict_canvas_x.append(_midPoint.x)
-        self.mid_predict_canvas_y.append(_midPoint.y)
-        self.mid_predict_canvas_th.append(_midPoint.z)
-        # self.mid_predict_canvas_time.append(ros_time_to_float(_midPointTime))
-        self.mid_predict_canvas_time.append(_midPointTime.data.to_nsec())
+        if not self.isProcessingVirtualmapTime:
+            self.mid_predict_canvas_x.appendleft(_midPoint.x)
+            self.mid_predict_canvas_y.appendleft(_midPoint.y)
+            self.mid_predict_canvas_th.appendleft(_midPoint.z)
+            self.mid_predict_canvas_time.appendleft(_midPointTime.data.to_nsec())
 
-        self.recent_pts.appendleft((_midPoint.x, _midPoint.y))
+            self.recent_pts.appendleft((_midPoint.x, _midPoint.y))
 
-        # self.virtual_map = self.app_robotview.run(_midPoint, _endPoint)
-        self.app_robotview.run(_midPoint, _endPoint)
-        self.virtual_map = self.app_robotview.img
+            # self.virtual_map = self.app_robotview.run(_midPoint, _endPoint)
+            self.app_robotview.run(_midPoint, _endPoint)
+            self.virtual_map = self.app_robotview.img
 
-        # self.mid_predict_img_x=-self.mid_predict_canvas_x *self.pixMetRatio
-        # self.mid_predict_img_y=self.virtual_map.shape[0]-self.mid_predict_canvas_y*self.pixMetRatio
-        # self.mid_predict_img_th=-self.mid_predict_canvas_th
+            # self.mid_predict_img_x=-self.mid_predict_canvas_x *self.pixMetRatio
+            # self.mid_predict_img_y=self.virtual_map.shape[0]-self.mid_predict_canvas_y*self.pixMetRatio
+            # self.mid_predict_img_th=-self.mid_predict_canvas_th
 
-        
-        # ttime=Float32()
-        # ttime.data=float(time.time()-_time)
+            
+            # ttime=Float32()
+            # ttime.data=float(time.time()-_time)
 
-        #PUBLISHING VIRTUAL MAP, but currently the msg cannot be viewed at rqt (supposedly because of msgtype mismatch)
-        # virtual_map_msg=self.bridge.cv2_to_compressed_imgmsg(self.virtual_map)
-        # self.pub_virtual_map.publish(virtual_map_msg)
+            #PUBLISHING VIRTUAL MAP, but currently the msg cannot be viewed at rqt (supposedly because of msgtype mismatch)
+            # virtual_map_msg=self.bridge.cv2_to_compressed_imgmsg(self.virtual_map)
+            # self.pub_virtual_map.publish(virtual_map_msg)
 
 
     def relocalization(self, homography):
+        print("debug1")
         mid_real_virtual_x, mid_real_virtual_y, _= np.matmul(homography, [self.mid_real_photo_x, self.mid_real_photo_y, 1])
+        print("debug2")
         del_x_virtual=mid_real_virtual_x-self.mid_real_photo_x
+        print("debug3")
         del_y_virtual=mid_real_virtual_y-self.mid_real_photo_y
+        print("debug4")
         del_th_virtual=-atan2(homography[0][1],homography[0][0])
-
+        print("debug5")
         rotation=np.array([[cos(self.mid_predict_canvas_th), -sin(self.mid_predict_canvas_th)],
                             [sin(self.mid_predict_canvas_th), cos(self.mid_predict_canvas_th)]])
+        print("debug6")
         del_x_canvas, del_y_canvas = np.matmul(rotation, [-del_x_virtual, -del_y_virtual])
         # *(-1) in del_x_virtual for calibration of x waypoint coordinate
         # *(-1) in del_y_virtual for calibration of image coordiate to canvas coordinate
