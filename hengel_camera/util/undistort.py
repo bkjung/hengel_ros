@@ -333,7 +333,7 @@ def homography_matrix(index):
     [120,152],[246,149.3],[374.3, 140.7],[501.5,139.8],[623.8,136.5],[862.2,131.5],
     [184.3,23.7],[582,18]])
 
-    homography, status=cv2.findHomography(np.array(imgPtsArr[index-1]), np.array(objPts[index-1],np.float32))
+    homography, status=cv2.findHomography(np.array(imgPtsArr[index-1]), np.array(objPts[index-1],np.float32), cv2.RANSAC)
 
     # return cv2.warpPerspective(_img, homography, (1280, 1280))
     print(homography)
