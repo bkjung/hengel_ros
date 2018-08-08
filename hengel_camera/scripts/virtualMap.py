@@ -312,7 +312,7 @@ class VisualCompensation():
 
             #################
 
-            print("Total Time (visaul feedback): "+str(time.time()-_time))
+            print("Total Time (visual feedback): "+str(time.time()-_time))
 
             # bridge=CvBridge()
             # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
