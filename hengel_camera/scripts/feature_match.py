@@ -106,8 +106,6 @@ class FeatureMatch():
 
 
     def SIFT_FLANN_matching(self, img1, img2):
-        #(self, real_image, virtual_image)
-
         plt.figure(1, figsize=(10, 20))
         plt.subplot(311)
         # cv2.imshow("white", img1)
@@ -127,10 +125,14 @@ class FeatureMatch():
         kp2, des2 = sift.detectAndCompute(img2, None)
         ############ Slow Part ############
 
-        # print("sift_flann 1 Time: "+str(time.time()-_time))
-        print("sift_flann 1 Time: "+str(time.time()-_time))
+        # orb=cv2.ORB_create(nfeatures=1500)
+        # kp1,des1=orb.detectAndCompute(img1, None)
+        # kp2, des2=orb.detectAndCompute(img2, None)
 
-        MIN_MATCH_COUNT=10
+        print("feature detection Time: "+str(time.time()-_time))
+
+        # MIN_MATCH_COUNT=10
+        MIN_MATCH_COUNT=5
         FLANN_INDEX_KDTREE=0
 
         # index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
@@ -149,7 +151,7 @@ class FeatureMatch():
             print("debug0")
             matches = flann.knnMatch(des1,des2,k=2)
 
-            print("sift_flann 2 Time: "+str(time.time()-_time))
+            # print("sift_flann 2 Time: "+str(time.time()-_time))
 
             #store all the good matches as per Lowe's ratio test
             good=[]
@@ -164,7 +166,7 @@ class FeatureMatch():
             # print("abc",kp1[good[3].queryIdx].pt)
 
 
-            print("sift_flann 3 Time: "+str(time.time()-_time))
+            # print("sift_flann 3 Time: "+str(time.time()-_time))
 
             if len(good)>MIN_MATCH_COUNT:
                 # print("FEATURE MATCH COUNT > MIN_MATCH_COUNT")
@@ -176,33 +178,44 @@ class FeatureMatch():
 
                 M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
                 if M is None:
-                    print("Homography mtx M is None !!!!")
+                    print("FAILED (Homography mtx M is None)")
                 else:
                     self.status = True
                     draw_params = dict(matchColor = (0,255,0),
                                     singlePointColor = (255,0,0),
                                     matchesMask = matchesMask,
                                     flags = 0)
-                    img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
-                    # img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,flags=2)
+                    print("debug2")
+                    try:
+                        img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
+                        # img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,flags=2)
+                        print("debug3")
 
-                    plt.subplot(313)
-                    plt.imshow(img3, cmap='gray')
+                        # cv2.imwrite(self.folder_path+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
 
-                    print("sift_flann match finished")
+                        plt.subplot(313)
+                        plt.imshow(img3, cmap='gray')
+
+                        print("sift_flann match finished")
+                        
+                        # plt.draw()
+                        # plt.pause(0.00000000001)
+                    except Exception as e:
+                        print(e)
+                        sys.exit("debug2-1")
             else:
-                print("Feature Match FAILED (Not enough features)")
+                print("FAILED (Not enough features, %d < %d)" %(len(good), MIN_MATCH_COUNT))
         else:
-            print("Feature Match FAILED (Empty Descriptor)")
+            print("FAILED (Empty Descriptor)")
 
+        # plt.draw()
+        # plt.pause(0.00000000001)
+        # print("sift_flann 4 Time: "+str(time.time()-_time))
         file_time = time.strftime("%y%m%d_%H%M%S")
         plt.savefig(self.folder_path+"/SIFT_FLANN_"+file_time+".png")
         print("FeatureMatch Saved to "+file_time)
 
-        # plt.draw()
-        # plt.pause(0.00000000001)
-
-        # print("sift_flann 4 Time: "+str(time.time()-_time))
+        plt.close("all")
 
         return M
 
