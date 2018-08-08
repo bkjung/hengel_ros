@@ -118,6 +118,7 @@ class VisualCompensation():
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
         if self.isNavigationStarted:
+            print("sync real")
             _time = time.time()
             image_time = (_img1.header.stamp.to_nsec()+_img2.header.stamp.to_nsec()+_img3.header.stamp.to_nsec()+_img4.header.stamp.to_nsec())/4.0
 
@@ -140,10 +141,7 @@ class VisualCompensation():
             self.mid_predict_img_th=-self.current_mid_predict_canvas_th
 
             print("Processing Virtualmap Sync Time: "+str(time.time()-_time))
-                    
 
-            _time=time.time()
-            print("sync real")
             img1 = self.undistort1(_img1)
             img2 = self.undistort2(_img2)
             img3 = self.undistort3(_img3)
@@ -282,6 +280,8 @@ class VisualCompensation():
 
             # self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
             self.cropped_virtual_map=im_white_masked+homography_virtual_map
+
+            print("summed_image time: "+str(time.time()-_time))
          
 ##################################################################################
 
@@ -293,8 +293,8 @@ class VisualCompensation():
                     print("IMAGE EMPTY")
                     raise Exception("Image Empty")
                 else:
-                    M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
-                    # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtusal_map)
+                    # M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
+                    M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
                     if fm.status == True:
                         # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                         # self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
@@ -388,7 +388,7 @@ class VisualCompensation():
 
         img_padding[padding:padding+_img.shape[0],padding:padding+_img.shape[1]]=_img
 
-        cv2.imwrite("/home/bkjung/img_padding.png", img_padding)
+        # cv2.imwrite("/home/bkjung/img_padding.png", img_padding)
         half_map_size_diagonal = 1280/sqrt(2)
         midpnt_offset=55.77116996/2 # in virtual map coordiate
 
