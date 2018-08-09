@@ -290,7 +290,7 @@ if __name__=="__main__":
 
     app = FeatureMatch('/home/bkjung/Pictures')
 
-    app = FeatureMatch('/home/bkjung/Pictures')
+    # app = FeatureMatch('/home/bkjung/Pictures')
 
     # app.SIFT_FLANN_matching(img_photo, img_virtual)
     app.SURF_BF_matching(img_photo, img_virtual)
