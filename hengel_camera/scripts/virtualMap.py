@@ -81,7 +81,8 @@ class VisualCompensation():
         self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
         self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
 
-
+        self.summed_image = None
+        self.summed_image_prev = None
 
         self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=False)
         rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.callback_left)
@@ -194,13 +195,14 @@ class VisualCompensation():
             #         else:
             #             summed_image[i][j] = 0
             # summed_image = (summed_image <80) * summed_image
-            # summed_image= cv2.threshold(summed_image, 70, 255, cv2.THRESH_BINARY)[1]
+            summed_image= cv2.threshold(summed_image, 70, 255, cv2.THRESH_BINARY)[1]
             # summed_image= cv2.threshold(summed_image, 90, 255, cv2.THRESH_BINARY)[1]
             summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
-            print(summed_image)
-            summed_image=self.image_processing(summed_image)
+            # print(summed_image)
+            # summed_image=self.image_processing(summed_image)
             # print(summed_image.shape)
 
+            self.summed_image = summed_image
 
             homography_virtual_map=self.crop_image(self.virtual_map) #background is black
             im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
@@ -226,8 +228,8 @@ class VisualCompensation():
                 else:
                     # M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
 
-                    # M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
-                    M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
+                    M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
+                    # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
                     # M = fm.IMAGE_ALIGNMENT_ecc(summed_image, self.cropped_virtual_map)
 
 
@@ -255,9 +257,13 @@ class VisualCompensation():
             # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
             # self.sum_pub.publish(summed_msg)
 
+            # self.summed_image_prev = self.summed_image
+
         else:
             print("Navigation not started yet")
 #################################################################
+
+
 
     def sync_virtual_callback(self, _endPoint, _midPoint, _midPointTime):
         if not self.isNavigationStarted:
