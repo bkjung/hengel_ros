@@ -23,7 +23,7 @@ class FeatureMatch():
         # Apply ratio test
         good = []
         for m, n in matches:
-            if m.distance < 0.75*n.distance:
+            if m.distance < 0.7*n.distance:
                 good.append([m])
 
         img3= np.ndarray([])
@@ -100,55 +100,13 @@ class FeatureMatch():
 
         file_time = time.strftime("%y%m%d_%H%M%S")
         plt.savefig(self.folder_path+"/SIFT_FLANN_"+file_time+".png")
+        plt.close("all")
+        cv2.imwrite(self.folder_path+"/SUMMED_"+file_time+".png", img1)
+        cv2.imwrite(self.folder_path+"/VIRTUAL_"+file_time+".png", img2)
+        cv2.destroyAllWindows()
         print("FeatureMatch Saved to "+file_time)
 
         return M
-
-    def IMAGE_ALIGNMENT_ecc(self, img1, img2):
-        # Find size of image1
-        sz = img1.shape
-        
-        # Define the motion model
-        warp_mode = cv2.MOTION_EUCLIDEAN
-        
-        # Define 2x3 or 3x3 matrices and initialize the matrix to identity
-        if warp_mode == cv2.MOTION_HOMOGRAPHY :
-            warp_matrix = np.eye(3, 3, dtype=np.float32)
-        else :
-            warp_matrix = np.eye(2, 3, dtype=np.float32)
-        
-        # Specify the number of iterations.
-        number_of_iterations = 5000;
-        
-        # Specify the threshold of the increment
-        # in the correlation coefficient between two iterations
-        termination_eps = 1e-10;
-        
-        # Define termination criteria
-        criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, number_of_iterations,  termination_eps)
-        
-        # Run the ECC algorithm. The results are stored in warp_matrix.
-        (cc, warp_matrix) = cv2.findTransformECC (img1,img2,warp_matrix, warp_mode, criteria)
-        
-        if warp_mode == cv2.MOTION_HOMOGRAPHY :
-            # Use warpPerspective for Homography 
-            img2_aligned = cv2.warpPerspective (img2, warp_matrix, (sz[1],sz[0]), flags=cv2.INTER_LINEAR + cv2.WARP_INVERSE_MAP)
-        else :
-            # Use warpAffine for Translation, Euclidean and Affine
-            img2_aligned = cv2.warpAffine(img2, warp_matrix, (sz[1],sz[0]), flags=cv2.INTER_LINEAR + cv2.WARP_INVERSE_MAP);
-        
-        # Show final results
-        plt.figure(1, figsize=(10,20))
-        plt.subplot(311)
-        plt.imshow(img1, cmap='gray')
-        plt.subplot(312)
-        plt.imshow(img2, cmap='gray')
-        plt.subplot(313)
-        plt.imshow(img2_aligned, cmap='gray')
-        file_time = time.strftime("%y%m%d_%H%M%S")
-        plt.savefig(self.folder_path+"/IMAGE_ALIGN_ecc_"+file_time+".png")
-        plt.close("all")
-        print("IMAGE ALIGN Ecc Saved to "+file_time)
 
 
     def SIFT_FLANN_matching(self, img1, img2):
@@ -218,7 +176,7 @@ class FeatureMatch():
             good=[]
             matchesMask = [[0,0] for i in xrange(len(matches))]
             for i,  (m,n) in enumerate(matches):
-                if m.distance < 0.8*n.distance:
+                if m.distance < 0.7*n.distance:
                     good.append(m)
                     matchesMask[i]=[1,0]
 
@@ -265,7 +223,7 @@ class FeatureMatch():
                         print(e)
                         sys.exit("debug2-1")
             else:
-                print("FAILED (Not enough features, %d < %d)" %(len(good), MIN_MATCH_COUNT))
+                print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
         else:
             print("FAILED (Empty Descriptor)")
 
@@ -286,8 +244,6 @@ if __name__=="__main__":
 
     app = FeatureMatch('/home/bkjung/Pictures')
 
-    # app.SIFT_FLANN_matching(img_photo, img_virtual)
-    # app.SIFT_FLANN_matching(img_virtual, img_photo)
     app.SIFT_FLANN_matching(img_photo, img_virtual)
     # app.IMAGE_ALIGNMENT_ecc(img_virtual, img_photo)
     # app.SIFT_FLANN_matching(img_virtual, img_virtual)
