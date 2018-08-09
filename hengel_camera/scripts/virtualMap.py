@@ -197,8 +197,8 @@ class VisualCompensation():
             # summed_image= cv2.threshold(summed_image, 70, 255, cv2.THRESH_BINARY)[1]
             # summed_image= cv2.threshold(summed_image, 90, 255, cv2.THRESH_BINARY)[1]
             summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
-            print(summed_image)
-            summed_image=self.image_processing(summed_image)
+            # print(summed_image)
+            # summed_image=self.image_processing(summed_image)
             # print(summed_image.shape)
 
 
@@ -226,8 +226,8 @@ class VisualCompensation():
                 else:
                     # M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
 
-                    # M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
-                    M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
+                    M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
+                    # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
                     # M = fm.IMAGE_ALIGNMENT_ecc(summed_image, self.cropped_virtual_map)
 
 
@@ -382,7 +382,7 @@ class VisualCompensation():
                     a.append(_img[i-1][j-1])    #P8
                     if sum(a[:8])>= 255*7:
                         _img[i][j]=255
-                        print("SALT_POINT: "+str(i)+", "+str(j))
+                        # print("SALT_POINT: "+str(i)+", "+str(j))
                     else:
                         pass
                 else:

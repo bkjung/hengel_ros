@@ -195,15 +195,86 @@ class FeatureMatch():
 
         return M
 
+    def SURF_BF_matching(self, img1, img2):
+        plt.figure(1, figsize=(10, 20))
+        plt.subplot(311)
+        plt.imshow(img1, cmap='gray')
+        plt.subplot(312)
+        plt.imshow(img2, cmap='gray')
+
+        M=None
+        MIN_MATCH_COUNT=10
+        _time=time.time()
+
+        self.status = False
+
+        surf_detector= cv2.SURF(400, 5, 5)
+        # find the keypoints and descriptors with SIFT
+        kp1, des1 = surf_detector.detectAndCompute(img1, None)
+        kp2, des2 = surf_detector.detectAndCompute(img2, None)
+
+        # create BFMatcher object
+        bf = cv2.BFMatcher(cv2.NORM_L2)
+
+        if des1 is not None and des2 is not None:
+            # Match descriptors
+            # matches = bf.match(des2, des1)
+            matches = bf.knnMatch(des1, trainDescriptors = des2, k = 2)
+            # Sort them in the order of their distance
+            # matches = sorted(matches, key=lambda x:x.distance)
+            
+            mkp1, mkp2 = [], []
+            for m in matches:
+                if len(m) == 2 and m[0].distance < m[1].distance * ratio:
+                    m = m[0]
+                    mkp1.append( kp1[m.queryIdx] )
+                    mkp2.append( kp2[m.trainIdx] )
+            # kp_pairs = zip(mkp1, mkp2)
+
+            # src_pts=np.float32([ kp2[m.queryIdx].pt for m in matches]).reshape(-1,1,2)
+            # dst_pts=np.float32([ kp1[m.trainIdx].pt for m in matches]).reshape(-1,1,2)
+            src_pts=np.float32([kp.pt for kp in mkp1])
+            dst_pts=np.float32([kp.pt for kp in mkp2])
+            M, mask= cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+            if M is None:
+                print("Homography mtx M is None !!!!")
+            else:
+                self.status = True
+                matchesMask = [[0,0] for i in xrange(len(matches))]
+                draw_params = dict(matchColor = (0,255,0),
+                                singlePointColor = (255,0,0),
+                                flags = 0)
+                img3 = cv2.drawMatches(img2,mkp2,img1,mkp1,matches[:10],None,**draw_params)
+                plt.subplot(313) 
+                plt.imshow(img3, cmap='gray')
+
+                print("surf_bf match finished")
+            # else:
+            #     print("Feature Match FAILED (Not enough features)")
+        else:
+            print("Feature Match FAILED (Empty Descriptor)")
+
+        file_time = time.strftime("%y%m%d_%H%M%S")
+        plt.savefig(self.folder_path+"/SURF_BF_"+file_time+".png")
+        plt.close("all")
+        cv2.imwrite(self.folder_path+"/SUMMED_"+file_time+".png", img1)
+        cv2.imwrite(self.folder_path+"/VIRTUAL_"+file_time+".png", img2)
+        cv2.destroyAllWindows()
+        print("FeatureMatch Saved to "+file_time)
+
+        return M
+
+
 if __name__=="__main__":
-    img_virtual= cv2.imread("/home/bkjung/VIRTUAL_PROCESSED.png", cv2.IMREAD_GRAYSCALE)
-    img_photo= cv2.imread("/home/bkjung/SUMMED_PROCESSED_CONNECTED.png", cv2.IMREAD_GRAYSCALE)
+    img_virtual= cv2.imread("/home/bkjung/Pictures/VIRTUAL_LABS_gimp.png", cv2.IMREAD_GRAYSCALE)
+    img_photo= cv2.imread("/home/bkjung/Pictures/SUMMED_LABS_gimp.png", cv2.IMREAD_GRAYSCALE)
 
 
-    app = FeatureMatch('/home/bkjung')
+    app = FeatureMatch('/home/bkjung/Pictures')
 
 
-    app.SIFT_FLANN_matching(img_photo, img_virtual)
+    # app.SIFT_FLANN_matching(img_photo, img_virtual)
+    app.SURF_BF_matching(img_photo, img_virtual)
     # SIFT_KNN_matching(img1, img2)
     # ORB_BF_matching(img1, img2)
     # surf = cv2.xfeatures2d.SURF_create()
