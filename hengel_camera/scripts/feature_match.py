@@ -266,7 +266,7 @@ class FeatureMatch():
                 draw_params = dict(matchColor = (0,255,0),
                                 singlePointColor = (255,0,0),
                                 flags = 0)
-                img3 = cv2.drawMatchesKnn(img2,mkp2,img1,mkp1,matches[:10],None,**draw_params)
+                img3 = cv2.drawMatchesKnn(img1,mkp1,img2,mkp2,matches[:10],None,**draw_params)
                 plt.subplot(313) 
                 plt.imshow(img3, cmap='gray')
 
@@ -288,8 +288,8 @@ class FeatureMatch():
 
 
 if __name__=="__main__":
-    img_virtual= cv2.imread("/home/bkjung/Pictures/VIRTUAL_LABS_gimp.png", cv2.IMREAD_GRAYSCALE)
-    img_photo= cv2.imread("/home/bkjung/Pictures/SUMMED_LABS_gimp.png", cv2.IMREAD_GRAYSCALE)
+    img_virtual= cv2.imread("/home/bkjung/Pictures/virtual_B_thin.png", cv2.IMREAD_GRAYSCALE)
+    img_photo= cv2.imread("/home/bkjung/Pictures/SUMMED_B.png", cv2.IMREAD_GRAYSCALE)
 
 
     app = FeatureMatch('/home/bkjung/Pictures')
