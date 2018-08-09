@@ -61,16 +61,10 @@ class FeatureMatch():
 
             good=[]
             print("debug0")
-            # print(matches)
-            for m,n in matches:
-                print("debug1")
-                if m.distance < 0.7*n.distance:
-                    pring("debug2")
-                    good.append(m)
 
             if len(good)>MIN_MATCH_COUNT:
-                src_pts=np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
-                dst_pts=np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
+                src_pts=np.float32([ kp1[m.queryIdx].pt for m in matches ]).reshape(-1,1,2)
+                dst_pts=np.float32([ kp2[m.trainIdx].pt for m in matches ]).reshape(-1,1,2)
 
                 M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
                 if M is None:
@@ -79,14 +73,11 @@ class FeatureMatch():
                     self.status = True
                     matchesMask = [[0,0] for i in xrange(len(matches))]
                     # ratio test as per Lowe's paper
-                    for i,(m,n) in enumerate(matches):
-                        if m.distance < 0.7*n.distance:
-                            matchesMask[i]=[1,0]
+                    
                     draw_params = dict(matchColor = (0,255,0),
                                     singlePointColor = (255,0,0),
-                                    matchesMask = matchesMask,
                                     flags = 0)
-                    img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
+                    img3 = cv2.drawMatches(img2,kp2,img1,kp1,matches,None,**draw_params)
                     # img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,flags=2)
 
                     plt.subplot(313)
