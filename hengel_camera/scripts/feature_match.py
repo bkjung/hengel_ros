@@ -226,10 +226,13 @@ class FeatureMatch():
 
         self.status = False
 
-        surf_detector= cv2.SURF(400, 5, 5)
+        #cv2 error
+        # surf_detector= cv2.SURF(400, 5, 5)
+
+        surf = cv2.xfeatures2d.SURF_create()
         # find the keypoints and descriptors with SIFT
-        kp1, des1 = surf_detector.detectAndCompute(img1, None)
-        kp2, des2 = surf_detector.detectAndCompute(img2, None)
+        kp1, des1 = surf.detectAndCompute(img1, None)
+        kp2, des2 = surf.detectAndCompute(img2, None)
 
         # create BFMatcher object
         bf = cv2.BFMatcher(cv2.NORM_L2)
@@ -242,6 +245,7 @@ class FeatureMatch():
             # matches = sorted(matches, key=lambda x:x.distance)
             
             mkp1, mkp2 = [], []
+            ratio = 0.75
             for m in matches:
                 if len(m) == 2 and m[0].distance < m[1].distance * ratio:
                     m = m[0]
@@ -262,7 +266,7 @@ class FeatureMatch():
                 draw_params = dict(matchColor = (0,255,0),
                                 singlePointColor = (255,0,0),
                                 flags = 0)
-                img3 = cv2.drawMatches(img2,mkp2,img1,mkp1,matches[:10],None,**draw_params)
+                img3 = cv2.drawMatchesKnn(img2,mkp2,img1,mkp1,matches[:10],None,**draw_params)
                 plt.subplot(313) 
                 plt.imshow(img3, cmap='gray')
 
