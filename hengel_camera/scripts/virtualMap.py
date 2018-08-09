@@ -388,7 +388,7 @@ class VisualCompensation():
                     a.append(_img[i-1][j-1])    #P8
                     if sum(a[:8])>= 255*7:
                         _img[i][j]=255
-                        print("SALT_POINT: "+str(i)+", "+str(j))
+                        # print("SALT_POINT: "+str(i)+", "+str(j))
                     else:
                         pass
                 else:
