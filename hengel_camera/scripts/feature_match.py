@@ -60,23 +60,22 @@ class FeatureMatch():
             dst_pts=np.float32([ kp1[m.trainIdx].pt for m in matches]).reshape(-1,1,2)
             M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
             if M is None:
+                self.status = Trues
                 print("Homography mtx M is None !!!!")
             else:
-                self.status = True
-                matchesMask = [[0,0] for i in xrange(len(matches))]
-                draw_params = dict(matchColor = (0,255,0),
-                                singlePointColor = (255,0,0),
-                                flags = 0)
-                img3 = cv2.drawMatches(img2,kp2,img1,kp1,matches[:10],None,**draw_params)
-                plt.subplot(313) 
-                plt.imshow(img3, cmap='gray')
-
                 print("sift_flann match finished")
             # else:
             #     print("Feature Match FAILED (Not enough features)")
         else:
             print("Feature Match FAILED (Empty Descriptor)")
 
+        matchesMask = [[0,0] for i in xrange(len(matches))]
+        draw_params = dict(matchColor = (0,255,0),
+                        singlePointColor = (255,0,0),
+                        flags = 0)
+        img3 = cv2.drawMatches(img2,kp2,img1,kp1,matches[:10],None,**draw_params)
+        plt.subplot(313) 
+        plt.imshow(img3, cmap='gray')
         file_time = time.strftime("%y%m%d_%H%M%S")
         plt.savefig(self.folder_path+"/SIFT_FLANN_"+file_time+".png")
         plt.close("all")
@@ -157,30 +156,25 @@ class FeatureMatch():
                     print("FAILED (Homography mtx M is None)")
                 else:
                     self.status = True
-                    draw_params = dict(matchColor = (0,255,0),
-                                    singlePointColor = (255,0,0),
-                                    matchesMask = matchesMask,
-                                    flags = 0)
-                    print("debug2")
-                    try:
-                        img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
-                        # img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,flags=2)
-                        print("debug3")
-
-                        # cv2.imwrite(self.folder_path+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
-
-                        plt.subplot(313)
-                        plt.imshow(img3, cmap='gray')
-
-                        print("sift_flann match finished")
-                        
-                        # plt.draw()
-                        # plt.pause(0.00000000001)
-                    except Exception as e:
-                        print(e)
-                        sys.exit("debug2-1")
+                    print("sift_flann match finished")
             else:
                 print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
+        
+
+            draw_params = dict(matchColor = (0,255,0),
+                            singlePointColor = (255,0,0),
+                            matchesMask = matchesMask,
+                            flags = 0)
+            print("debug2")
+            img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
+            # img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,flags=2)
+            print("debug3")
+
+            # cv2.imwrite(self.folder_path+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
+
+            plt.subplot(313)
+            plt.imshow(img3, cmap='gray')
+
         else:
             print("FAILED (Empty Descriptor)")
 
