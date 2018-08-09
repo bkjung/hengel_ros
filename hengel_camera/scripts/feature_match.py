@@ -255,8 +255,8 @@ class FeatureMatch():
 
             # src_pts=np.float32([ kp2[m.queryIdx].pt for m in matches]).reshape(-1,1,2)
             # dst_pts=np.float32([ kp1[m.trainIdx].pt for m in matches]).reshape(-1,1,2)
-            src_pts=np.float32([kp.pt for kp in mkp1])
-            dst_pts=np.float32([kp.pt for kp in mkp2])
+            src_pts=np.float32([kp.pt for kp in mkp1]).reshape(-1,1,2)
+            dst_pts=np.float32([kp.pt for kp in mkp2]).reshape(-1,1,2)
             M, mask= cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
             if M is None:
                 print("Homography mtx M is None !!!!")
@@ -270,7 +270,7 @@ class FeatureMatch():
                 plt.subplot(313) 
                 plt.imshow(img3, cmap='gray')
 
-                print("surf_bf match finished")
+            print("surf_bf match finished")
             # else:
             #     print("Feature Match FAILED (Not enough features)")
         else:
