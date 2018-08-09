@@ -12,7 +12,7 @@ class FeatureMatch():
         self.status = False
         self.folder_path  = _folder_path
 
-    def SIFT_BF_matching(self, img1, img2):
+    def SIFT_KNN_matching(self, img1, img2):
         sift = cv2.xfeatures2d.SIFT_create()
         kp1, des1= sift.detectAndCompute(img1, None)
         kp2, des2= sift.detectAndCompute(img2, None)
@@ -33,6 +33,8 @@ class FeatureMatch():
     def ORB_BF_matching(self, img1, img2):
         plt.figure(1, figsize=(10, 20))
         plt.subplot(311)
+        # cv2.imshow("white", img1)
+        # cv2.waitKey(3)
         plt.imshow(img1, cmap='gray')
         plt.subplot(312)
         plt.imshow(img2, cmap='gray')
@@ -60,23 +62,22 @@ class FeatureMatch():
             dst_pts=np.float32([ kp1[m.trainIdx].pt for m in matches]).reshape(-1,1,2)
             M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
             if M is None:
+                self.status = Trues
                 print("Homography mtx M is None !!!!")
             else:
-                self.status = True
-                matchesMask = [[0,0] for i in xrange(len(matches))]
-                draw_params = dict(matchColor = (0,255,0),
-                                singlePointColor = (255,0,0),
-                                flags = 0)
-                img3 = cv2.drawMatches(img2,kp2,img1,kp1,matches[:10],None,**draw_params)
-                plt.subplot(313) 
-                plt.imshow(img3, cmap='gray')
-
                 print("sift_flann match finished")
             # else:
             #     print("Feature Match FAILED (Not enough features)")
         else:
             print("Feature Match FAILED (Empty Descriptor)")
 
+        matchesMask = [[0,0] for i in xrange(len(matches))]
+        draw_params = dict(matchColor = (0,255,0),
+                        singlePointColor = (255,0,0),
+                        flags = 0)
+        img3 = cv2.drawMatches(img2,kp2,img1,kp1,matches[:10],None,**draw_params)
+        plt.subplot(313) 
+        plt.imshow(img3, cmap='gray')
         file_time = time.strftime("%y%m%d_%H%M%S")
         plt.savefig(self.folder_path+"/SIFT_FLANN_"+file_time+".png")
         plt.close("all")
@@ -105,6 +106,15 @@ class FeatureMatch():
         sift=cv2.xfeatures2d.SIFT_create()
         ############ Slow Part ############
         kp1, des1 = sift.detectAndCompute(img1, None)
+        # print("kp1 shape")
+        # print(kp1)
+        # print(len(kp1))
+        # print("des1 shape")
+        # print(len(des1))
+        # print(des1[0])
+        # print(des1[0][0])
+        # for i in range(len(des1)):
+        #     print(des1[i])
         kp2, des2 = sift.detectAndCompute(img2, None)
         ############ Slow Part ############
 
@@ -132,10 +142,16 @@ class FeatureMatch():
 
         if des1 is not None and des2 is not None:
             print("debug0")
+            
+
+            #match keypoints here!!!
+            #1st
             matches = flann.knnMatch(des1,des2,k=2)
 
             # print("sift_flann 2 Time: "+str(time.time()-_time))
 
+            #filter matched keypoints
+            #2nd
             #store all the good matches as per Lowe's ratio test
             good=[]
             matchesMask = [[0,0] for i in xrange(len(matches))]
@@ -143,6 +159,13 @@ class FeatureMatch():
                 if m.distance < 0.7*n.distance:
                     good.append(m)
                     matchesMask[i]=[1,0]
+
+            # print(len(kp1))
+
+            # print("abc",kp1[good[3].queryIdx].pt)
+
+
+            # print("sift_flann 3 Time: "+str(time.time()-_time))
 
             if len(good)>MIN_MATCH_COUNT:
                 # print("FEATURE MATCH COUNT > MIN_MATCH_COUNT")
@@ -157,30 +180,25 @@ class FeatureMatch():
                     print("FAILED (Homography mtx M is None)")
                 else:
                     self.status = True
-                    draw_params = dict(matchColor = (0,255,0),
-                                    singlePointColor = (255,0,0),
-                                    matchesMask = matchesMask,
-                                    flags = 0)
-                    print("debug2")
-                    try:
-                        img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
-                        # img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,flags=2)
-                        print("debug3")
-
-                        # cv2.imwrite(self.folder_path+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
-
-                        plt.subplot(313)
-                        plt.imshow(img3, cmap='gray')
-
-                        print("sift_flann match finished")
-                        
-                        # plt.draw()
-                        # plt.pause(0.00000000001)
-                    except Exception as e:
-                        print(e)
-                        sys.exit("debug2-1")
+                    print("sift_flann match finished")
             else:
                 print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
+        
+
+            draw_params = dict(matchColor = (0,255,0),
+                            singlePointColor = (255,0,0),
+                            matchesMask = matchesMask,
+                            flags = 0)
+            print("debug2")
+            img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
+            # img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,flags=2)
+            print("debug3")
+
+            # cv2.imwrite(self.folder_path+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
+
+            plt.subplot(313)
+            plt.imshow(img3, cmap='gray')
+
         else:
             print("FAILED (Empty Descriptor)")
 
@@ -272,11 +290,12 @@ if __name__=="__main__":
 
     app = FeatureMatch('/home/bkjung/Pictures')
 
+    app = FeatureMatch('/home/bkjung/Pictures')
 
     # app.SIFT_FLANN_matching(img_photo, img_virtual)
     app.SURF_BF_matching(img_photo, img_virtual)
     # SIFT_KNN_matching(img1, img2)
-    # ORB_BF_matching(img1, img2)
+    # app.ORB_BF_matching(img_virtual, img_photo)
     # surf = cv2.xfeatures2d.SURF_create()
 
 
