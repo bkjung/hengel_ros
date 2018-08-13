@@ -211,6 +211,7 @@ endif(FLANN_CFLAGS)
 
 catkin_install_python(PROGRAMS
   scripts/virtualMap.py
+  scripts/virtualMap_unstitched.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

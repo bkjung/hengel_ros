@@ -1,26 +1,24 @@
 #!/usr/bin/env python
 
 import rospy
-import sys
-print(sys.path)
 from geometry_msgs.msg import Point
 from std_msgs.msg import Float32, Time, Header
 from sensor_msgs.msg import Image, CompressedImage
 from markRobotView import RobotView
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos, asin,ceil
 import numpy as np
+import sys
 import time
 import os
 import copy
 from os.path import expanduser
+import cv2
+from cv_bridge import CvBridge
 import message_filters
 import collections
 from feature_match import FeatureMatch
 from matplotlib import pyplot as plt
 from hengel_camera.msg import CmpImg
-sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
-import cv2
-from cv_bridge import CvBridge
 
 # def ros_time_to_float(msg_time):
 #     # print(type(msg_time))
@@ -33,7 +31,7 @@ from cv_bridge import CvBridge
 class VisualCompensation():
     def __init__(self, _num_pts_delete):
         while True:
-            word= input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
+            word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
             self.width=float(word.split()[0])
             self.height=float(word.split()[1])
             break
@@ -48,7 +46,7 @@ class VisualCompensation():
 
 
     def initialize(self):
-        rospy.init_node('hengel_camera_compensation', anonymous=False)
+        rospy.init_node('hengel_camera_compensation_unstitched', anonymous=False)
 
         self.isNavigationStarted = False
         self.bridge=CvBridge()
@@ -83,8 +81,7 @@ class VisualCompensation():
         self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
         self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
 
-        self.summed_image = None
-        self.summed_image_prev = None
+
 
         self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=False)
         rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.callback_left)
@@ -105,7 +102,7 @@ class VisualCompensation():
         # self.pub_pi_l=rospy.Publisher('/pi_left/undist', Image, queue_size=5 )
         # self.pub_pi_r=rospy.Publisher('/pi_right/undist', Image, queue_size=5 )
         self.pub_sum=rospy.Publisher('/summed_image/compressed',CompressedImage, queue_size=5)
-
+    
 
         rospy.spin()
 
@@ -156,188 +153,75 @@ class VisualCompensation():
 
             # img_left=copy.deepcopy(self.pi_left_img)
             # img_right=copy.deepcopy(self.pi_right_img)
-####  1  #############################################################################
-            # im_mask_inv1, im_mask1=self.find_mask(img1)
-            # im_mask_inv3, im_mask3=self.find_mask(img3)
-            # im_mask_inv2, im_mask2=self.find_mask(img2)
-            # im_mask_inv4, im_mask4=self.find_mask(img4)
-            # # _, im_mask_l=self.find_mask(img_left)
-            # # _, im_mask_r=self.find_mask(img_right)
 
-            # img_white=np.full((1280, 1280), 255)
-
-            # im_mask13=cv2.bitwise_and(np.array(im_mask1).astype('uint8'), np.array(im_mask3).astype('uint8'))
-
-            # im_mask_inv_13=cv2.bitwise_and(np.array(im_mask_inv1).astype('uint8'), np.array(im_mask_inv3).astype('uint8'))
-            # im_mask_inv_24=cv2.bitwise_and(np.array(im_mask_inv2).astype('uint8'), np.array(im_mask_inv4).astype('uint8'))
-            # im_mask_inv1234=cv2.bitwise_and(im_mask_inv_13, im_mask_inv_24)
-
-            # img_white_masked=np.multiply(img_white, im_mask_inv1234)
-            # img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask_inv2)
-            # img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask_inv4)
-            # img1_masked=np.multiply(img1, im_mask_inv1)
-            # img3_masked=np.multiply(img3, im_mask_inv3)
-            # # img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r).astype('uint8')
-            # # img_right_masked=np.multiply(np.multiply(img_right, im_mask1234), im_mask_l).astype('uint8')
-            # summed_image=(img1_masked+img2_masked+img3_masked+img4_masked+img_white_masked).astype('uint8')
-            # summed_image=(img1_masked+img2_masked+img3_masked+img4_masked).astype('uint8')
-            # summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
-
-            # self.pub_sum.publish(summed_msg)
-            # print("summed_image time: "+str(time.time()-_time))
-
-
-            # homography_virtual_map=self.crop_image(self.virtual_map) #background is black
-            # im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
-
-            # im_white=np.full((1280,1280),255).astype('uint8')
-            # im_white_masked=np.multiply(im_white, np.array(im_mask)).astype('uint8')
-            # homography_virtual_map_masked=np.multiply(homography_virtual_map, im_mask_inv).astype('uint8')
-            # self.cropped_virtual_map=homography_virtual_map_masked+im_white_masked
-
-######  2  ############################################################################
-            # im_mask_inv1, im_mask1=self.find_mask(img1)
-            # im_mask_inv3, im_mask3=self.find_mask(img3)
-            # im_mask_inv2, im_mask2=self.find_mask(img2)
-            # im_mask_inv4, im_mask4=self.find_mask(img4)
-            # # _, im_mask_l=self.find_mask(img_left)
-            # # _, im_mask_r=self.find_mask(img_right)
-
-            # img_white=np.full((1280, 1280), 255)
-
-            # im_mask13=cv2.bitwise_and(im_mask1, im_mask3)
-            # im_mask_inv_13=cv2.bitwise_and(im_mask_inv1, im_mask_inv3)
-            # im_mask_inv_24=cv2.bitwise_and(im_mask_inv2, im_mask_inv4)
-            # im_mask_inv1234=cv2.bitwise_and(im_mask_inv_13, im_mask_inv_24) #mask & mask_inv data type: numpy.ndarray
-            # print("inv1234: "+str(im_mask_inv1234))
-
-            # img_white_masked=np.multiply(img_white, im_mask1234)
-            # # img2_masked=np.multiply(np.multiply(img2, im_mask_inv_13), np.array(im_mask_inv4))
-            # # img4_masked=np.multiply(np.multiply(img4, im_mask_inv_13), np.array(im_mask_inv2))
-            # img2_masked=np.multiply(img2, im_mask13)
-            # img4_masked=np.multiply(img4, im_mask13)
-            # img1_masked=np.multiply(img1, im_mask_inv1)
-            # img3_masked=np.multiply(img3, im_mask_inv3)
-            # # img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r).astype('uint8')
-            # # img_right_masked=np.multiply(np.multiply(img_right, im_mask1234), im_mask_l).astype('uint8')
-
-
-            # # summed_image=(img1+img2_masked+img3+img4_masked+img_white_masked).astype('uint8')
-            # summed_image=(img2_masked+img4_masked+img_white_masked).astype('uint8')
-            # # summed_image=(img1_masked+img2_masked+img3_masked+img4_masked).astype('uint8')
-            # summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
-
-            # self.pub_sum.publish(summed_msg)
-            # print("summed_image time: "+str(time.time()-_time))
-
-
-            # homography_virtual_map=self.crop_image(self.virtual_map) #background is black
-            # im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
-            # print("inv"+str(im_mask_inv))
-
-            # im_white=np.full((1280,1280),255)
-            # im_white_masked=np.multiply(im_white, np.array(im_mask))
-            # homography_virtual_map_masked=np.multiply(homography_virtual_map, np.array(im_mask_inv))
-            # self.cropped_virtual_map=(homography_virtual_map_masked+im_white_masked).astype('uint8')
-
-##### 3  #############################################################################
             im_mask_inv1, im_mask1=self.find_mask(img1)
-            im_mask_inv3, im_mask3=self.find_mask(img3)
             im_mask_inv2, im_mask2=self.find_mask(img2)
+            im_mask_inv3, im_mask3=self.find_mask(img3)
             im_mask_inv4, im_mask4=self.find_mask(img4)
-            # _, im_mask_l=self.find_mask(img_left)
-            # _, im_mask_r=self.find_mask(img_right)
 
-            img_white=np.full((1280, 1280), 145)
+            # img1= cv2.threshold(img1, 80, 255, cv2.THRESH_BINARY)[1]
+            # img2= cv2.threshold(img2, 80, 255, cv2.THRESH_BINARY)[1]
+            # img3= cv2.threshold(img3, 80, 255, cv2.THRESH_BINARY)[1]
+            # img4= cv2.threshold(img4, 80, 255, cv2.THRESH_BINARY)[1]
+
+            # img_white=np.full((1280, 1280), 145)
 
             im_mask13=cv2.bitwise_and(np.array(im_mask1).astype('uint8'), np.array(im_mask3).astype('uint8'))
             im_mask24=cv2.bitwise_and(np.array(im_mask2).astype('uint8'), np.array(im_mask4).astype('uint8'))
-            # im_mask_inv_13=cv2.bitwise_and(np.array(im_mask_inv1).astype('uint8'), np.array(im_mask_inv3).astype('uint8'))
-            # im_mask_inv_24=cv2.bitwise_and(np.array(im_mask_inv2).astype('uint8'), np.array(im_mask_inv4).astype('uint8'))
             im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
             # im_mask_inv1234=cv2.bitwise_and(im_mask_inv_13, im_mask_inv_24)
 
-            img_white_masked=np.multiply(img_white, im_mask1234).astype('uint8')
+            # img_white_masked=np.multiply(img_white, im_mask1234).astype('uint8')
             img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4).astype('uint8')
             img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask2).astype('uint8')
-<<<<<<< HEAD
-            # img1_masked=np.multiply(img1, im_mask_inv1).astype('uint8')
-            # img3_masked=np.multiply(img3, im_mask_inv3).astype('uint8')
-            # img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r).astype('uint8')
-            # img_right_masked=np.multiply(np.multiply(img_right, im_mask1234), im_mask_l).astype('uint8')
 
-=======
-
->>>>>>> 82147b0235babed0eae12a6cefe40cf2cc721c21
-            # summed_image=img_white_masked
-            summed_image=img1+img2_masked+img3+img4_masked+img_white_masked
-            summed_image[531:571,497:577]=156
-            summed_image[535:570,597:706]=150
-            summed_image[620:651, 510:547]=176
-            summed_image[723:744, 617: 708]=135
-            summed_image[608:659, 778:887]=153
-            summed_image[659:692, 866:935]=158
-            summed_image[631:650, 900:980]=165
-
-
-            # print("summed_image time: "+str(time.time()-_time))
-
-            # for i in range(len(summed_image)):
-            #     for j in range(len(summed_image[i])):
-            #         if summed_image[i][j] >= 90:
-            #             summed_image[i][j] = 255
-            #         else:
-            #             summed_image[i][j] = 0
-            # summed_image = (summed_image <80) * summed_image
-            summed_image= cv2.threshold(summed_image, 70, 255, cv2.THRESH_BINARY)[1]
-            # summed_image= cv2.threshold(summed_image, 90, 255, cv2.THRESH_BINARY)[1]
-            summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
-            # print(summed_image)
-            # summed_image=self.image_processing(summed_image)
-            # print(summed_image.shape)
-
-            self.summed_image = summed_image
 
             homography_virtual_map=self.crop_image(self.virtual_map) #background is black
             im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
-
-            im_white=np.full((1280,1280),255).astype('uint8')
+            
+            im_white=np.full((1280, 1280),255).astype('uint8')
             im_white_masked=np.multiply(im_white, np.array(im_mask)).astype('uint8')
-            # homography_virtual_map_masked=np.multiply(homography_virtual_map, im_mask_inv).astype('uint8')
+            self.cropped_virtual_map=homography_virtual_map+im_white_masked
 
-            # self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
-            self.cropped_virtual_map=im_white_masked+homography_virtual_map
+            virtual_map1 = np.multiply(self.cropped_virtual_map, im_mask_inv1).astype('uint8')
+            virtual_map2 = np.multiply(self.cropped_virtual_map, im_mask_inv2).astype('uint8')
+            virtual_map3 = np.multiply(self.cropped_virtual_map, im_mask_inv3).astype('uint8')
+            virtual_map4 = np.multiply(self.cropped_virtual_map, im_mask_inv4).astype('uint8')
 
             print("sum & crop image time: "+str(time.time()-_time))
-
+         
 ##################################################################################
 
             try:
                 fm = FeatureMatch(self.folder_path)
                 # print("img1: "+str(self.virtual_map.shape)+", img2: "+str(summed_image.shape))
                 # if self.cropped_virtual_map is None or summed_image is None:
-                if self.cropped_virtual_map is None or summed_image is None:
+                if self.cropped_virtual_map is None or img1 is None or img1 is None or img1 is None or img1 is None:
                     print("IMAGE EMPTY")
                     raise Exception("Image Empty")
                 else:
                     # M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
 
-                    M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
-                    # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
+                    # M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
                     # M = fm.IMAGE_ALIGNMENT_ecc(summed_image, self.cropped_virtual_map)
+                    M1 = fm.SURF_BF_matching(img1, virtual_map1)
+                    M2 = fm.SURF_BF_matching(img2, virtual_map2)
+                    M3 = fm.SURF_BF_matching(img3, virtual_map3)
+                    M4 = fm.SURF_BF_matching(img4, virtual_map4)
 
 
-                    if fm.status == True:
-                        # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
-                        # self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
-                        # self.virtual_map = self.app_robotview.img
 
-                        #Initialize Queue
-                        # self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
+                    # if fm.status == True:
+                    #     # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
+                    #     # self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
+                    #     # self.virtual_map = self.app_robotview.img
 
-                        __time=time.time()
-                        self.relocalization(M)
-                        print("relocation time: "+str(time.time()-__time))
+                    #     #Initialize Queue
+                    #     # self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
+
+                    #     __time=time.time()
+                    #     self.relocalization(M)
+                    #     print("relocation time: "+str(time.time()-__time))
 
             except Exception as e:
                 print(e)
@@ -351,13 +235,9 @@ class VisualCompensation():
             # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
             # self.sum_pub.publish(summed_msg)
 
-            # self.summed_image_prev = self.summed_image
-
         else:
             print("Navigation not started yet")
 #################################################################
-
-
 
     def sync_virtual_callback(self, _endPoint, _midPoint, _midPointTime):
         if not self.isNavigationStarted:
@@ -403,7 +283,7 @@ class VisualCompensation():
         del_x_canvas, del_y_canvas = np.matmul(rotation, [-del_x_virtual, -del_y_virtual])
         # *(-1) in del_x_virtual for calibration of x waypoint coordinate
         # *(-1) in del_y_virtual for calibration of image coordiate to canvas coordinate
-
+        
         offset=Point()
         offset.x=del_x_canvas
         offset.y=del_y_canvas
@@ -412,7 +292,7 @@ class VisualCompensation():
         print(offset)
 
         self.pub_offset.publish(offset)
-
+        
 
     def crop_image(self, _img):
         _time=time.time()
@@ -435,10 +315,10 @@ class VisualCompensation():
                     [x_mid_crop-half_map_size_diagonal*cos(pi/4+self.mid_predict_img_th), y_mid_crop+half_map_size_diagonal*sin(pi/4+self.mid_predict_img_th)],
                     [x_mid_crop+half_map_size_diagonal*cos(pi/4-self.mid_predict_img_th), y_mid_crop+half_map_size_diagonal*sin(pi/4-self.mid_predict_img_th)],
                     [x_mid_crop+half_map_size_diagonal*cos(pi/4+self.mid_predict_img_th), y_mid_crop-half_map_size_diagonal*sin(pi/4+self.mid_predict_img_th)]]
-
+        
         imgPts_padding=[[a[0]+padding, a[1]+padding] for a in imgPts]
         # print("points: "+str(imgPts_padding))
-
+        
         imgPts_padding=np.array(imgPts_padding)
 
         objPts=np.array([[0,0], [0, 1280], [1280, 1280], [1280,0]])
@@ -470,7 +350,7 @@ class VisualCompensation():
         for i in xrange(len(_img)):
             for j in xrange(len(_img[i])):
                 if _img[i][j]==0 and i>1 and j>1 and i<_img.shape[1]-1 and j<_img.shape[0]-1:
-
+                    
                     a=[]
                     a.append(_img[i-1][j])  #P1
                     a.append(_img[i][j+1])  #P2
@@ -482,7 +362,7 @@ class VisualCompensation():
                     a.append(_img[i-1][j-1])    #P8
                     if sum(a[:8])>= 255*7:
                         _img[i][j]=255
-                        # print("SALT_POINT: "+str(i)+", "+str(j))
+                        print("SALT_POINT: "+str(i)+", "+str(j))
                     else:
                         pass
                 else:
