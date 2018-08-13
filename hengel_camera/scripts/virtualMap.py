@@ -260,16 +260,8 @@ class VisualCompensation():
             img_white_masked=np.multiply(img_white, im_mask1234).astype('uint8')
             img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4).astype('uint8')
             img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask2).astype('uint8')
-<<<<<<< HEAD
-            # img1_masked=np.multiply(img1, im_mask_inv1).astype('uint8')
-            # img3_masked=np.multiply(img3, im_mask_inv3).astype('uint8')
-            # img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r).astype('uint8')
-            # img_right_masked=np.multiply(np.multiply(img_right, im_mask1234), im_mask_l).astype('uint8')
-
-=======
-
->>>>>>> 82147b0235babed0eae12a6cefe40cf2cc721c21
-            # summed_image=img_white_masked
+            
+	    # summed_image=img_white_masked
             summed_image=img1+img2_masked+img3+img4_masked+img_white_masked
             summed_image[531:571,497:577]=156
             summed_image[535:570,597:706]=150
