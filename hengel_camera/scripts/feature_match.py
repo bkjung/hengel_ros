@@ -243,7 +243,6 @@ class FeatureMatch():
             matches = bf.knnMatch(des1, trainDescriptors = des2, k = 2)
             # Sort them in the order of their distance
             # matches = sorted(matches, key=lambda x:x.distance)
-            
             mkp1, mkp2 = [], []
             ratio = 0.75
             for m in matches:
@@ -252,12 +251,14 @@ class FeatureMatch():
                     mkp1.append( kp1[m.queryIdx] )
                     mkp2.append( kp2[m.trainIdx] )
             # kp_pairs = zip(mkp1, mkp2)
-
             # src_pts=np.float32([ kp2[m.queryIdx].pt for m in matches]).reshape(-1,1,2)
             # dst_pts=np.float32([ kp1[m.trainIdx].pt for m in matches]).reshape(-1,1,2)
             src_pts=np.float32([kp.pt for kp in mkp1]).reshape(-1,1,2)
             dst_pts=np.float32([kp.pt for kp in mkp2]).reshape(-1,1,2)
-            M, mask= cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+            try:
+                M, mask= cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+            except Exception as e:
+                print(e)
             if M is None:
                 print("Homography mtx M is None !!!!")
             else:

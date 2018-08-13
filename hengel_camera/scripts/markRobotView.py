@@ -19,7 +19,7 @@ class RobotView():
     #def __init__(self):
         self.pixMetRatio=500
         # self.lineThickness=0.01   #original
-        self.lineThickness=0.03
+        self.lineThickness=0.02
 
         self.img=_img
 
