@@ -15,14 +15,14 @@ from navigation_control import NavigationControl
 import cv2
 
 #INTERVAL = 0.0001
-INTERVAL = 0.003
+INTERVAL = 0.0007
 #INTERVAL = 0.0025
 # CANVAS_SIDE_LENGTH = 1.0
 #CANVAS_SIDE_LENGTH = 1.5 * 0.58
 #CANVAS_SIDE_LENGTH = 0.5 * 0.58
 #PADDING_LENGTH = 0.0
 #PADDING_LENGTH = -0.65
-#PADDING_LENGTH = -0.30
+PADDING_LENGTH = -0.15
 #VIEWPOINT_DISTANCE = 0.3
 
 package_base_path = os.path.abspath(
@@ -37,7 +37,7 @@ class PaintLetter():
         while True:
             word = raw_input("What is the CANVAS SIDE LENGTH of one letter?\n Type: ")
             self.CANVAS_SIDE_LENGTH = float(word)
-            break        
+            break
         print("Length of Canvas Side = " + str(self.CANVAS_SIDE_LENGTH))
         #print("Length of Padding = " + str(PADDING_LENGTH))
         #print("Distance of Viewpoint = " + str(VIEWPOINT_DISTANCE))
@@ -130,7 +130,7 @@ class PaintLetter():
                                 if not len(_str) == 0:
                                     #letter_path.append([(float)(_str[0])+(float)(letter_index)-(2*(float)(letter_index)-1)*250/1632, 1.0-(float)(_str[1])])
                                     #x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH+float(letter_index)*(CANVAS_SIDE_LENGTH+PADDING_LENGTH))*-1.0
-                                    x_curr=(float(_str[0])*self.CANVAS_SIDE_LENGTH+float(letter_index)*(self.CANVAS_SIDE_LENGTH))*-1.0
+                                    x_curr=(float(_str[0])*self.CANVAS_SIDE_LENGTH+float(letter_index)*(self.CANVAS_SIDE_LENGTH)+PADDING_LENGTH*(letter_index))*-1.0
                                     y_curr=(1-float(_str[1]))*self.CANVAS_SIDE_LENGTH+row_index*self.CANVAS_SIDE_LENGTH
 
                                     dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
