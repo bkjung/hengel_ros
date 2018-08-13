@@ -9,10 +9,12 @@ from std_msgs.msg import Float32
 from sensor_msgs.msg import Image, CompressedImage
 from math import cos, sin, pi, sqrt
 import numpy as np
-from cv_bridge import CvBridge
-import cv2
 import copy
 import collections
+from cv_bridge import CvBridge
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
+import cv2
+sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
 class RobotView():
     def __init__(self, _img):
@@ -41,7 +43,7 @@ class RobotView():
         # print(self.end_x, self.img.shape[1], self.end_y, self.img.shape[0])
 
         if self.end_x>=0 and self.end_x<self.img.shape[1] and self.end_y>=0 and self.end_y<self.img.shape[0]:
-            
+
             # print("add run")
             self.add_endpoint()
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity

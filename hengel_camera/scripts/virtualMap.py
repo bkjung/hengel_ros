@@ -1,24 +1,26 @@
 #!/usr/bin/env python
 
 import rospy
+import sys
+print(sys.path)
 from geometry_msgs.msg import Point
 from std_msgs.msg import Float32, Time, Header
 from sensor_msgs.msg import Image, CompressedImage
 from markRobotView import RobotView
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos, asin,ceil
 import numpy as np
-import sys
 import time
 import os
 import copy
 from os.path import expanduser
-import cv2
-from cv_bridge import CvBridge
 import message_filters
 import collections
 from feature_match import FeatureMatch
 from matplotlib import pyplot as plt
 from hengel_camera.msg import CmpImg
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
+import cv2
+from cv_bridge import CvBridge
 
 # def ros_time_to_float(msg_time):
 #     # print(type(msg_time))
@@ -31,7 +33,7 @@ from hengel_camera.msg import CmpImg
 class VisualCompensation():
     def __init__(self, _num_pts_delete):
         while True:
-            word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
+            word= input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
             self.width=float(word.split()[0])
             self.height=float(word.split()[1])
             break
@@ -102,7 +104,7 @@ class VisualCompensation():
         # self.pub_pi_l=rospy.Publisher('/pi_left/undist', Image, queue_size=5 )
         # self.pub_pi_r=rospy.Publisher('/pi_right/undist', Image, queue_size=5 )
         self.pub_sum=rospy.Publisher('/summed_image/compressed',CompressedImage, queue_size=5)
-    
+
 
         rospy.spin()
 
@@ -218,8 +220,8 @@ class VisualCompensation():
             # img3_masked=np.multiply(img3, im_mask_inv3)
             # # img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r).astype('uint8')
             # # img_right_masked=np.multiply(np.multiply(img_right, im_mask1234), im_mask_l).astype('uint8')
-            
-            
+
+
             # # summed_image=(img1+img2_masked+img3+img4_masked+img_white_masked).astype('uint8')
             # summed_image=(img2_masked+img4_masked+img_white_masked).astype('uint8')
             # # summed_image=(img1_masked+img2_masked+img3_masked+img4_masked).astype('uint8')
@@ -262,7 +264,7 @@ class VisualCompensation():
             # img3_masked=np.multiply(img3, im_mask_inv3).astype('uint8')
             # img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r).astype('uint8')
             # img_right_masked=np.multiply(np.multiply(img_right, im_mask1234), im_mask_l).astype('uint8')
-            
+
             # summed_image=img_white_masked
             summed_image=img1+img2_masked+img3+img4_masked+img_white_masked
             summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
@@ -282,7 +284,7 @@ class VisualCompensation():
             self.cropped_virtual_map=im_white_masked+homography_virtual_map
 
             print("crop image time: "+str(time.time()-_time))
-         
+
 ##################################################################################
 
             try:
@@ -367,7 +369,7 @@ class VisualCompensation():
         del_x_canvas, del_y_canvas = np.matmul(rotation, [-del_x_virtual, -del_y_virtual])
         # *(-1) in del_x_virtual for calibration of x waypoint coordinate
         # *(-1) in del_y_virtual for calibration of image coordiate to canvas coordinate
-        
+
         offset=Point()
         offset.x=del_x_canvas
         offset.y=del_y_canvas
@@ -376,7 +378,7 @@ class VisualCompensation():
         print(offset)
 
         self.pub_offset.publish(offset)
-        
+
 
     def crop_image(self, _img):
         _time=time.time()
@@ -399,10 +401,10 @@ class VisualCompensation():
                     [x_mid_crop-half_map_size_diagonal*cos(pi/4+self.mid_predict_img_th), y_mid_crop+half_map_size_diagonal*sin(pi/4+self.mid_predict_img_th)],
                     [x_mid_crop+half_map_size_diagonal*cos(pi/4-self.mid_predict_img_th), y_mid_crop+half_map_size_diagonal*sin(pi/4-self.mid_predict_img_th)],
                     [x_mid_crop+half_map_size_diagonal*cos(pi/4+self.mid_predict_img_th), y_mid_crop-half_map_size_diagonal*sin(pi/4+self.mid_predict_img_th)]]
-        
+
         imgPts_padding=[[a[0]+padding, a[1]+padding] for a in imgPts]
         # print("points: "+str(imgPts_padding))
-        
+
         imgPts_padding=np.array(imgPts_padding)
 
         objPts=np.array([[0,0], [0, 1280], [1280, 1280], [1280,0]])
