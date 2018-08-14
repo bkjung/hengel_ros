@@ -339,16 +339,6 @@ class VisualCompensation():
         im_mask_inv=(1-im_mask).astype('bool')
         return im_mask_inv, im_mask 
 
-    def find_mask_virtual(self, img):
-        # print(img.shape)
-        _time=time.time()
-        black_range1=np.array([0])
-        black_range2=np.array([250])
-        im_mask=(cv2.inRange(img, black_range1, black_range2)).astype('bool')
-        # im_mask=np.dstack((im_mask, im_mask, im_mask))
-        im_mask_inv=(1-im_mask).astype('bool')
-        return im_mask_inv, im_mask 
-
     def image_processing(self, _img):
         print("IMAGE PROCESSING")
         cv2.imwrite("/home/bkjung/before.png",_img)
@@ -391,6 +381,7 @@ class VisualCompensation():
         undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
         if self.is_first1==True:
             self.img_for_mask1=cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo1, (1280, 1280))
+            self.is_first1=False
 
         return cv2.bitwise_not(cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo1, (1280,1280)))
 

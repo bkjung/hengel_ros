@@ -6,6 +6,7 @@ from sensor_msgs.msg import Image, CameraInfo, CompressedImage
 from std_msgs.msg import Bool
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
+from matplotlib import pyplot as plt
 import message_filters
 import time
 
@@ -333,17 +334,61 @@ def homography_matrix(index):
     [120,152],[246,149.3],[374.3, 140.7],[501.5,139.8],[623.8,136.5],[862.2,131.5],
     [184.3,23.7],[582,18]])
 
-    robotPtsArr.append([[626.7,2093.3], [653, 2090.3], [680, 2054.7], [827,2232.7],   [795.3,2239.3], 
-                    [853,2254.7], [553.7,2206.3],[775,2346.7],[779.7,2378],  [775,2359],    
-                    [941,2461],     [286,2220],[1444,1132], [2068,488]])
-    imgPtsArr.append(  [[786.3,2169.3], [784.7, 2166.7],[659,2425.2], [980.3, 2232.3],[939,2244.7],   
-                    [1004,2244],  [743, 2259],   [953,2358.3],[968.3,2397.3],[965.7,1841.7],
-                    [1129.3,2452.3],[1370,962],[1330,1630], [1580,1504]])
+    img=[[626.7,2093.3], [653, 2090.3],  [553,2207],
+                    [827,2232.7]
+                    # ,   [795.3,2239.3], [853,2285],
+                    # [853,2254.7], [553.7,2206.3],[775,2346.7],[779.7,2378],      
+                    # [941,2461],    
+                    # [680, 2054.7],[775,2359],
+                    #  [286,2220], [2068,488],[1444,1132]
+                    ]
+    img_resized=[ [a[0]/2560*1280 ,a[1]/2560*1280 ] for a in img]
+    imgPtsArr.append(img_resized)
 
-    homography, status=cv2.findHomography(np.array(imgPtsArr[index-1]), np.array(objPts[index-1],np.float32), cv2.RANSAC)
+    obj=[[786.3,2169.3], [784.7, 2166.7], [747,2260],
+                    [980.3, 2232.3]
+                    # ,[939,2244.7], [1019,2283],
+                    # [1004,2244],  [743, 2259],   [953,2358.3],[968.3,2397.3],
+                    # [1129.3,2452.3],
+                    # [659,2425.2],[965.7,1841.7],
+                    # [1370,962], [1580,1504], [1330,1630] ##OUTLIER
+                    ]
+    obj_resized=[[b[0]/2560*1280, b[1]/2560*1280] for b in obj]
+    objPts.append(obj_resized)
+
+
+    
+
+    # print("index: "+str(index))
+
+    homography, status=cv2.findHomography(np.array(imgPtsArr[index-1]), np.array(objPts[index-1],np.float32), cv2.RANSAC, 10)
+
+    print("img resized: "+str(imgPtsArr[6]))
+    print("obj resized: "+str(objPts[6]))
+    print("size: "+str(len(imgPtsArr[6]))+", "+str(len(objPts[6])))
 
     # return cv2.warpPerspective(_img, homography, (1280, 1280))
     print(homography)
+
+    real_img=cv2.imread('/home/mjlee/Pictures/real_photo.png')
+    virtual_img=cv2.imread('/home/mjlee/Pictures/virtual.png')
+
+    real_homo=cv2.warpPerspective(real_img, homography,(1280,1280))
+    virtual_homo=cv2.warpPerspective(virtual_img, homography, (1280,1280))
+
+    plt.figure(1, figsize=(10,20))
+    plt.subplot(221)
+    plt.imshow(real_img)
+    plt.subplot(222)
+    plt.imshow(virtual_img)
+    plt.subplot(223)
+    plt.imshow(real_homo)
+    plt.subplot(224)
+    plt.imshow(virtual_homo)
+
+    plt.savefig("/home/mjlee/Pictures/homography.png")
+
+
 
 
 if __name__=="__main__":

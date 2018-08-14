@@ -32,7 +32,7 @@ sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 class VisualCompensation():
     def __init__(self, _num_pts_delete):
         while True:
-            word= input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
+            word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
             self.width=float(word.split()[0])
             self.height=float(word.split()[1])
             break
@@ -86,6 +86,7 @@ class VisualCompensation():
         self.summed_image_prev = None
 
         self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=False)
+        
         rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.callback_left)
         rospy.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage, self.callback_right)
 
@@ -94,7 +95,15 @@ class VisualCompensation():
         # self.callback_pi_left=message_filters.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage)
         # self.callback_pi_right=message_filters.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage)
 
+        self.is_first1=True
+        self.is_first2=True
+        self.is_first3=True
+        self.is_first4=True
 
+        self.threshold1=100
+        self.threshold2=100
+        self.threshold3=100
+        self.threshold4=100        
 
         self.ts.registerCallback(self.sync_real_callback)
 
@@ -240,28 +249,20 @@ class VisualCompensation():
             # self.cropped_virtual_map=(homography_virtual_map_masked+im_white_masked).astype('uint8')
 
 ##### 3  #############################################################################
-            im_mask_inv1, im_mask1=self.find_mask(img1)
-            im_mask_inv3, im_mask3=self.find_mask(img3)
-            im_mask_inv2, im_mask2=self.find_mask(img2)
-            im_mask_inv4, im_mask4=self.find_mask(img4)
-            # _, im_mask_l=self.find_mask(img_left)
-            # _, im_mask_r=self.find_mask(img_right)
+            # im_mask_inv1, im_mask1=self.find_mask(img1)
+            # im_mask_inv3, im_mask3=self.find_mask(img3)
+            # im_mask_inv2, im_mask2=self.find_mask(img2)
+            # im_mask_inv4, im_mask4=self.find_mask(img4)
 
-            img_white=np.full((1280, 1280), 145)
+            im_mask13=cv2.bitwise_and(np.array(self.im_mask1).astype('uint8'), np.array(self.im_mask3).astype('uint8'))
 
-            im_mask13=cv2.bitwise_and(np.array(im_mask1).astype('uint8'), np.array(im_mask3).astype('uint8'))
-            im_mask24=cv2.bitwise_and(np.array(im_mask2).astype('uint8'), np.array(im_mask4).astype('uint8'))
-            # im_mask_inv_13=cv2.bitwise_and(np.array(im_mask_inv1).astype('uint8'), np.array(im_mask_inv3).astype('uint8'))
-            # im_mask_inv_24=cv2.bitwise_and(np.array(im_mask_inv2).astype('uint8'), np.array(im_mask_inv4).astype('uint8'))
-            im_mask1234=cv2.bitwise_and(im_mask13, im_mask24)
-            # im_mask_inv1234=cv2.bitwise_and(im_mask_inv_13, im_mask_inv_24)
+            img2_masked=np.multiply(np.multiply(img2, im_mask13), self.im_mask4).astype('uint8')
+            img4_masked=np.multiply(np.multiply(img4, im_mask13), self.im_mask2).astype('uint8')
 
-            img_white_masked=np.multiply(img_white, im_mask1234).astype('uint8')
-            img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4).astype('uint8')
-            img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask2).astype('uint8')
+    	    # summed_image=img_white_masked
+            summed_image=img1+img2_masked+img3+img4_masked
+            summed_image=cv2.bitwise_not(summed_image)
 
-	    # summed_image=img_white_masked
-            summed_image=img1+img2_masked+img3+img4_masked+img_white_masked
             summed_image[531:571,497:577]=156
             summed_image[535:570,597:706]=150
             summed_image[620:651, 510:547]=176
@@ -290,14 +291,15 @@ class VisualCompensation():
             self.summed_image = summed_image
 
             homography_virtual_map=self.crop_image(self.virtual_map) #background is black
-            im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
+            # im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
 
-            im_white=np.full((1280,1280),255).astype('uint8')
-            im_white_masked=np.multiply(im_white, np.array(im_mask)).astype('uint8')
+            # im_white=np.full((1280,1280),255).astype('uint8')
+            # im_white_masked=np.multiply(im_white, np.array(im_mask)).astype('uint8')
             # homography_virtual_map_masked=np.multiply(homography_virtual_map, im_mask_inv).astype('uint8')
 
             # self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
-            self.cropped_virtual_map=im_white_masked+homography_virtual_map
+            # self.cropped_virtual_map=im_white_masked+homography_virtual_map
+            self.cropped_virtual_map=cv2.bitwise_not(homography_virtual_map)
 
             print("sum & crop image time: "+str(time.time()-_time))
 
@@ -377,17 +379,12 @@ class VisualCompensation():
 
 
     def relocalization(self, homography):
-        print("debug1")
         mid_real_virtual_x, mid_real_virtual_y, _= np.matmul(homography, [self.mid_real_photo_x, self.mid_real_photo_y, 1])
-        print("debug2")
         print(mid_real_virtual_x)
         print(self.mid_real_photo_x)
         del_x_virtual=mid_real_virtual_x-self.mid_real_photo_x
-        print("debug3")
         del_y_virtual=mid_real_virtual_y-self.mid_real_photo_y
-        print("debug4")
         del_th_virtual=-atan2(homography[0][1],homography[0][0])
-        print("debug5")
         rotation=np.array([[cos(self.current_mid_predict_canvas_th), -sin(self.current_mid_predict_canvas_th)],
                             [sin(self.current_mid_predict_canvas_th), cos(self.current_mid_predict_canvas_th)]])
         print("debug6")
@@ -407,13 +404,14 @@ class VisualCompensation():
 
     def crop_image(self, _img):
         _time=time.time()
+        img_not=cv2.bitwise_not(_img)
         padding=int(ceil(640*sqrt(2)))
         img_padding=np.full((_img.shape[0]+padding*2, _img.shape[1]+padding*2),0).astype('uint8')
 
         img_test=img_padding[padding:padding+_img.shape[0],padding:padding+_img.shape[1]]
 
 
-        img_padding[padding:padding+_img.shape[0],padding:padding+_img.shape[1]]=_img
+        img_padding[padding:padding+_img.shape[0],padding:padding+_img.shape[1]]= img_not
 
         half_map_size_diagonal = 1280/sqrt(2)
         midpnt_offset=55.77116996/2 # in virtual map coordiate
@@ -489,13 +487,17 @@ class VisualCompensation():
         mtx=np.array([[393.8666817683925, 0.0, 399.6813895086665], [0.0, 394.55108358870405, 259.84676565717876], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0032079005049939543, -0.020856072501002923, 0.000252242294186179, -0.0021042704510431365])
 
-
         homo1=np.array([[ 1.92059741e+00,  4.44537102e+00, -1.55299796e+02],
             [-8.33364081e-02,  5.20206669e+00, -3.00766611e+02],
             [-5.52618496e-05,  6.56931686e-03,  1.00000000e+00]])
-        return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo1, (1280,1280))
 
-
+        undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
+        if self.is_first1 == True:
+            img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo1, (1280, 1280))
+            self.im_mask_inv1, self.im_mask1 = self.find_mask(img_for_mask)
+            self.is_first1=False
+        
+        return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo1, (1280,1280))
 
 
 
@@ -505,11 +507,17 @@ class VisualCompensation():
         mtx=np.array([[396.01900903941834, 0.0, 410.8496405295566], [0.0, 396.2406539134792, 285.8932176591904], [0.0, 0.0, 1.0]])
         dst=np.array([-0.008000340519517233, -0.016478659972026452, 7.25792172844022e-05, -0.00434319738405187])
 
-
         homo2= np.array([[-1.63920447e-01,  4.80660669e+00, -2.26012234e+02],
             [-1.92644897e+00,  3.66877166e+00,  1.35918715e+03],
             [-2.64765872e-04,  5.74538321e-03,  1.00000000e+00]])
-        return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo2, (1280,1280))
+        
+        undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold2, 255, cv2.THRESH_BINARY)[1]
+        if self.is_first2 == True:
+            img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo2, (1280, 1280))
+            self.im_mask_inv2, self.im_mask2 = self.find_mask(img_for_mask)
+            self.is_first2=False
+                   
+        return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo2, (1280,1280))
 
     def undistort3(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
@@ -521,8 +529,13 @@ class VisualCompensation():
             [-2.92334083e-03,  2.97243939e+00,  1.71000087e+03],
             [ 7.54059686e-06,  6.36915820e-03,  1.00000000e+00]])
 
-
-        return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo3, (1280,1280))
+        undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
+        if self.is_first3 == True:
+            img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo3, (1280, 1280))
+            self.im_mask_inv3, self.im_mask3 = self.find_mask(img_for_mask)
+            self.is_first3=False
+        
+        return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo3, (1280,1280))
 
 
     def undistort4(self, _img):
@@ -534,7 +547,16 @@ class VisualCompensation():
         homo4= np.array([[ 4.95663167e-01,  9.49273943e+00,  3.61867640e+03],
             [ 5.88390241e+00,  1.17526923e+01, -1.72914355e+03],
             [ 5.65609665e-04,  1.83615875e-02,  1.00000000e+00]])
-        return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo4, (1280,1280))
+
+        undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold4, 255, cv2.THRESH_BINARY)[1]
+        if self.is_first4 == True:
+            img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo4, (1280, 1280))
+            self.im_mask_inv4, self.im_mask4 = self.find_mask(img_for_mask)
+            self.is_first4=False
+        
+
+        return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo4, (1280,1280))
+        
 
     def undistort_left(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
