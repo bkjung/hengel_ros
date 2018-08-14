@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-
 import rospy
 import sys
-print(sys.path)
 from geometry_msgs.msg import Point
 from std_msgs.msg import Float32, Time, Header
 from sensor_msgs.msg import Image, CompressedImage
@@ -18,9 +16,10 @@ import collections
 from feature_match import FeatureMatch
 from matplotlib import pyplot as plt
 from hengel_camera.msg import CmpImg
+from cv_bridge import CvBridge
 sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
 import cv2
-from cv_bridge import CvBridge
+sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
 # def ros_time_to_float(msg_time):
 #     # print(type(msg_time))
