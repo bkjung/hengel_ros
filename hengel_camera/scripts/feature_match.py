@@ -71,12 +71,12 @@ class FeatureMatch():
         else:
             print("Feature Match FAILED (Empty Descriptor)")
 
-        matchesMask = [[0,0] for i in xrange(len(matches))]
+        matchesMask = [[0,0] for i in range(len(matches))]
         draw_params = dict(matchColor = (0,255,0),
                         singlePointColor = (255,0,0),
                         flags = 0)
         img3 = cv2.drawMatches(img2,kp2,img1,kp1,matches[:10],None,**draw_params)
-        plt.subplot(313) 
+        plt.subplot(313)
         plt.imshow(img3, cmap='gray')
         file_time = time.strftime("%y%m%d_%H%M%S")
         plt.savefig(self.folder_path+"/SIFT_FLANN_"+file_time+".png")
@@ -142,7 +142,7 @@ class FeatureMatch():
 
         if des1 is not None and des2 is not None:
             print("debug0")
-            
+
 
             #match keypoints here!!!
             #1st
@@ -154,7 +154,7 @@ class FeatureMatch():
             #2nd
             #store all the good matches as per Lowe's ratio test
             good=[]
-            matchesMask = [[0,0] for i in xrange(len(matches))]
+            matchesMask = [[0,0] for i in range(len(matches))]
             for i,  (m,n) in enumerate(matches):
                 if m.distance < 0.7*n.distance:
                     good.append(m)
@@ -183,7 +183,7 @@ class FeatureMatch():
                     print("sift_flann match finished")
             else:
                 print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
-        
+
 
             draw_params = dict(matchColor = (0,255,0),
                             singlePointColor = (255,0,0),
@@ -263,12 +263,12 @@ class FeatureMatch():
                 print("Homography mtx M is None !!!!")
             else:
                 self.status = True
-                matchesMask = [[0,0] for i in xrange(len(matches))]
+                matchesMask = [[0,0] for i in range(len(matches))]
                 draw_params = dict(matchColor = (0,255,0),
                                 singlePointColor = (255,0,0),
                                 flags = 0)
                 img3 = cv2.drawMatchesKnn(img1,mkp1,img2,mkp2,matches[:10],None,**draw_params)
-                plt.subplot(313) 
+                plt.subplot(313)
                 plt.imshow(img3, cmap='gray')
 
             print("surf_bf match finished")

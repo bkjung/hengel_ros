@@ -21,6 +21,7 @@ from hengel_camera.msg import CmpImg
 sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
 import cv2
 from cv_bridge import CvBridge
+sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
 # def ros_time_to_float(msg_time):
 #     # print(type(msg_time))
@@ -260,7 +261,7 @@ class VisualCompensation():
             img_white_masked=np.multiply(img_white, im_mask1234).astype('uint8')
             img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask4).astype('uint8')
             img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask2).astype('uint8')
-            
+
 	    # summed_image=img_white_masked
             summed_image=img1+img2_masked+img3+img4_masked+img_white_masked
             summed_image[531:571,497:577]=156
@@ -459,8 +460,8 @@ class VisualCompensation():
     def image_processing(self, _img):
         print("IMAGE PROCESSING")
         cv2.imwrite("/home/bkjung/before.png",_img)
-        for i in xrange(len(_img)):
-            for j in xrange(len(_img[i])):
+        for i in range(len(_img)):
+            for j in range(len(_img[i])):
                 if _img[i][j]==0 and i>1 and j>1 and i<_img.shape[1]-1 and j<_img.shape[0]-1:
 
                     a=[]
