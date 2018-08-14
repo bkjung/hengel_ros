@@ -333,6 +333,13 @@ def homography_matrix(index):
     [120,152],[246,149.3],[374.3, 140.7],[501.5,139.8],[623.8,136.5],[862.2,131.5],
     [184.3,23.7],[582,18]])
 
+    robotPtsArr.append([[626.7,2093.3], [653, 2090.3], [680, 2054.7], [827,2232.7],   [795.3,2239.3], 
+                    [853,2254.7], [553.7,2206.3],[775,2346.7],[779.7,2378],  [775,2359],    
+                    [941,2461],     [286,2220],[1444,1132], [2068,488]])
+    imgPtsArr.append(  [[786.3,2169.3], [784.7, 2166.7],[659,2425.2], [980.3, 2232.3],[939,2244.7],   
+                    [1004,2244],  [743, 2259],   [953,2358.3],[968.3,2397.3],[965.7,1841.7],
+                    [1129.3,2452.3],[1370,962],[1330,1630], [1580,1504]])
+
     homography, status=cv2.findHomography(np.array(imgPtsArr[index-1]), np.array(objPts[index-1],np.float32), cv2.RANSAC)
 
     # return cv2.warpPerspective(_img, homography, (1280, 1280))
@@ -340,7 +347,7 @@ def homography_matrix(index):
 
 
 if __name__=="__main__":
-    homography_matrix(6)
+    homography_matrix(7)
     # Undistort()
     # cv2.destroyAllWindows()
 
