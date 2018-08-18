@@ -25,7 +25,7 @@ class VelodyneCompensation():
     def __init__(self):
         rospy.init_node('hengel_velodyne_compensation', anonymous=False)
         self.origin=rospy.wait_for_message('/midpoint', Point)
-        rospy.Subscriber('/blam/blam_slam/odometry_integrated_estimate', PoseStamped, self.callback)
+        #rospy.Subscriber('/blam/blam_slam/odometry_integrated_estimate', PoseStamped, self.callback)
         self.pub=rospy.Publisher('/offset_change', Point, queue_size=5)
 
         self.callback_midpoint=message_filters.Subscriber('/midpoint',Point)
@@ -33,6 +33,8 @@ class VelodyneCompensation():
         self.ts=message_filters.ApproximateTimeSynchronizer([self.callback_midpoint, self.callback_velodyne], 10, 0.1, allow_headerless=True)
 
         self.ts.registerCallback(self.sync_callback)
+
+        rospy.spin()
 
     def sync_callback(self, _midpnt, _pose):
         print("origin: %d, %d, %d" %(self.origin.x, self.origin.y, self.origin.z))
