@@ -60,7 +60,7 @@ class FeatureMatch():
                 else:
                     self.status=True
                     print("sift_flann match finished")
-                    print(M)
+                    # print(M)
                     img4=cv2.warpPerspective(img1, M, (1280,1280))
 
                     plt.subplot(224)

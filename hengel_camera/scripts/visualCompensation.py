@@ -271,6 +271,9 @@ class VisualCompensation():
             summed_image[608:659, 778:887]=153
             summed_image[659:692, 866:935]=158
             summed_image[631:650, 900:980]=165
+            summed_image[589:597, 565:569]=155
+            summed_image[526:599 , 558:725]=150
+
 
 
             # print("summed_image time: "+str(time.time()-_time))
@@ -398,8 +401,8 @@ class VisualCompensation():
         print("virtual photo mid: %d, %d / real photo midpnt: %d, %d" %(mid_real_virtual_x, mid_real_virtual_y, self.mid_real_photo_x, self.mid_real_photo_y))
 
         offset=Point()
-        offset.x=del_x_canvas
-        offset.y=del_y_canvas
+        offset.x=del_x_canvas/self.pixMetRatio
+        offset.y=del_y_canvas/self.pixMetRatio
         offset.z=del_th_virtual
 
         print(offset)
