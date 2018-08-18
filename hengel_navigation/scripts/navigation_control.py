@@ -425,9 +425,9 @@ class NavigationControl():
                             self.go_to_point_and_come_back(self.cam_save_x, self.cam_save_y, self.cam_save_theta_deg)
 
                     # Motion Control
-<<<<<<< Updated upstream
+
                     self.robotNavigationLoop(self.current_waypoint)
-=======
+
                     while True:
                         if rospy.is_shutdown():
                             break
@@ -678,7 +678,7 @@ class NavigationControl():
 
                             rospy.signal_shutdown("KeyboardInterrupt")
                             break
->>>>>>> Stashed changes
+
 
                     #Arrived at the waypoint
                     #rospy.loginfo("CURRENT: " + str(self.point.x) + ", " +
@@ -819,10 +819,7 @@ class NavigationControl():
                                 self.valve_angle_input.goal_position = 740
                                 self.valve_angle_publisher.publish(self.valve_angle_input)
 
-                            #########################################################################
-                            ##### self.D (pen tip distance) can vary here #######
-                            # self.D = arr_D[-1]
-                            #########################################################################
+                            # start
 
 
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
@@ -854,14 +851,40 @@ class NavigationControl():
                             th = self.heading.data
                             delX= self.current_waypoint[0]-self.endPoint.x
                             delY= self.current_waypoint[1]-self.endPoint.y
+                            arr_delX.append(delX)
+                            arr_delY.append(delY)
 
-                            delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
-                            delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
+                            # D(k) should add
+                            #####################################################
+                            a = delX*sin(th) - delY*cos(th)
+                            b = delX*cos(th) + delY*sin(th)
+                            c = b - self.D
+                            if arr_delOmega:
+                                # self.D = self.calculate_optimal_D(delX, delY, th, self.D, arr_delOmega[-1][0], arr_delOmega[-1][1])
+                                self.D = 0.25
+                            else:
+                                print("initial self.D is " + str(self.D))
+                                # self.D = 0.233
+                            arr_D.append(self.D)
+                            #####################################################
+                            # delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
+                            # delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
+                            # delOmega1= (1/self.R)*(delS+self.L*delOmega) * 1.0
+                            # delOmega2= (1/self.R)*(delS-self.L*delOmega) * 1.0
+                            delOmega = asin(a/self.D)
+                            delS = self.D*cos(delOmega) + c
+                            delOmega1 = (1/self.R)*(delS + self.L*delOmega)
+                            delOmega2 = (1/self.R)*(delS - self.L*delOmega)
 
-                            # delOmega1= (1/self.R)*(delS+2*self.L*delOmega) * 0.75
-                            # delOmega2= (1/self.R)*(delS-2*self.L*delOmega) * 0.75
-                            delOmega1= (1/self.R)*(delS+self.L*delOmega) * 1.0
-                            delOmega2= (1/self.R)*(delS-self.L*delOmega) * 1.0
+                            if not arr_delOmega:
+                                arr_delOmega.append([delOmega1, delOmega2])
+                                print("initial delOmega is " + str(delOmega1) + " and " + str(delOmega2))
+                            else:
+                                deldelOmega1 = delOmega1 - arr_delOmega[-1][0]
+                                deldelOmega2 = delOmega2 - arr_delOmega[-1][1]
+                                arr_deldelOmega.append([deldelOmega1, deldelOmega2])
+                                arr_deldelOmega_error.append(sqrt(pow(deldelOmega1,2) + pow(deldelOmega2,2)))
+                                arr_delOmega.append([delOmega1, delOmega2])
 
                             #Motor Smoothing Buffer Disabled
                             pubDelta1 = delOmega1
@@ -1215,22 +1238,72 @@ class NavigationControl():
             rospy.signal_shutdown("KeyboardInterrupt")
 
 
+    # def calculate_optimal_D(self, _delX, _delY, _th, _prev_D, _prev_delOmega1, _prev_delOmega2):
+    #     arr_error = []
+    #     _a = _delX*sin(_th) - _delY*cos(_th)
+    #     _b = _delX*cos(_th) + _delY*sin(_th)
+    #     for i in range(MOTOR_RESOLUTION):
+    #         _D = 0.2 + i*0.1/MOTOR_RESOLUTION
+    #         # _D = 0.2 + i*0.5/MOTOR_RESOLUTION
+    #         # if exception needed
+    #         _delOmega = asin(_a/_D)
+    #         _delS = sqrt(_D*_D-_a*_a) - _prev_D + _b
+    #         _delOmega1 = (1/self.R)*(_delS + self.L*_delOmega)
+    #         _delOmega2 = (1/self.R)*(_delS - self.L*_delOmega)
+    #         _error = pow(_delOmega1 - _prev_delOmega1, 2) + pow(_delOmega2 - _prev_delOmega2, 2)
+    #         arr_error.append(_error)
+    #     return 0.2 + arr_error.index(min(arr_error))*0.1/MOTOR_RESOLUTION
+    #     # return 0.2 + arr_error.index(min(arr_error))*0.5/MOTOR_RESOLUTION
+
+    def derivative_cost_function(self, x, _a, _b, _c, _e, _f):
+        value1 = ((1/self.R)*(sqrt(pow(x,2) - pow(_a,2)) + _c + self.L*asin(_a/x)) - _e)*(1/self.R)*(pow(x,2)-self.L*_a)/(x*sqrt(pow(x,2) - pow(_a,2)))
+        value2 = ((1/self.R)*(sqrt(pow(x,2) - pow(_a,2)) + _c - self.L*asin(_a/x)) - _f)*(1/self.R)*(pow(x,2)+self.L*_a)/(x*sqrt(pow(x,2) - pow(_a,2)))
+        value = value1 + value2
+        return value
+
+    def cost_function(self, x, _a, _b, _c, _e, _f):
+        _delOmega = asin(_a/x)
+        _delS = sqrt(x*x-_a*_a) + _c
+        _delOmega1 = (1/self.R)*(_delS + self.L*_delOmega)
+        _delOmega2 = (1/self.R)*(_delS - self.L*_delOmega)
+        value = pow(_delOmega1 - _e, 2) + pow(_delOmega2 - _f, 2)
+        return value
+
     def calculate_optimal_D(self, _delX, _delY, _th, _prev_D, _prev_delOmega1, _prev_delOmega2):
         arr_error = []
         _a = _delX*sin(_th) - _delY*cos(_th)
         _b = _delX*cos(_th) + _delY*sin(_th)
-        for i in range(MOTOR_RESOLUTION):
-            _D = 0.2 + i*0.1/MOTOR_RESOLUTION
-            # _D = 0.2 + i*0.5/MOTOR_RESOLUTION
-            # if exception needed
-            _delOmega = asin(_a/_D)
-            _delS = sqrt(_D*_D-_a*_a) - _prev_D + _b
-            _delOmega1 = (1/self.R)*(_delS + self.L*_delOmega)
-            _delOmega2 = (1/self.R)*(_delS - self.L*_delOmega)
-            _error = pow(_delOmega1 - _prev_delOmega1, 2) + pow(_delOmega2 - _prev_delOmega2, 2)
-            arr_error.append(_error)
-        return 0.2 + arr_error.index(min(arr_error))*0.1/MOTOR_RESOLUTION
-        # return 0.2 + arr_error.index(min(arr_error))*0.5/MOTOR_RESOLUTION
+        x1 = 0.2
+        x2 = 0.3
+        x3 = 0
+        error = 0
+        y1 = self.derivative_cost_function(x1, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
+        y2 = self.derivative_cost_function(x2, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
+        for i in range(100):
+            x3 = x2 - y2*(x2-x1)/(y2-y1)
+            error = abs(x3-x2)
+            if error < 0.001:
+                break
+            x1 = x2
+            x2 = x3
+            y1 = self.derivative_cost_function(x1, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
+            y2 = self.derivative_cost_function(x2, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
+        f_x3 = self.cost_function(x3, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
+        f_low = self.cost_function(0.2, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
+        f_high = self.cost_function(0.3, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
+        if f_x3 <= f_low and f_x3 <= f_high:
+            if x3 >= 0.2 and x3 <= 0.3:
+                return x3
+            else:
+                if f_low <= f_high:
+                    return 0.2
+                else:
+                    return 0.3
+        else:
+            if f_low <= f_high:
+                return 0.2
+            else:
+                return 0.3
 
     def control_motors(self, _loop_cnt, delta1, delta2):
 

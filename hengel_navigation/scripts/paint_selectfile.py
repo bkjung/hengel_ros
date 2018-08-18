@@ -144,7 +144,6 @@ class PaintSelectfile():
         path_str=raw_input("Type Waypoint FILE PATH: ")
 
         #root.quit()
-
         if os.path.isfile(path_str):
             with open(path_str, "r") as file_path:
                 for idx, line in enumerate(file_path):
@@ -170,6 +169,8 @@ class PaintSelectfile():
                         dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
                         if dist>self.interval*2.0:
                             div=int(ceil(dist/self.interval))
+                            ############## MJLEE EDITED ####################
+                            count_init=0
                             for k in range(div):
                                 x=x_last+(k+1)/float(div)*(x_curr-x_last)
                                 y=y_last+(k+1)/float(div)*(y_curr-y_last)
