@@ -380,12 +380,12 @@ class NavigationControl():
                         new_endpoint_z=0.0
 
                         dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
-                        
+
                         # if the acquired offset is too large, dismiss it.
                         if dist>0.5:
                             print("VISUAL OFFSET is too LARGE!!! (Dismissing the calculated offset)")
                             pass
-                            
+
                         elif dist>0.001*2.0:
                             div=int(ceil(dist/0.001))
                             print("VISUAL OFFSET inserted %d waypoints" % (div))
@@ -541,11 +541,13 @@ class NavigationControl():
                                 else:
                                     if self.is_moving_between_segments==True:
                                         # self.spray_intensity_publisher.publish(1024.0)
+                                        input_pixel_value_graphic = 255
                                         self.valve_angle_input.goal_position = 1024
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
                                     else:
                                         #self.spray_intensity_publisher.publish(660.0)
                                         # self.spray_intensity_publisher.publish(740.0)
+                                        input_pixel_value_graphic = 0
                                         self.valve_angle_input.goal_position = 660
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
 
@@ -578,8 +580,8 @@ class NavigationControl():
 
                             if original_input_pixel_value<=254:
                                 arr_endPoint.append((self.endPoint.x, self.endPoint.y))
-                            
-                            
+
+
                             # print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.point.x)+"  "+str(self.point.y)+"  "+str(leftWheel.x)+"  "+str(leftWheel.y)+"  "+str(rightWheel.x)+"  "+str(rightWheel.y))
 
                             #print("distance: ", distance)
@@ -686,11 +688,13 @@ class NavigationControl():
                 else:
                     if self.is_moving_between_segments==True:
                         # self.spray_intensity_publisher.publish(1024.0)
+                        input_pixel_value_graphic = 255
                         self.valve_angle_input.goal_position = 1024
                         self.valve_angle_publisher.publish(self.valve_angle_input)
                     else:
                         #self.spray_intensity_publisher.publish(660.0)
                         # self.spray_intensity_publisher.publish(740.0)
+                        input_pixel_value_graphic = 0
                         self.valve_angle_input.goal_position = 660
                         self.valve_angle_publisher.publish(self.valve_angle_input)
 
