@@ -6,6 +6,7 @@ from std_msgs.msg import Float32, Time, Header
 from sensor_msgs.msg import Image, CompressedImage
 from markRobotView import RobotView
 from math import radians, copysign, sqrt, pow, pi, atan2, sin, floor, cos, asin,ceil
+from numpy.linalg import inv
 import numpy as np
 import time
 import os
@@ -315,9 +316,11 @@ class VisualCompensation():
                 else:
                     # M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
 
-                    M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
+                    # M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
+                    M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map)
                     # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
                     # M = fm.IMAGE_ALIGNMENT_ecc(summed_image, self.cropped_virtual_map)
+                    # M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map)
 
 
                     if fm.status == True:
@@ -379,18 +382,20 @@ class VisualCompensation():
 
 
     def relocalization(self, homography):
+        
         mid_real_virtual_x, mid_real_virtual_y, _= np.matmul(homography, [self.mid_real_photo_x, self.mid_real_photo_y, 1])
-        print(mid_real_virtual_x)
-        print(self.mid_real_photo_x)
+
         del_x_virtual=mid_real_virtual_x-self.mid_real_photo_x
+        
         del_y_virtual=mid_real_virtual_y-self.mid_real_photo_y
         del_th_virtual=-atan2(homography[0][1],homography[0][0])
         rotation=np.array([[cos(self.current_mid_predict_canvas_th), -sin(self.current_mid_predict_canvas_th)],
                             [sin(self.current_mid_predict_canvas_th), cos(self.current_mid_predict_canvas_th)]])
-        print("debug6")
         del_x_canvas, del_y_canvas = np.matmul(rotation, [-del_x_virtual, -del_y_virtual])
         # *(-1) in del_x_virtual for calibration of x waypoint coordinate
         # *(-1) in del_y_virtual for calibration of image coordiate to canvas coordinate
+
+        print("virtual photo mid: %d, %d / real photo midpnt: %d, %d" %(mid_real_virtual_x, mid_real_virtual_y, self.mid_real_photo_x, self.mid_real_photo_y))
 
         offset=Point()
         offset.x=del_x_canvas
@@ -398,6 +403,7 @@ class VisualCompensation():
         offset.z=del_th_virtual
 
         print(offset)
+        print(homography)
 
         self.pub_offset.publish(offset)
 
