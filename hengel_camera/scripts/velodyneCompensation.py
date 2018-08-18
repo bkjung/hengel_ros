@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import rospy
 import sys
 from geometry_msgs.msg import Point, PoseStamped
@@ -25,7 +24,7 @@ sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 class VelodyneCompensation():
     def __init__(self):
         rospy.init_node('hengel_velodyne_compensation', anonymous=False)
-        self.origin=rospy.wait_for_message('/midpoint', Point)        
+        self.origin=rospy.wait_for_message('/midpoint', Point)
         rospy.Subscriber('/blam/blam_slam/odometry_integrated_estimate', PoseStamped, self.callback)
         self.pub=rospy.Publisher('/offset_change', Point, queue_size=5)
 
@@ -36,18 +35,20 @@ class VelodyneCompensation():
         self.ts.registerCallback(self.sync_callback)
 
     def sync_callback(self, _midpnt, _pose):
+        print("origin: %d, %d, %d" %(self.origin.x, self.origin.y, self.origin.z))
         offset=Point()
         move_x =_pose.pose.position.x-self.origin.x
         move_y =_pose.pose.position.y-self.origin.y
-        move_th =_pose.pose.orientation.-self.origin.z
+        move_th =_pose.pose.orientation.z -self.origin.z
 
+        print("velodyne: %d, %d, %d" %(_pose.pose.position.x, _pose.pose.position.y, _pose.pose.orientation))
         mid_x = _midpnt.x
         mid_y = _midpnt.y
         mid_th = _midpnt.z
 
         offset.x = (-move_x) - mid_x
         offset.y = move_y - mid_y
-        offset.z = -midpnt.z - move_th
+        offset.z = - move_th - midpnt.z
 
         self.pub.publish(offset)
 
