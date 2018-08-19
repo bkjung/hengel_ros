@@ -805,11 +805,13 @@ class NavigationControl():
                                 else:
                                     if self.is_moving_between_segments==True:
                                         # self.spray_intensity_publisher.publish(1024.0)
+                                        input_pixel_value_graphic = 255
                                         self.valve_angle_input.goal_position = 1024
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
                                     else:
                                         #self.spray_intensity_publisher.publish(660.0)
                                         # self.spray_intensity_publisher.publish(740.0)
+                                        input_pixel_value_graphic = 0
                                         self.valve_angle_input.goal_position = 660
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
 
@@ -1013,11 +1015,13 @@ class NavigationControl():
                 else:
                     if self.is_moving_between_segments==True:
                         # self.spray_intensity_publisher.publish(1024.0)
+                        input_pixel_value_graphic = 255
                         self.valve_angle_input.goal_position = 1024
                         self.valve_angle_publisher.publish(self.valve_angle_input)
                     else:
                         #self.spray_intensity_publisher.publish(660.0)
                         # self.spray_intensity_publisher.publish(740.0)
+                        input_pixel_value_graphic = 0
                         self.valve_angle_input.goal_position = 660
                         self.valve_angle_publisher.publish(self.valve_angle_input)
 
