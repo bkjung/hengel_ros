@@ -169,10 +169,15 @@ class PaintSelectfile():
                         dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
                         if dist>self.interval*2.0:
                             div=int(ceil(dist/self.interval))
+                            ############## MJLEE EDITED ####################
+                            count_init=0
                             for k in range(div):
                                 x=x_last+(k+1)/float(div)*(x_curr-x_last)
                                 y=y_last+(k+1)/float(div)*(y_curr-y_last)
                                 subletter_path.append([x,y])
+                                if count_init < 3:
+                                    print(x, y)
+                                    count_init += 1
                                 if self.isIntensityControl:
                                     if flag_start==True:
                                         self.arr_intensity.append(255.0)
@@ -187,6 +192,9 @@ class PaintSelectfile():
                             y_last=y
                         else:
                             subletter_path.append([x_curr, y_curr])
+                            if count_init < 3:
+                                print(x_curr, y_curr)
+                                count_init += 1
 
                             if self.isIntensityControl:
                                 if flag_start==True:
