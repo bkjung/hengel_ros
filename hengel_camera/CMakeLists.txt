@@ -13,16 +13,20 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   geometry_msgs
   message_generation
+  roscpp
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(FLANN REQUIRED flann)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-catkin_python_setup()
+catkin_python_setup(
+    )
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -111,20 +115,24 @@ generate_messages(
  )
 catkin_package(
  CATKIN_DEPENDS rospy std_msgs sensor_msgs geometry_msgs message_runtime
+ LIBRARIES hengel_camera
 # CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs
 # DEPENDS system_lib
 )
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-#include_directories(
-#  # include
-#  ${catkin_INCLUDE_DIRS}
-#)
+include_directories(
+  # include
+  ${FLANN_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
+)
+
+link_directories(${FLANN_LIBRARY_DIRS})
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/hengel_camera.cpp
-# )
+add_library(${PROJECT_NAME}
+  src/${PROJECT_NAME}/feature_match.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -140,6 +148,8 @@ catkin_package(
 # add_executable(hengel_mono_odom src/hengel_mono_odom.cpp)
 # add_dependencies(hengel_mono_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # target_link_libraries(hengel_mono_odom ${catkin_LIBRARIES})
+add_executable(feature_match src/hengel_camera/feature_match.cpp)
+
 #######################################################################################
 
 ## Rename C++ executable without prefix
@@ -151,11 +161,18 @@ catkin_package(
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(feature_match ${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} flann)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(feature_match
+  ${catkin_LIBRARIES}
+  ${PROJECT_NAME}
+  ${FLANN_LIBRARIES}
+)
+
+if(FLANN_CFLAGS)
+    add_definitions(${FLANN_CFLAGS})
+endif(FLANN_CFLAGS)
 
 #############
 ## Install ##
@@ -193,8 +210,8 @@ catkin_package(
 # )
 
 catkin_install_python(PROGRAMS
-  scripts/globalAlignment.py
-  scripts/picam_undistort1.py
+    scripts/visualCompensation.py
+    scripts/visualCompensation_unstitched.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

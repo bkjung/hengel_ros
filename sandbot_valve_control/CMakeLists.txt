@@ -13,9 +13,12 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_message_files(
   FILES
-  ValveInput.msg
-  MotorInput.msg
-  OperationMode.msg
+  IntensityInput.msg
+  HeightInput.msg
+  DistanceInput.msg
+  # ValveInput.msg
+  # MotorInput.msg
+  # OperationMode.msg
   ShutDown.msg
 #   Message1.msg
 #   Message2.msg

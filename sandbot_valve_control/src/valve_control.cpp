@@ -12,9 +12,12 @@
 
 // #include "sandbot_valve_control/DynamixelSDK.h"                                  // Uses Dynamixel SDK library
 #include "ros/ros.h"
-#include "sandbot_valve_control/ValveInput.h"
-#include "sandbot_valve_control/MotorInput.h"
-#include "sandbot_valve_control/OperationMode.h"
+// #include "sandbot_valve_control/ValveInput.h"
+// #include "sandbot_valve_control/MotorInput.h"
+#include "sandbot_valve_control/IntensityInput.h"
+#include "sandbot_valve_control/HeightInput.h"
+#include "sandbot_valve_control/DistanceInput.h"
+// #include "sandbot_valve_control/OperationMode.h"
 #include "sandbot_valve_control/ShutDown.h"
 #include "sandbot_valve_control/packet_handler.h"
 #include "sandbot_valve_control/port_handler.h"
@@ -32,9 +35,10 @@
 #define PROTOCOL_VERSION                2.0                 // See which protocol version is used in the Dynamixel
 
 // Default setting
-#define DXL_ID_10                       10                  // Dynamixel ID: 10
-#define DXL_ID_13                       13                  // Dynamixel ID: 10
-#define DXL_ID_254                      254
+#define DXL_INTENSITY                   10                  // Dynamixel ID: 10
+#define DXL_DISTANCE                    20                  // Dynamixel ID: 20
+#define DXL_HEIGHT                      30                  // Dynamixel ID: 30
+#define DXL_ALL                         254
 #define BAUDRATE                        57600
 #define DEVICENAME                      "/dev/ttyUSB0"      // Check which port is being used on your controller
                                                             // ex) Windows: "COM1"   Linux: "/dev/ttyUSB0" Mac: "/dev/tty.usbserial-*"
@@ -44,20 +48,19 @@
 // #define DXL_MINIMUM_POSITION_VALUE      512            // Dynamixel will rotate between this value
 // #define DXL_MAXIMUM_POSITION_VALUE      1023              // and this value (note that the Dynamixel would not move when the position value is out of movable range. Check e-manual about the range of the Dynamixel you use.)
 
-//#define DXL_MOVING_STATUS_THRESHOLD     10                  // Dynamixel moving status threshold
-#define DXL_MOVING_STATUS_THRESHOLD     20                  // Dynamixel moving status threshold
+#define DXL_MOVING_STATUS_THRESHOLD     10                  // Dynamixel moving status threshold
+// #define VELOCITY_CONTROL_MODE           1
+// #define DXL_MAXIMUM_VELOCITY            380
 
-#define VELOCITY_CONTROL_MODE           1
-#define DXL_MAXIMUM_VELOCITY            380
-#define CONTINUOUS_MODE                 0
-#define DISCRETE_MODE                   1
+// int GOAL_POSITION = 1024;
 
-#define VALVE_OPEN                      3900
-//int GOAL_POSITION = 3200;
-int GOAL_POSITION = 3270;
-int MODE = 1;
+// motor input
+int INTENSITY = 960;
+int DISTANCE = 814;
+int HEIGHT = 3012;
+
 int SHUTDOWN = 0;
-bool RECEIVED_MSG = false;
+// bool RECEIVED_MSG = false;
 
 #define ESC_ASCII_VALUE                 0x1b
 
@@ -79,38 +82,65 @@ int getch()
 #endif
 }
 
-// chage valve input
-void changeValveInput(int goal_position)
+// change intensity input
+void changeIntensityInput(int goal_position)
 {
-  GOAL_POSITION = goal_position;
+  INTENSITY = goal_position;
+}
+// change height
+void changeHeightInput(int goal_position)
+{
+  HEIGHT = goal_position;
+}
+// change distance
+void changeDistanceInput(int goal_position)
+{
+  DISTANCE = goal_position;
 }
 
 // subscribe msgCallback
-void msgCallback(const sandbot_valve_control::ValveInput::ConstPtr& msg1)
+void msgCallbackIntensity(const sandbot_valve_control::IntensityInput::ConstPtr& msg_intensity)
 {
-  ROS_INFO("recieved msg1 = %d", msg1->goal_position);
-  changeValveInput(msg1->goal_position);
-  RECEIVED_MSG = true;
+  ROS_INFO("recieved msg_intensity = %d", msg_intensity->intensity_input);
+  changeIntensityInput(msg_intensity->intensity_input);
+  // RECEIVED_MSG = true;
 }
-
-void msgCallback_mode(const sandbot_valve_control::OperationMode::ConstPtr& msg_mode)
+void msgCallbackHeight(const sandbot_valve_control::HeightInput::ConstPtr& msg_height)
 {
-  ROS_INFO("recieved msg_mode = %d", msg_mode->mode);
-  MODE = msg_mode->mode;
+  ROS_INFO("recieved msg_height = %d", msg_height->height_input);
+  changeHeightInput(msg_height->height_input);
+  // RECEIVED_MSG = true;
 }
-
-void msgCallback_shutdown(const sandbot_valve_control::ShutDown::ConstPtr& msg_shutdown)
+void msgCallbackDistance(const sandbot_valve_control::DistanceInput::ConstPtr& msg_distance)
+{
+  ROS_INFO("recieved msg_distance = %d", msg_distance->distance_input);
+  changeDistanceInput(msg_distance->distance_input);
+  // RECEIVED_MSG = true;
+}
+void msgCallbackShutdown(const sandbot_valve_control::ShutDown::ConstPtr& msg_shutdown)
 {
   SHUTDOWN = msg_shutdown->shutdown;
 }
+// void msgCallback(const sandbot_valve_control::ValveInput::ConstPtr& msg1)
+// {
+//   ROS_INFO("recieved msg1 = %d", msg1->goal_position);
+//   changeValveInput(msg1->goal_position);
+//   RECEIVED_MSG = true;
+// }
+//
+// void msgCallback_mode(const sandbot_valve_control::OperationMode::ConstPtr& msg_mode)
+// {
+//   ROS_INFO("recieved msg_mode = %d", msg_mode->mode);
+//   MODE = msg_mode->mode;
+// }
 
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "valve_control");
   ros::NodeHandle nh;
-  ros::Publisher pub = nh.advertise<sandbot_valve_control::MotorInput>("motor_input", 100);
+  // ros::Publisher pub = nh.advertise<sandbot_valve_control::MotorInput>("motor_input", 100);
 
-  sandbot_valve_control::MotorInput msg2;
+  // sandbot_valve_control::MotorInput msg2;
 
   ros::Rate loop_rate(50);
 
@@ -125,11 +155,8 @@ int main(int argc, char **argv)
   dynamixel::PacketHandler *packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION);
 
   int dxl_comm_result = COMM_TX_FAIL;             // Communication result
-  int dxl_goal_velocity = DXL_MAXIMUM_VELOCITY * -1;   // Goal velocity
-
   uint8_t dxl_error = 0;                          // Dynamixel error
   int32_t dxl_present_position = 0;               // Present position
-  int valve_open = VALVE_OPEN;
 
   // Open port
   if (portHandler->openPort())
@@ -157,25 +184,8 @@ int main(int argc, char **argv)
     return 0;
   }
 
-  // Change to Wheel model
-  dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, DXL_ID_10, ADDR_PRO_OPERATING_MODE, VELOCITY_CONTROL_MODE, &dxl_error);
-  if (dxl_comm_result != COMM_SUCCESS)
-  {
-    // printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
-    printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
-  }
-  else if (dxl_error != 0)
-  {
-    // printf("%s\n", packetHandler->getRxPacketError(dxl_error));
-    printf("%s\n", packetHandler->getRxPacketError(dxl_error));
-  }
-  else
-  {
-    printf("Dynamixel ID_10 is now on wheel mode \n");
-  }
-
   // Enable Dynamixel Torque
-  dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, DXL_ID_254, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
+  dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, DXL_ALL, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
   if (dxl_comm_result != COMM_SUCCESS)
   {
     // printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
@@ -191,46 +201,61 @@ int main(int argc, char **argv)
     printf("Dynamixel has been successfully connected \n");
   }
 
-  // Write goal velocity
-  dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_10, ADDR_PRO_GOAL_VELOCITY, dxl_goal_velocity, &dxl_error);
-  if (dxl_comm_result != COMM_SUCCESS)
-  {
-    printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
-  }
-  else if (dxl_error != 0)
-  {
-    printf("%s\n", packetHandler->getRxPacketError(dxl_error));
-  }
-  printf("write goal velocity done\n");
-
-  ros::Subscriber sub = nh.subscribe("valve_input", 100, msgCallback);
-  ros::Subscriber sub_mode = nh.subscribe("operation_mode", 100, msgCallback_mode);
-  ros::Subscriber sub_shutdown = nh.subscribe("shut_down", 100, msgCallback_shutdown);
+  ros::Subscriber sub_intensity = nh.subscribe("intensity", 100, msgCallbackIntensity);
+  ros::Subscriber sub_height = nh.subscribe("height", 100, msgCallbackHeight);
+  ros::Subscriber sub_distance = nh.subscribe("distance", 100, msgCallbackDistance);
+  ros::Subscriber sub_shutdown = nh.subscribe("shut_down", 100, msgCallbackShutdown);
+  // ros::Subscriber sub = nh.subscribe("valve_input", 100, msgCallback);
 
   // Write goal position & Shutdown case
   while(ros::ok())
   {
-    // ROS_INFO("GOAL_POSITION = %d\n", GOAL_POSITION);
     ros::spinOnce();
     // Disable torque and Shutdown
     if (SHUTDOWN != 0)
     {
-      // Close valve
-      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 3200, &dxl_error);
-      do
-      {
-        dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
-        printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
+      // Goal position example
+      // dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 960, &dxl_error);
+      // if (dxl_comm_result != COMM_SUCCESS)
+      // {
+      //   printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
+      // }
+      // else if (dxl_error != 0)
+      // {
+      //   printf("%s\n", packetHandler->getRxPacketError(dxl_error));
+      // }
+      // printf("write goal position done\n");
+      // dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+      // printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
+      // do
+      // {
+      //   dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+      //   printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
+      //
+      //   //if (RECEIVED_MSG == true)
+      //   //{
+      //   //    RECEIVED_MSG = false;
+      //   //    break;
+      //   //}
+      // } while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD) && ros::ok());
 
-        //if (RECEIVED_MSG == true)
-        //{
-        //    RECEIVED_MSG = false;
-        //    break;
-        //}
-      } while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD) && ros::ok());
+      // Default Position
+      // Intensity
+      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_INTENSITY, ADDR_PRO_GOAL_POSITION, 960, &dxl_error);
+      dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_INTENSITY, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+      printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_INTENSITY, 960, dxl_present_position);
+      // Height
+      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_HEIGHT, ADDR_PRO_GOAL_POSITION, 3012, &dxl_error);
+      dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_HEIGHT, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+      printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_HEIGHT, 3012, dxl_present_position);
+      // Distance
+      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_DISTANCE, ADDR_PRO_GOAL_POSITION, 814, &dxl_error);
+      dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_DISTANCE, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+      printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_DISTANCE, 814, dxl_present_position);
+      printf("dynamixel is now on default position");
 
       // Disable torque
-      dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, DXL_ID_254, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
+      dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, DXL_ALL, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
       if (dxl_comm_result != COMM_SUCCESS)
       {
         printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
@@ -246,86 +271,45 @@ int main(int argc, char **argv)
     }
 
     // Write goal position
-    if (MODE == 0)
-    {
-      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, valve_open, &dxl_error);
-      // if (dxl_comm_result != COMM_SUCCESS)
-      // {
-      //   printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
-      // }
-      // else if (dxl_error != 0)
-      // {
-      //   printf("%s\n", packetHandler->getRxPacketError(dxl_error));
-      // }
-      // printf("write goal position done\n");
-      do
-      {
-        // Read present position
-        dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
-        // if (dxl_comm_result != COMM_SUCCESS)
-        // {
-        //   printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
-        // }
-        // else if (dxl_error != 0)
-        // {
-        //   printf("%s\n", packetHandler->getRxPacketError(dxl_error));
-        // }
+    // Intensity
+    dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_INTENSITY, ADDR_PRO_GOAL_POSITION, INTENSITY, &dxl_error);
+    dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_INTENSITY, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+    printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_INTENSITY, INTENSITY, dxl_present_position);
+    // Height
+    dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_HEIGHT, ADDR_PRO_GOAL_POSITION, HEIGHT, &dxl_error);
+    dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_HEIGHT, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+    printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_HEIGHT, HEIGHT, dxl_present_position);
+    // Distance
+    dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_DISTANCE, ADDR_PRO_GOAL_POSITION, DISTANCE, &dxl_error);
+    dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_DISTANCE, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+    printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_DISTANCE, DISTANCE, dxl_present_position);
 
-        printf("continuous mode\n");
-        printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, valve_open, dxl_present_position);
-
-      }while((abs(valve_open - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD));
-    }
-    else
-    {
-      dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, GOAL_POSITION, &dxl_error);
-      // if (dxl_comm_result != COMM_SUCCESS)
-      // {
-      //   printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
-      // }
-      // else if (dxl_error != 0)
-      // {
-      //   printf("%s\n", packetHandler->getRxPacketError(dxl_error));
-      // }
-      // printf("write goal position done\n");
-      do
-      {
-        // Read present position
-        dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
-        // if (dxl_comm_result != COMM_SUCCESS)
-        // {
-        //   printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));
-        // }
-        // else if (dxl_error != 0)
-        // {
-        //   printf("%s\n", packetHandler->getRxPacketError(dxl_error));
-        // }
-
-        printf("discrete mode\n");
-        printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
-
-      }while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD));
-    }
-
-    // publish present position
-    msg2.present_position = dxl_present_position;
-    pub.publish(msg2);
-    // printf("publish done\n");
+    // // publish present position
+    // msg2.present_position = dxl_present_position;
+    // pub.publish(msg2);
+    // // printf("publish done\n");
 
     // set loop rate
     loop_rate.sleep();
   }
 
-  // Close valve
-  dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_GOAL_POSITION, 3200, &dxl_error);
-  
-  {
-    dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_ID_13, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
-    printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_ID_13, GOAL_POSITION, dxl_present_position);
-  } while((abs(GOAL_POSITION - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD));
+  // Default Position
+  // Intensity
+  dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_INTENSITY, ADDR_PRO_GOAL_POSITION, 960, &dxl_error);
+  dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_INTENSITY, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+  printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_INTENSITY, 960, dxl_present_position);
+  // Height
+  dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_HEIGHT, ADDR_PRO_GOAL_POSITION, 3012, &dxl_error);
+  dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_HEIGHT, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+  printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_HEIGHT, 3012, dxl_present_position);
+  // Distance
+  dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, DXL_DISTANCE, ADDR_PRO_GOAL_POSITION, 814, &dxl_error);
+  dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, DXL_DISTANCE, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+  printf("[ID:%03d] GoalPos:%03d  PresPos:%03d\n", DXL_DISTANCE, 814, dxl_present_position);
+  printf("dynamixel is now on default position");
 
   // Disable Dynamixel Torque
-  dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, DXL_ID_254, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
+  dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, DXL_ALL, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
   if (dxl_comm_result != COMM_SUCCESS)
   {
     printf("%s\n", packetHandler->getTxRxResult(dxl_comm_result));

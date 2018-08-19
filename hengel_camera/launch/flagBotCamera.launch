@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="hengel_camera" type="visualCompensation.py" name="hengel_camera_compensation"  output="screen" />
+</launch>

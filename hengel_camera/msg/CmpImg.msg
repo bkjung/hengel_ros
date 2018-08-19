@@ -1,4 +1,4 @@
 sensor_msgs/CompressedImage img1
 sensor_msgs/CompressedImage img2
-sensor_msgs/CompressedImage img3
-sensor_msgs/CompressedImage img4
+float32 timestamp1
+float32 timestamp2
