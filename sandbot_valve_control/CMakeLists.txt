@@ -15,7 +15,7 @@ add_message_files(
   FILES
   IntensityInput.msg
   HeightInput.msg
-  DistanceInput.msg
+  # DistanceInput.msg
   # ValveInput.msg
   # MotorInput.msg
   # OperationMode.msg
@@ -113,7 +113,6 @@ add_library(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(valve_control src/valve_control.cpp)
 add_executable(valve_input_publisher src/publisher.cpp)
-add_executable(valve_input_publisher_mode src/publisher_mode.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -125,7 +124,6 @@ add_executable(valve_input_publisher_mode src/publisher_mode.cpp)
 ## same as for the library above
 add_dependencies(valve_control ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamixel)
 add_dependencies(valve_input_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamixel)
-add_dependencies(valve_input_publisher_mode ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamixel)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(valve_control
@@ -133,10 +131,6 @@ target_link_libraries(valve_control
   ${PROJECT_NAME}
 )
 target_link_libraries(valve_input_publisher
-  ${catkin_LIBRARIES}
-  ${PROJECT_NAME}
-)
-target_link_libraries(valve_input_publisher_mode
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}
 )
