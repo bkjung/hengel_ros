@@ -86,13 +86,13 @@ class VisualCompensation():
         self.summed_image = None
         self.summed_image_prev = None
 
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=False)
+        self.ts_2=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=False)
         
         rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.callback_left)
         rospy.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage, self.callback_right)
 
 
-        # self.ts=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4, self.callback_pi_left, self.callback_pi_right], 10,0.1, allow_headerless=False)
+        # self.ts_2=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4, self.callback_pi_left, self.callback_pi_right], 10,0.1, allow_headerless=False)
         # self.callback_pi_left=message_filters.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage)
         # self.callback_pi_right=message_filters.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage)
 
@@ -106,7 +106,7 @@ class VisualCompensation():
         self.threshold3=100
         self.threshold4=100        
 
-        self.ts.registerCallback(self.sync_real_callback)
+        self.ts_2.registerCallback(self.sync_real_callback)
 
 
         self.pub_offset=rospy.Publisher('/offset_change', Point, queue_size=5)

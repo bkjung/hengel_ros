@@ -34,7 +34,25 @@ class VelodyneCompensation():
 
         self.ts.registerCallback(self.sync_callback)
 
+        self.endPoint_callback=message_filters.Subscriber('/endpoint', Point)
+        self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
+        self.midPoint_time_callback=message_filters.Subscriber('/midpoint_time', Time)
+
+        self.ts_2=message_filters.ApproximateTimeSynchronizer([self.endPoint_callback, self.midPoint_callback, self.midPoint_time_callback], 10, 0.1, allow_headerless=True)
+        self.ts_2.registerCallback(self.sync_virtual_callback)
+
+        self.pub_virtual_map=rospy.Publisher('/virtual_map', CompressedImage, queue_size=3)
+
+        self.initialize()
+
         rospy.spin()
+
+    def initialize(self):
+        self.bridge=CvBridge()
+        self.pixMetRatio=500
+        self.cropped_virtual_map=np.full((1280,1280),255).astype('uint8')
+        self.virtual_map=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
+        self.app_robotview=RobotView(self.virtual_map) # Add the endpoint into the virtual map
 
     def sync_callback(self, _midpnt, _pose):
         print("origin: %d, %d, %d" %(self.origin.x, self.origin.y, self.origin.z))
@@ -53,6 +71,32 @@ class VelodyneCompensation():
         offset.z = - move_th - midpnt.z
 
         self.pub.publish(offset)
+
+    def sync_virtual_callback(self, _endPoint, _midPoint, _midPointTime):
+        if not self.isNavigationStarted:
+            self.isNavigationStarted = True
+        # print("sync virtual")
+        # _time=time.time()
+
+        # if not self.isProcessingVirtualmapTime:
+        # self.mid_predict_canvas_x.appendleft(_midPoint.x)
+        # self.mid_predict_canvas_y.appendleft(_midPoint.y)
+        # self.mid_predict_canvas_th.appendleft(_midPoint.z)
+        # self.mid_predict_canvas_time.appendleft(_midPointTime.data.to_nsec())
+
+        # self.recent_pts.appendleft((_midPoint.x, _midPoint.y))
+
+        # self.virtual_map = self.app_robotview.run(_midPoint, _endPoint)
+        self.app_robotview.run(_midPoint, _endPoint)
+        self.virtual_map = self.app_robotview.img
+
+        # ttime=Float32()
+        # ttime.data=float(time.time()-_time)
+
+        #PUBLISHING VIRTUAL MAP, but currently the msg cannot be viewed at rqt (supposedly because of msgtype mismatch)
+        virtual_map_msg=self.bridge.cv2_to_compressed_imgmsg(self.virtual_map)
+        self.pub_virtual_map.publish(virtual_map_msg)
+
 
 if __name__=='__main__':
     VelodyneCompensation()
