@@ -37,7 +37,7 @@ class PaintLetter():
         while True:
             word = raw_input("What is the CANVAS SIDE LENGTH of one letter?\n Type: ")
             self.CANVAS_SIDE_LENGTH = float(word)
-            self.PADDING_LENGTH = -0.15*self.CANVAS_SIDE_LENGTH
+            self.PADDING_LENGTH = 0.05*self.CANVAS_SIDE_LENGTH
             break
         print("Length of Canvas Side = " + str(self.CANVAS_SIDE_LENGTH))
         #print("Length of Padding = " + str(self.PADDING_LENGTH))
