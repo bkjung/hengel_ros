@@ -742,12 +742,13 @@ class NavigationControl():
         #  hskim added
         arr_delOmega = []
         arr_deldelOmega = []
-        arr_deldelOmega_x = []
-        arr_deldelOmega_y = []
+        # arr_deldelOmega_x = []
+        # arr_deldelOmega_y = []
         arr_deldelOmega_error = []
         arr_D = []
-        arr_delX = []
-        arr_delY = []
+        arr_delD = []
+        # arr_delX = []
+        # arr_delY = []
 
         while self.letter_index < self.cnt_letter:
             if rospy.is_shutdown():
@@ -851,8 +852,8 @@ class NavigationControl():
                             th = self.heading.data
                             delX= self.current_waypoint[0]-self.endPoint.x
                             delY= self.current_waypoint[1]-self.endPoint.y
-                            arr_delX.append(delX)
-                            arr_delY.append(delY)
+                            # arr_delX.append(delX)
+                            # arr_delY.append(delY)
 
                             # D(k) should add
                             #####################################################
@@ -860,8 +861,8 @@ class NavigationControl():
                             b = delX*cos(th) + delY*sin(th)
                             c = b - self.D
                             if arr_delOmega:
-                                # self.D = self.calculate_optimal_D(delX, delY, th, self.D, arr_delOmega[-1][0], arr_delOmega[-1][1])
-                                self.D = 0.25
+                                self.D = self.calculate_optimal_D(delX, delY, th, self.D, arr_delOmega[-1][0], arr_delOmega[-1][1])
+                                # self.D = 0.25
                             else:
                                 print("initial self.D is " + str(self.D))
                                 # self.D = 0.233
@@ -955,31 +956,38 @@ class NavigationControl():
                 print(arr_deldelOmega_error.index(i))
                 print(i)
 
-        print("max = " + str(max(arr_deldelOmega_error)))
-        print("avg = " + str(sum(arr_deldelOmega_error) / len(arr_deldelOmega_error)))
-        print("arr_delOmega[0] = " + str(arr_delOmega[0]))
-        print("arr_delOmega[1] = " + str(arr_delOmega[1]))
-        print("arr_delOmega[2] = " + str(arr_delOmega[2]))
-        print("arr_deldelOmega_error[0] = " + str(arr_deldelOmega_error[0]))
-        print("arr_deldelOmega_error[1] = " + str(arr_deldelOmega_error[1]))
-        print("arr_deldelOmega_error[2] = " + str(arr_deldelOmega_error[2]))
-        print("arr_D[0] = " + str(arr_D[0]))
-        print("arr_D[1] = " + str(arr_D[1]))
-        print("arr_D[2] = " + str(arr_D[2]))
-        print("arr_delX[0] = " + str(arr_delX[0]))
-        print("arr_delY[0] = " + str(arr_delY[0]))
-        print("arr_delX[1] = " + str(arr_delX[1]))
-        print("arr_delY[1] = " + str(arr_delY[1]))
-        print("arr_delX[2] = " + str(arr_delX[2]))
-        print("arr_delY[2] = " + str(arr_delY[2]))
+        # print("max = " + str(max(arr_deldelOmega_error)))
+        # print("avg = " + str(sum(arr_deldelOmega_error) / len(arr_deldelOmega_error)))
+        # print("arr_delOmega[0] = " + str(arr_delOmega[0]))
+        # print("arr_delOmega[1] = " + str(arr_delOmega[1]))
+        # print("arr_delOmega[2] = " + str(arr_delOmega[2]))
+        # print("arr_deldelOmega_error[0] = " + str(arr_deldelOmega_error[0]))
+        # print("arr_deldelOmega_error[1] = " + str(arr_deldelOmega_error[1]))
+        # print("arr_deldelOmega_error[2] = " + str(arr_deldelOmega_error[2]))
+        # print("arr_D[0] = " + str(arr_D[0]))
+        # print("arr_D[1] = " + str(arr_D[1]))
+        # print("arr_D[2] = " + str(arr_D[2]))
+        # print("arr_delX[0] = " + str(arr_delX[0]))
+        # print("arr_delY[0] = " + str(arr_delY[0]))
+        # print("arr_delX[1] = " + str(arr_delX[1]))
+        # print("arr_delY[1] = " + str(arr_delY[1]))
+        # print("arr_delX[2] = " + str(arr_delX[2]))
+        # print("arr_delY[2] = " + str(arr_delY[2]))
 
+        for i in range(len(arr_D)):
+            if i != len(arr_D)-1:
+                arr_delD.append(arr_D[i+1] - arr_D[i])
 
         # plt.plot([a[0] for a in arr_deldelOmega], 'r')
         # plt.plot([a[1] for a in arr_deldelOmega], 'b')
-        plt.plot(arr_deldelOmega_error, 'r')
         # plt.axis([0, 6000, -0.1, 0.1])
-        plt.plot(arr_D, "b")
-        plt.axis([0, 6000, -0.1, 0.4])
+        # plt.plot(arr_deldelOmega_error, 'r')
+        # plt.plot(arr_D, "b")
+        print("max arr_delD = " + str(max(arr_delD)))
+        print("min arr_delD = " + str(min(arr_delD)))
+        plt.plot(arr_delD, "k")
+        # plt.axis([0, 6000, -0.1, 0.4])
+        plt.axis([0, 6000, -0.1, 0.1])
 
         # self.plot_arr([a[0] for a in arr_deldelOmega], 'r')
         # self.plot_arr([a[1] for a in arr_deldelOmega], 'b')
