@@ -91,27 +91,12 @@ class FeatureMatch():
         plt.close("all")
 
         return M
-        
-        
-        
-
-        # Apply ratio test
-        good = []
-        for m, n in matches:
-            if m.distance < 0.7*n.distance:
-                good.append([m])
-
-        img3= np.ndarray([])
-        img3=cv2.drawMatchesKnn(img2, kp2, img1, kp1, good, img3, flags=2)
-        plt.imshow(img3), plt.show()
 
     def ORB_BF_matching(self, img1, img2):
         plt.figure(1, figsize=(10, 20))
-        plt.subplot(311)
-        # cv2.imshow("white", img1)
-        # cv2.waitKey(3)
+        plt.subplot(221)
         plt.imshow(img1, cmap='gray')
-        plt.subplot(312)
+        plt.subplot(222)
         plt.imshow(img2, cmap='gray')
 
         M=None
@@ -121,6 +106,7 @@ class FeatureMatch():
         self.status = False
 
         orb= cv2.ORB_create(nfeatures=1500)
+
         # find the keypoints and descriptors with SIFT
         kp1, des1 = orb.detectAndCompute(img1, None)
         kp2, des2 = orb.detectAndCompute(img2, None)
@@ -132,17 +118,24 @@ class FeatureMatch():
             # Match descriptors
             matches = bf.match(des2, des1)
             # Sort them in the order of their distance
+
             matches = sorted(matches, key=lambda x:x.distance)
             src_pts=np.float32([ kp2[m.queryIdx].pt for m in matches]).reshape(-1,1,2)
             dst_pts=np.float32([ kp1[m.trainIdx].pt for m in matches]).reshape(-1,1,2)
-            M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
-            if M is None:
-                self.status = Trues
+            # M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+            H=cv2.estimateRigidTransform(dst_pts, src_pts, False)
+            M=np.eye(3)
+            M[:2]=H
+
+            if H is None:
                 print("Homography mtx M is None !!!!")
             else:
+                self.status = True
                 print("sift_flann match finished")
-            # else:
-            #     print("Feature Match FAILED (Not enough features)")
+                img4= cv2.warpPerspective(img1, M, (1280,1280))
+                plt.subplot(224)
+                plt.imshow(img4, cmap='gray')
+            
         else:
             print("Feature Match FAILED (Empty Descriptor)")
 
@@ -162,6 +155,63 @@ class FeatureMatch():
         print("FeatureMatch Saved to "+file_time)
 
         return M
+
+        # if des1 is not None and des2 is not None:
+        #     matches=bf.knnMatch(des2, des1, k=2)
+        
+        #     good=[]
+        #     ratio= 0.7
+
+        #     matchesMask=[[0,0] for i in range(len(matches))]
+        #     for i, (m,n) in enumerate(matches):
+        #         if m.distance < 0.7* n.distance:
+        #             good.append(m)
+        #             matchesMask[i]=[1,0]
+        #     if len(good)>MIN_MATCH_COUNT:
+        #         src_pts=np.float32([kp2[m.queryIdx].pt for m in good]).reshape(-1,1,2)
+        #         dst_pts=np.float32([kp1[m.trainIdx].pt for m in good]).reshape(-1,1,2)
+
+        #         # M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+        #         H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
+        #         M=np.eye(3)
+        #         M[:2]=H
+
+        #         if H is None:
+        #             print("FAILED (Homography mtx M is None")
+        #         else:
+        #             self.status=True
+        #             print("sift_flann match finished")
+        #             # print(M)
+        #             img4=cv2.warpPerspective(img1, M, (1280,1280))
+
+        #             plt.subplot(224)
+        #             plt.imshow(img4, cmap='gray')
+            
+        #     else:
+        #         print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
+
+        #     draw_params = dict(matchColor = (0,255,0),
+        #                         singlePointColor = (255,0,0),
+        #                         matchesMask = matchesMask,
+        #                         flags = 0)
+        #     img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
+
+        #     plt.subplot(223)
+        #     plt.imshow(img3, cmap='gray')
+
+        # else:
+        #     print("FAILED (Empty Descriptor)")
+
+        # file_time = time.strftime("%y%m%d_%H%M%S")
+        # plt.savefig(self.folder_path+"/SIFT_BF_"+file_time+".png")
+        # cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
+        # cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
+        # cv2.destroyAllWindows()
+        # print("FeatureMatch Saved to "+file_time)
+
+        # plt.close("all")
+
+        # return M
 
 
     def SIFT_FLANN_matching(self, img1, img2):
@@ -296,12 +346,11 @@ class FeatureMatch():
         #img1: summed image
         #img2: virtual map
         plt.figure(1, figsize=(10, 20))
-        plt.subplot(311)
+        plt.subplot(221)
         plt.imshow(img1, cmap='gray')
-        plt.subplot(312)
+        plt.subplot(222)
         plt.imshow(img2, cmap='gray')
 
-        print("debug0")
         M=None
         MIN_MATCH_COUNT=5
         _time=time.time()
@@ -309,60 +358,14 @@ class FeatureMatch():
         self.status = False
 
         #cv2 error
-        # surf_detector= cv2.SURF(400, 5, 5)
-        print("debug1")
-
         surf = cv2.xfeatures2d.SURF_create()
+
         # find the keypoints and descriptors with SIFT
         kp1, des1 = surf.detectAndCompute(img1, None)
         kp2, des2 = surf.detectAndCompute(img2, None)
 
-        print("debug2")
-
         # create BFMatcher object
         bf = cv2.BFMatcher(cv2.NORM_L2)
-        print("debug3")
-
-        # if des1 is not None and des2 is not None:
-        #     # Match descriptors
-        #     # matches = bf.match(des2, des1)
-        #     matches = bf.knnMatch(des2, trainDescriptors = des1, k = 2) #virtual->summed
-        #     # Sort them in the order of their distance
-        #     # matches = sorted(matches, key=lambda x:x.distance)
-        #     matchesMask=[[0,0] for i in range(len(matches))]
-        #     mkp1, mkp2 = [], []
-        #     ratio = 0.7
-        #     for m in matches:
-        #         if m[0].distance < m[1].distance * ratio:
-        #             m = m[0]
-        #             mkp1.append( kp1[m.queryIdx] )
-        #             mkp2.append( kp2[m.trainIdx] )
-            
-        #     src_pts=np.float32([kp.pt for kp in mkp2]).reshape(-1,1,2) #virtual
-        #     dst_pts=np.float32([kp.pt for kp in mkp1]).reshape(-1,1,2) #summed
-        #     try:
-        #         M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0) #summed->virtual
-        #     except Exception as e:
-        #         print(e)
-        #     if M is None:
-        #         print("Homography mtx M is None !!!!")
-        #     else:
-        #         self.status = True
-
-        #     print("surf_bf match finished")
-        #     matchesMask = [[0,0] for i in range(len(matches))]
-        #     draw_params = dict(matchColor = (0,255,0),
-        #                     singlePointColor = (255,0,0),
-        #                     matchesMask = matchesMask,
-        #                     flags = 0)
-        #     print("debug:)")
-        #     img3 = cv2.drawMatches(img2,mkp2,img1,mkp1,matches[:10],None,**draw_params)
-        #     plt.subplot(313)
-        #     print("debug3")
-        #     plt.imshow(img3, cmap='gray')
-            
-        # else:
-        #     print("Feature Match FAILED (Empty Descriptor)")
 
         if des1 is not None and des2 is not None:
             matches=bf.knnMatch(des2, des1, k=2)
@@ -375,19 +378,25 @@ class FeatureMatch():
                 if m.distance < 0.7* n.distance:
                     good.append(m)
                     matchesMask[i]=[1,0]
-            print("keypoint length- 1(summed): %d, 2(virtual): %d" %(len(kp1), len(kp2)))
             if len(good)>MIN_MATCH_COUNT:
-                print("queryIdx: %d, trainIdx: %d" %(m.queryIdx, m.trainIdx))
                 src_pts=np.float32([kp2[m.queryIdx].pt for m in good]).reshape(-1,1,2)
                 dst_pts=np.float32([kp1[m.trainIdx].pt for m in good]).reshape(-1,1,2)
 
-                M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+                # M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+                H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
+                print(H)
+                M = np.eye(3)
+                M[:2]=H
 
-                if M is None:
+                if H is None:
                     print("FAILED (Homography mtx M is None")
                 else:
                     self.status=True
                     print("sift_flann match finished")
+                    img4 = cv2.warpPerspective(img1, M, (1280,1280))
+
+                    plt.subplot(224)
+                    plt.imshow(img4, cmap='gray')
             
             else:
                 print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
@@ -396,14 +405,8 @@ class FeatureMatch():
                                 singlePointColor = (255,0,0),
                                 matchesMask = matchesMask,
                                 flags = 0)
-            print("debug2")
             img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
-            # img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,flags=2)
-            print("debug3")
-
-            # cv2.imwrite(self.folder_path+"/SIFT_BF_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
-
-            plt.subplot(313)
+            plt.subplot(223)
             plt.imshow(img3, cmap='gray')
 
         else:
@@ -411,6 +414,9 @@ class FeatureMatch():
 
         file_time = time.strftime("%y%m%d_%H%M%S")
         plt.savefig(self.folder_path+"/SURF_BF_"+file_time+".png")
+        cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
+        cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
+        cv2.destroyAllWindows()
         print("FeatureMatch Saved to "+file_time)
 
         plt.close("all")
