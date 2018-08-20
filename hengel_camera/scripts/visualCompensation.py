@@ -116,6 +116,10 @@ class VisualCompensation():
         self.pub_sum=rospy.Publisher('/summed_image/compressed',CompressedImage, queue_size=5)
 
 
+        self.success_try = 0
+        self.total_try = 0
+
+
         rospy.spin()
 
 
@@ -307,6 +311,10 @@ class VisualCompensation():
 
             print("sum & crop image time: "+str(time.time()-_time))
 
+            self.total_try += 1
+
+            print("Compensation Success Count =%d/%d" %(self.success_try, self.total_try))
+
 ##################################################################################
 
             try:
@@ -407,6 +415,8 @@ class VisualCompensation():
 
         print(offset)
         print(homography)
+
+        self.success_try += 1
 
         self.pub_offset.publish(offset)
 
