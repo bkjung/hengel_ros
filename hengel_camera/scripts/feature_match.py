@@ -144,10 +144,10 @@ class FeatureMatch():
                         singlePointColor = (255,0,0),
                         flags = 0)
         img3 = cv2.drawMatches(img2,kp2,img1,kp1,matches[:10],None,**draw_params)
-        plt.subplot(313)
+        plt.subplot(223)
         plt.imshow(img3, cmap='gray')
         file_time = time.strftime("%y%m%d_%H%M%S")
-        plt.savefig(self.folder_path+"/SIFT_FLANN_"+file_time+".png")
+        plt.savefig(self.folder_path+"/ORB_BF_"+file_time+".png")
         plt.close("all")
         cv2.imwrite(self.folder_path+"/SUMMED_"+file_time+".png", img1)
         cv2.imwrite(self.folder_path+"/VIRTUAL_"+file_time+".png", img2)
