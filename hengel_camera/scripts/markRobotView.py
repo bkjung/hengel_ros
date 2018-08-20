@@ -1,4 +1,4 @@
-#!/usr/bin/env pyself.thon
+#!/usr/bin/env python
 import rospy
 import os
 import time

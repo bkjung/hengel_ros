@@ -470,7 +470,7 @@ class NavigationControl():
                             self.pub_endpoint.publish(self.endPoint)
 
                             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
-                            print(str(self.endPoint.x)+"  "+str(self.endPoint.y))
+                            print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.endPoint.z))
 
                             #print("distance: ", distance)
                             #print("waypoint: ", self.current_waypoint)
