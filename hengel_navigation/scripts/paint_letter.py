@@ -133,7 +133,7 @@ class PaintLetter():
                                     #letter_path.append([(float)(_str[0])+(float)(letter_index)-(2*(float)(letter_index)-1)*250/1632, 1.0-(float)(_str[1])])
                                     #x_curr=(float(_str[0])*CANVAS_SIDE_LENGTH+float(letter_index)*(CANVAS_SIDE_LENGTH+self.PADDING_LENGTH))*-1.0
                                     x_curr=(float(_str[0])*self.CANVAS_SIDE_LENGTH+float(letter_index)*(self.CANVAS_SIDE_LENGTH)+self.PADDING_LENGTH*(letter_index))*-1.0
-                                    y_curr=(1-float(_str[1]))*self.CANVAS_SIDE_LENGTH+row_index*self.CANVAS_SIDE_LENGTH
+                                    y_curr=(1-float(_str[1]))*self.CANVAS_SIDE_LENGTH+row_index*(self.CANVAS_SIDE_LENGTH+self.PADDING_LENGTH)
 
                                     dist=sqrt(pow(x_last-x_curr,2)+pow(y_last-y_curr,2))
                                     #if dist>0.001:
