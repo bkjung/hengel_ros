@@ -34,6 +34,8 @@ class VelodyneCompensation():
 
         self.ts.registerCallback(self.sync_callback)
 
+        rospy.spin()
+
     def sync_callback(self, _midpnt, _pose):
         print("origin: %d, %d, %d" %(self.origin.x, self.origin.y, self.origin.z))
         offset=Point()
