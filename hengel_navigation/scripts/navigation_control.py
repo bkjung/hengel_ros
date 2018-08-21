@@ -1333,7 +1333,7 @@ class NavigationControl():
             else:
                 return 0.3
 
-    def control_motors(self, _loop_cnt, delta1, delta2):
+    def control_motors_by_direct_input(self, _loop_cnt, delta1, delta2):
 
         loop_cnt = 0
         while True:

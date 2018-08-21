@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="hengel_navigation" type="hengel_keyop_publisher.py" name="hengel_keyop_publisher"  output="screen"/>
+  <node pkg="hengel_navigation" type="hengel_keyop.py" name="hengel_keyop"  output="screen"/>
+</launch>

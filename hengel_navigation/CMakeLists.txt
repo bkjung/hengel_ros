@@ -60,6 +60,8 @@ catkin_install_python(PROGRAMS
   scripts/navigation_control.py
   scripts/paint_drawing.py
   scripts/paint_letter.py
+  scripts/hengel_keyop.py
+  scripts/hengel_keyop_publisher.py
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
