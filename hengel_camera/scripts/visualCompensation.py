@@ -119,6 +119,8 @@ class VisualCompensation():
         self.success_try = 0
         self.total_try = 0
 
+        self.sum_compensation_distance = 0.0
+
 
         rospy.spin()
 
@@ -313,7 +315,8 @@ class VisualCompensation():
 
             self.total_try += 1
 
-            print("Compensation Success Count =%d/%d" %(self.success_try, self.total_try))
+            print("Compensation Success Count = %d/%d" %(self.success_try, self.total_try))
+            print("SUM of Compensation Distance = %f" %(self.sum_compensation_distance))
 
 ##################################################################################
 
@@ -327,11 +330,11 @@ class VisualCompensation():
                 else:
                     # M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
 
-                    M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
-                    # M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map)
+                    # M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
+                    M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map)
                     # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
                     # M = fm.IMAGE_ALIGNMENT_ecc(summed_image, self.cropped_virtual_map)
-                    # M=fm.SURF_BF_matching(summed_imzage, self.cropped_virtual_map)
+                    # M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map)
 
 
                     if fm.status == True:
@@ -417,6 +420,7 @@ class VisualCompensation():
         print(homography)
 
         self.success_try += 1
+        self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)
 
         self.pub_offset.publish(offset)
 
