@@ -2,7 +2,7 @@
 
 import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion, PoseStamped
-from std_msgs.msg import Float32, Time
+from std_msgs.msg import Float32, Time, Int32
 from sensor_msgs.msg import Image, CompressedImage
 from nav_msgs.msg import Path
 from visualization_msgs.msg import Marker
@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 #import PIL.ImageTk
 
 MOTOR_RESOLUTION = 3260
-SPRAY_OFF = 1024
+SPRAY_OFF = 1000
 
 scale_factor = 3  #[pixel/cm]
 robot_size = 15  #[cm]; diameter
@@ -143,10 +143,12 @@ class NavigationControl():
 
         #test flag bot
         #self.R = 0.11/2 #radius of wheel
-        self.R = 0.1249/2 #radius of wheel
+        #self.R = 0.1249/2 #radius of wheel     #flag_bot
+        self.R = 0.12475/2 #radius of wheel      #red_pipe
         #self.R = 0.12475/2 #radius of wheel    #CORRECT ONE
         #self.R = 0.1237/2 #radius of wheel
-        self.L = 0.3544/2 #half of distance btw two wheels
+        #self.L = 0.3544/2 #half of distance btw two wheels     #flag_bot
+        self.L = 0.4/2 #half of distance btw two wheels      #red_pipe
         #self.L = 0.347/2 #half of distance btw two wheels
         #self.L = 0.357/2 #half of distance btw two wheels
 
@@ -291,15 +293,17 @@ class NavigationControl():
         #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown_everything)
 
-        self.valve_angle_publisher = rospy.Publisher(
-                '/valve_input', ValveInput, queue_size=5)
-        self.valve_operation_mode_publisher = rospy.Publisher(
-                '/operation_mode', OperationMode, queue_size=5)
-        self.valve_operation_mode_publisher.publish(
-                self.valve_operation_mode)
-        self.valve_angle_input.goal_position = self.valve_status
-        self.valve_angle_publisher.publish(
-                self.valve_angle_input)
+        self.intensity_publisher = rospy.Publisher(
+                '/intensity', Int32, queue_size=5)
+        self.height_publisher = rospy.Publisher(
+                '/height', Int32, queue_size=5)
+        #self.valve_operation_mode_publisher = rospy.Publisher(
+        #        '/operation_mode', OperationMode, queue_size=5)
+        #self.valve_operation_mode_publisher.publish(
+        #        self.valve_operation_mode)
+        #self.valve_angle_input.goal_position = self.valve_status
+        #self.valve_angle_publisher.publish(
+        #        self.valve_angle_input)
 
         self.vision_offset_subscriber = rospy.Subscriber(
                 '/offset_change', Point, self.callback_vision_offset)
@@ -441,26 +445,32 @@ class NavigationControl():
 
                                         #cut off value larger than 230 to 230.
                                         input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
-                                        spray_input = 660.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
+                                        spray_input = 700.0+(1000.0-700.0)*(float(input_pixel_value)/230.0)
                                         # self.spray_intensity_publisher.publish(spray_input)
-                                        self.valve_angle_input.goal_position = int(spray_input)
-                                        self.valve_angle_publisher.publish(self.valve_angle_input)
+                                        #self.valve_angle_input.goal_position = int(spray_input)
+                                        #self.valve_angle_publisher.publish(self.valve_angle_input)
+                                        self.intensity_publisher.publish(int(spray_input))
                                 else:
                                     if self.is_moving_between_segments==True:
-                                        # self.spray_intensity_publisher.publish(1024.0)
-                                        self.valve_angle_input.goal_position = 1024
-                                        self.valve_angle_publisher.publish(self.valve_angle_input)
+                                        # self.spray_intensity_publisher.publish(1000.0)
+                                        #self.valve_angle_input.goal_position = 1000
+                                        #self.valve_angle_publisher.publish(self.valve_angle_input)
+                                        self.intensity_publisher.publish(int(1000))
+                                        input_pixel_value_graphic = 255
                                     else:
-                                        #self.spray_intensity_publisher.publish(660.0)
+                                        #self.spray_intensity_publisher.publish(700.0)
                                         # self.spray_intensity_publisher.publish(740.0)
-                                        self.valve_angle_input.goal_position = 660
-                                        self.valve_angle_publisher.publish(self.valve_angle_input)
+                                        #self.valve_angle_input.goal_position = 700
+                                        #self.valve_angle_publisher.publish(self.valve_angle_input)
+                                        self.intensity_publisher.publish(int(700))
+                                        input_pixel_value_graphic = 0
 
 
                             elif self.intensity_option==2:
                                 input_pixel_value_graphic=0
-                                self.valve_angle_input.goal_position = 740
-                                self.valve_angle_publisher.publish(self.valve_angle_input)
+                                #self.valve_angle_input.goal_position = 740
+                                #self.valve_angle_publisher.publish(self.valve_angle_input)
+                                self.intensity_publisher.publish(int(700))
 
                             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
                             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
@@ -485,8 +495,10 @@ class NavigationControl():
                             b = delX*cos(th) + delY*sin(th)
                             c = b - self.D
                             if arr_delOmega:
-                                self.D = self.calculate_optimal_D(delX, delY, th, self.D, arr_delOmega[-1][0], arr_delOmega[-1][1])
-                                # self.D = 0.233
+                                # D(k) optimization
+                                #self.D = self.calculate_optimal_D(delX, delY, th, self.D, arr_delOmega[-1][0], arr_delOmega[-1][1])
+                                # D(k) constant
+                                self.D = 0.1995
 
                             delOmega = asin(a/self.D)
                             delS = self.D*cos(delOmega) + c
@@ -799,21 +811,21 @@ class NavigationControl():
 
                                         #cut off value larger than 230 to 230.
                                         input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
-                                        spray_input = 660.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
+                                        spray_input = 700.0+(1000.0-700.0)*(float(input_pixel_value)/230.0)
                                         # self.spray_intensity_publisher.publish(spray_input)
                                         self.valve_angle_input.goal_position = int(spray_input)
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
                                 else:
                                     if self.is_moving_between_segments==True:
-                                        # self.spray_intensity_publisher.publish(1024.0)
+                                        # self.spray_intensity_publisher.publish(1000.0)
                                         input_pixel_value_graphic = 255
-                                        self.valve_angle_input.goal_position = 1024
+                                        self.valve_angle_input.goal_position = 1000
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
                                     else:
-                                        #self.spray_intensity_publisher.publish(660.0)
+                                        #self.spray_intensity_publisher.publish(700.0)
                                         # self.spray_intensity_publisher.publish(740.0)
                                         input_pixel_value_graphic = 0
-                                        self.valve_angle_input.goal_position = 660
+                                        self.valve_angle_input.goal_position = 700
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
 
 
@@ -1016,28 +1028,32 @@ class NavigationControl():
 
                         #cut off value larger than 230 to 230.
                         input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
-                        spray_input = 660.0+(1024.0-660.0)*(float(input_pixel_value)/230.0)
+                        spray_input = 700.0+(1000.0-700.0)*(float(input_pixel_value)/230.0)
                         # self.spray_intensity_publisher.publish(spray_input)
-                        self.valve_angle_input.goal_position = int(spray_input)
-                        self.valve_angle_publisher.publish(self.valve_angle_input)
+                        #self.valve_angle_input.goal_position = int(spray_input)
+                        #self.valve_angle_publisher.publish(self.valve_angle_input)
+                        self.intensity_publisher.publish(int(spray_input))
                 else:
                     if self.is_moving_between_segments==True:
-                        # self.spray_intensity_publisher.publish(1024.0)
+                        # self.spray_intensity_publisher.publish(1000.0)
                         input_pixel_value_graphic = 255
-                        self.valve_angle_input.goal_position = 1024
-                        self.valve_angle_publisher.publish(self.valve_angle_input)
+                        #self.valve_angle_input.goal_position = 1000
+                        #self.valve_angle_publisher.publish(self.valve_angle_input)
+                        self.intensity_publisher.publish(int(1000))
                     else:
-                        #self.spray_intensity_publisher.publish(660.0)
+                        #self.spray_intensity_publisher.publish(700.0)
                         # self.spray_intensity_publisher.publish(740.0)
                         input_pixel_value_graphic = 0
-                        self.valve_angle_input.goal_position = 660
-                        self.valve_angle_publisher.publish(self.valve_angle_input)
+                        #self.valve_angle_input.goal_position = 700
+                        #self.valve_angle_publisher.publish(self.valve_angle_input)
+                        self.intensity_publisher.publish(int(700))
 
 
             elif self.intensity_option==2:
                 input_pixel_value_graphic=0
-                self.valve_angle_input.goal_position = 740
-                self.valve_angle_publisher.publish(self.valve_angle_input)
+                #self.valve_angle_input.goal_position = 740
+                #self.valve_angle_publisher.publish(self.valve_angle_input)
+                self.intensity_publisher.publish(int(740))
 
             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
@@ -1408,9 +1424,10 @@ class NavigationControl():
         # self.cmd_vel.publish(Twist())
         self.pub_delta_theta_1.publish(0.0)
         self.pub_delta_theta_2.publish(0.0)
-        # self.spray_intensity_publisher.publish(1024.0)
-        self.valve_angle_input.goal_position = 1024
-        self.valve_angle_publisher.publish(self.valve_angle_input)
+        # self.spray_intensity_publisher.publish(1000.0)
+        #self.valve_angle_input.goal_position = 1000
+        #self.valve_angle_publisher.publish(self.valve_angle_input)
+        self.intensity_publisher.publish(int(1000))
         self.r.sleep()
 
     def shutdown_for_seconds(self, _input):

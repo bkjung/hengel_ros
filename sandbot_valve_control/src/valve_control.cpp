@@ -16,6 +16,7 @@
 #include <chrono>
 // #include "sandbot_valve_control/ValveInput.h"
 // #include "sandbot_valve_control/MotorInput.h"
+#include "std_msgs/Int32.h"
 #include "sandbot_valve_control/IntensityInput.h"
 #include "sandbot_valve_control/HeightInput.h"
 // #include "sandbot_valve_control/DistanceInput.h"
@@ -63,7 +64,9 @@
 // motor input
 // default position
 int INTENSITY = 1000;
-int HEIGHT = 3095;
+//int HEIGHT = 3095;    //MAXIMUM HEIGHT
+//int HEIGHT = 480;    //MAXIMUM HEIGHT
+int HEIGHT = 1000;       //OPTIMAL HEIGHT AT START
 // int DISTANCE = 814;
 
 int SHUTDOWN = 0;
@@ -106,16 +109,16 @@ void changeHeightInput(int goal_position)
 // }
 
 // subscribe msgCallback
-void msgCallbackIntensity(const sandbot_valve_control::IntensityInput::ConstPtr& msg_intensity)
+void msgCallbackIntensity(const std_msgs::Int32::ConstPtr& msg_intensity)
 {
   // ROS_INFO("recieved msg_intensity = %d", msg_intensity->intensity_input);
-  changeIntensityInput(msg_intensity->intensity_input);
+  changeIntensityInput(msg_intensity->data);
   // RECEIVED_MSG = true;
 }
-void msgCallbackHeight(const sandbot_valve_control::HeightInput::ConstPtr& msg_height)
+void msgCallbackHeight(const std_msgs::Int32::ConstPtr& msg_height)
 {
   // ROS_INFO("recieved msg_height = %d", msg_height->height_input);
-  changeHeightInput(msg_height->height_input);
+  changeHeightInput(msg_height->data);
   // RECEIVED_MSG = true;
 }
 // void msgCallbackDistance(const sandbot_valve_control::DistanceInput::ConstPtr& msg_distance)
