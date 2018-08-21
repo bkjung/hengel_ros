@@ -44,7 +44,7 @@ for alph in range(65, 91):
                         x=float(line.split()[0])
                         y=float(line.split()[1])
 
-                        x_aft= (x-x_min)/(x_max-x_min)
+                        x_aft= (x-x_min)/(x_max-x_min)*0.8
                         y_aft= (y-y_min)/(y_max-y_min)
 
                         alphabet_after.write(str(x_aft)+'\t'+str(y_aft)+'\n')
