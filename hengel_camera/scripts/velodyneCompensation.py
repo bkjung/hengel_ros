@@ -49,7 +49,7 @@ class VelodyneCompensation():
 
     def initialize(self):
         self.bridge=CvBridge()
-        self.pixMetRatio=500
+        self.pixMetRatio=250
         self.cropped_virtual_map=np.full((1280,1280),255).astype('uint8')
         self.virtual_map=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
         self.app_robotview=RobotView(self.virtual_map) # Add the endpoint into the virtual map

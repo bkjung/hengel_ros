@@ -52,7 +52,7 @@ class VisualCompensation():
 
         self.isNavigationStarted = False
         self.bridge=CvBridge()
-        self.pixMetRatio=500
+        self.pixMetRatio=250
 
         self.cropped_virtual_map=np.full((1280,1280),255).astype('uint8')
         self.virtual_map=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
@@ -510,9 +510,9 @@ class VisualCompensation():
         mtx=np.array([[393.8666817683925, 0.0, 399.6813895086665], [0.0, 394.55108358870405, 259.84676565717876], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0032079005049939543, -0.020856072501002923, 0.000252242294186179, -0.0021042704510431365])
 
-        homo1=np.array([[ 1.92059741e+00,  4.44537102e+00, -1.55299796e+02],
-            [-8.33364081e-02,  5.20206669e+00, -3.00766611e+02],
-            [-5.52618496e-05,  6.56931686e-03,  1.00000000e+00]])
+        homo1=np.array([[ -1.19105303e+00 ,  1.68060322e+00  , 1.12892282e+03],
+ [ -1.81606541e-02 ,  7.67289427e-01 ,  1.18937721e+03],
+ [ -3.84572928e-05  , 2.63351073e-03 ,  1.00000000e+00]])
 
         undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
         if self.is_first1 == True:
@@ -527,12 +527,12 @@ class VisualCompensation():
     def undistort2(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        mtx=np.array([[396.01900903941834, 0.0, 410.8496405295566], [0.0, 396.2406539134792, 285.8932176591904], [0.0, 0.0, 1.0]])
-        dst=np.array([-0.008000340519517233, -0.016478659972026452, 7.25792172844022e-05, -0.00434319738405187])
+        mtx=np.array([[382.750581, 0, 422.843185], [0, 385.64829129, 290.20197850], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.018077383, -0.0130221045547, 0.0003464289655, 0.00581105231096])
 
-        homo2= np.array([[-1.63920447e-01,  4.80660669e+00, -2.26012234e+02],
-            [-1.92644897e+00,  3.66877166e+00,  1.35918715e+03],
-            [-2.64765872e-04,  5.74538321e-03,  1.00000000e+00]])
+        homo2= np.array([[ -1.48776708e-01  , 5.50706654e+00 , -3.60421668e+02]
+ [ -2.28522629e+00 ,  4.17778419e+00 ,  1.53166978e+03]
+ [ -2.57162595e-04  , 6.57751893e-03  , 1.00000000e+00]])
         
         undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold2, 255, cv2.THRESH_BINARY)[1]
         if self.is_first2 == True:
@@ -548,9 +548,9 @@ class VisualCompensation():
         mtx=np.array([[387.8191999285985, 0.0, 392.3078288789019],[ 0.0, 382.1093651210362, 317.43368009853674], [0.0, 0.0, 1.0]])
         dst=np.array([-0.008671221810333559, -0.013546386893040543, -0.00016537575030651431, 0.002659594999360673])
 
-        homo3= np.array([[-2.00983918e+00,  4.28781278e+00,  1.46124710e+03],
-            [-2.92334083e-03,  2.97243939e+00,  1.71000087e+03],
-            [ 7.54059686e-06,  6.36915820e-03,  1.00000000e+00]])
+        homo3= np.array([[  1.40641268e+00  , 2.02456544e+00  , 1.15695930e+02],
+ [  5.75929657e-02  , 3.08154517e+00  ,-4.22071086e+01],
+ [  6.92537809e-05  , 3.17103531e-03  , 1.00000000e+00]])
 
         undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
         if self.is_first3 == True:
@@ -567,9 +567,9 @@ class VisualCompensation():
         mtx=np.array([[384.2121883964654, 0.0, 423.16727407803353], [0.0, 386.8188468139677, 359.5190506678551], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0056866549555025896, -0.019460881544303938, 0.0012937686026747307, -0.0031999317338443087])
 
-        homo4= np.array([[ 4.95663167e-01,  9.49273943e+00,  3.61867640e+03],
-            [ 5.88390241e+00,  1.17526923e+01, -1.72914355e+03],
-            [ 5.65609665e-04,  1.83615875e-02,  1.00000000e+00]])
+        homo4= np.array([[  1.89007466e-01  , 6.81705144e+00  , 3.46768518e+03]
+ [  5.49408235e+00   ,9.98981898e+00 , -1.56094237e+03]
+ [  3.10194079e-04  , 1.58077911e-02 ,  1.00000000e+00]])
 
         undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold4, 255, cv2.THRESH_BINARY)[1]
         if self.is_first4 == True:
