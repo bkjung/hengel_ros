@@ -25,6 +25,7 @@ class Keyop():
 
         self.delta1 = 0.0
         self.delta2 = 0.0
+        self.increment = 0.01
 
         self.pub_delta_theta_1 = rospy.Publisher('/delta_theta_1', Float32, queue_size=5)
         self.pub_delta_theta_2 = rospy.Publisher('/delta_theta_2', Float32, queue_size=5)
@@ -33,21 +34,21 @@ class Keyop():
         self.r=rospy.Rate(50)
 
         self.run()
-
-    def callback(self, _keyboard):
-        increment = 0.1
+ 
+    def callback(self, key_input):
+        _keyboard=key_input.data
         if _keyboard==0: #straight
-            self.delta1 += increment
-            self.delta2 += increment
+            self.delta1 += self.increment
+            self.delta2 += self.increment
         elif _keyboard == 1: #backward
-            self.delta1 -= increment
-            self.delta2 -= increment
+            self.delta1 -= self.increment
+            self.delta2 -= self.increment
         elif _keyboard ==2: #right
-            self.delta1 += increment
-            self.delta2 -= increment
+            self.delta1 += self.increment/2
+            self.delta2 -= self.increment/2
         elif _keyboard ==3: # left
-            self.delta1 -= increment
-            self.delta2 -= increment
+            self.delta1 -= self.increment/2
+            self.delta2 += self.increment/2
         elif _keyboard == 4: #stop
             self.delta1 = 0.0
             self.delta2 = 0.0
