@@ -31,14 +31,14 @@ sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 #     return msg_time.sec+msg_time.nsec*0.000000001
 
 class VisualCompensation():
-    def __init__(self):
+    def __init__(self, _num_pts_delete):
         while True:
             word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
             self.width=float(word.split()[0])
             self.height=float(word.split()[1])
             break
-        # self.num_pts_delete = _num_pts_delete
-        self.recent_pts = collections.deque(150*[(0.0,0.0)],150)
+        self.num_pts_delete = _num_pts_delete
+        self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
 
         self.home_path = expanduser("~")
         self.folder_path = self.home_path + "/FEATURE_MATCH/" + time.strftime("%y%m%d_%H%M%S")
@@ -56,10 +56,7 @@ class VisualCompensation():
 
         self.cropped_virtual_map=np.full((1280,1280),255).astype('uint8')
         self.virtual_map=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
-        self.app_robotview=RobotView(self.virtual_map, self.piMetRatio) # Add the endpoint into the virtual map
-
-        self.pi_left_img=np.array([])
-        self.pi_right_img=np.array([])
+        self.app_robotview=RobotView(self.virtual_map) # Add the endpoint into the virtual map
 
         self.isProcessingVirtualmapTime = False
         self.mid_predict_canvas_x=collections.deque(300*[0.0],300)
@@ -67,22 +64,8 @@ class VisualCompensation():
         self.mid_predict_canvas_th=collections.deque(300*[0.0],300)
         self.mid_predict_canvas_time=collections.deque(300*[0.0],300)
 
-        # self.mid_real_photo_x=640+55.77116996/2
-        self.mid_real_photo_x=640
+        self.mid_real_photo_x=640+55.77116996/2
         self.mid_real_photo_y=640
-
-        self.endPoint_callback=message_filters.Subscriber('/endpoint', Point)
-        self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
-        self.midPoint_time_callback=message_filters.Subscriber('/midpoint_time', Time)
-
-        self.ts=message_filters.ApproximateTimeSynchronizer([self.endPoint_callback, self.midPoint_callback, self.midPoint_time_callback], 10, 0.1, allow_headerless=True)
-        self.ts.registerCallback(self.sync_virtual_callback)
-
-        self.pub_virtual_map=rospy.Publisher('/virtual_map', CompressedImage, queue_size=3)
-        self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
-        self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
-        self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
-        self.callback4=message_filters.Subscriber('/genius4/compressed', CompressedImage)
 
         self.summed_image = None
         self.summed_image_prev = None
@@ -250,7 +233,6 @@ class VisualCompensation():
             # homography_virtual_map=self.crop_image(self.virtual_map) #background is black
             # im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
             # print("inv"+str(im_mask_inv))
-    def relocalization(self, homography):
 
             # im_white=np.full((1280,1280),255)
             # im_white_masked=np.multiply(im_white, np.array(im_mask))
@@ -340,9 +322,9 @@ class VisualCompensation():
 
 
                     if fm.status == True:
-                        self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
-                        self.app_robotview.remove_points_during_vision_compensation(self.recent_pts, int((time.time()-_time)/0.02))
-                        self.virtual_map = self.app_robotview.img
+                        # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
+                        # self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
+                        # self.virtual_map = self.app_robotview.img
 
                         #Initialize Queue
                         # self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
@@ -507,16 +489,11 @@ class VisualCompensation():
 
 
     def undistort1(self, _img):
-        img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        mtx=np.array([[393.8666817683925, 0.0, 399.6813895086665], [0.0, 394.55108358870405, 259.84676565717876], [0.0, 0.0, 1.0]])
-        dst=np.array([-0.0032079005049939543, -0.020856072501002923, 0.000252242294186179, -0.0021042704510431365])
+        homo1=np.array([[ -1.19105303e+00 ,  1.68060322e+00  , 1.12892282e+03],
+ [ -1.81606541e-02 ,  7.67289427e-01 ,  1.18937721e+03],
+ [ -3.84572928e-05  , 2.63351073e-03 ,  1.00000000e+00]])
 
-        homo1=np.array([[ -1.89091759e+00  , 1.67769711e+00  , 1.42227655e+03],
- [ -1.42898633e-02 ,  2.16395367e-01 ,  1.51900347e+03],
- [ -3.84577983e-05  , 2.63351099e-03 ,  1.00000000e+00]])
-
-        undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
+        undist_img_binary= cv2.threshold( _img, self.threshold1, 255, cv2.THRESH_BINARY)[1]
         if self.is_first1 == True:
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo1, (1280, 1280))
             self.im_mask_inv1, self.im_mask1 = self.find_mask(img_for_mask)
@@ -532,11 +509,11 @@ class VisualCompensation():
         mtx=np.array([[382.750581, 0, 422.843185], [0, 385.64829129, 290.20197850], [0.0, 0.0, 1.0]])
         dst=np.array([-0.018077383, -0.0130221045547, 0.0003464289655, 0.00581105231096])
 
-        homo2= np.array([[ -1.39262304e-01 ,  6.28805894e+00  ,-9.61177240e+02],
- [ -3.55876335e+00  , 4.16053251e+00  , 2.06718569e+03],
- [ -2.57089754e-04 ,  6.58048809e-03 ,  1.00000000e+00]])
+        homo2= np.array([[ -1.48776708e-01  , 5.50706654e+00 , -3.60421668e+02]
+ [ -2.28522629e+00 ,  4.17778419e+00 ,  1.53166978e+03]
+ [ -2.57162595e-04  , 6.57751893e-03  , 1.00000000e+00]])
         
-        undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold2, 255, cv2.THRESH_BINARY)[1]
+        undist_img_binary= cv2.threshold(_img, self.threshold2, 255, cv2.THRESH_BINARY)[1]
         if self.is_first2 == True:
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo2, (1280, 1280))
             self.im_mask_inv2, self.im_mask2 = self.find_mask(img_for_mask)
@@ -550,11 +527,11 @@ class VisualCompensation():
         mtx=np.array([[387.8191999285985, 0.0, 392.3078288789019],[ 0.0, 382.1093651210362, 317.43368009853674], [0.0, 0.0, 1.0]])
         dst=np.array([-0.008671221810333559, -0.013546386893040543, -0.00016537575030651431, 0.002659594999360673])
 
-        homo3= np.array([[  2.22366767e+00   ,2.02162733e+00 , -1.98886694e+02],
- [  6.55555411e-02 ,  3.71279525e+00 , -4.51531523e+02],
- [  6.92542990e-05 ,  3.17103568e-03  , 1.00000000e+00]])
+        homo3= np.array([[  1.40641268e+00  , 2.02456544e+00  , 1.15695930e+02],
+ [  5.75929657e-02  , 3.08154517e+00  ,-4.22071086e+01],
+ [  6.92537809e-05  , 3.17103531e-03  , 1.00000000e+00]])
 
-        undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
+        undist_img_binary= cv2.threshold(_img, self.threshold1, 255, cv2.THRESH_BINARY)[1]
         if self.is_first3 == True:
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo3, (1280, 1280))
             self.im_mask_inv3, self.im_mask3 = self.find_mask(img_for_mask)
@@ -569,11 +546,11 @@ class VisualCompensation():
         mtx=np.array([[384.2121883964654, 0.0, 423.16727407803353], [0.0, 386.8188468139677, 359.5190506678551], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0056866549555025896, -0.019460881544303938, 0.0012937686026747307, -0.0031999317338443087])
 
-        homo4= np.array([[  1.83297471e-01  , 4.83709167e+00 ,  5.16429708e+03],
- [  8.67141883e+00  , 9.91352060e+00 , -2.88150843e+03],
- [  3.10194158e-04 ,  1.58077943e-02  , 1.00000000e+00]])
+        homo4= np.array([[  1.89007466e-01  , 6.81705144e+00  , 3.46768518e+03]
+ [  5.49408235e+00   ,9.98981898e+00 , -1.56094237e+03]
+ [  3.10194079e-04  , 1.58077911e-02 ,  1.00000000e+00]])
 
-        undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold4, 255, cv2.THRESH_BINARY)[1]
+        undist_img_binary= cv2.threshold(_img, self.threshold4, 255, cv2.THRESH_BINARY)[1]
         if self.is_first4 == True:
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo4, (1280, 1280))
             self.im_mask_inv4, self.im_mask4 = self.find_mask(img_for_mask)
@@ -608,6 +585,5 @@ class VisualCompensation():
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo5, (1280,1280))
 
 if __name__=='__main__':
-    # num_pts_delete = 150 #num_of_waypoints_to_delete_in_virtualmap_after_compensation
-    # VisualCompensation(num_pts_delete)
-    VisualCompensation()
+    num_pts_delete = 150 #num_of_waypoints_to_delete_in_virtualmap_after_compensation
+    VisualCompensation(num_pts_delete)
