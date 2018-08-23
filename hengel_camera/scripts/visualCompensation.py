@@ -31,14 +31,14 @@ sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 #     return msg_time.sec+msg_time.nsec*0.000000001
 
 class VisualCompensation():
-    def __init__(self, _num_pts_delete):
+    def __init__(self):
         while True:
             word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
             self.width=float(word.split()[0])
             self.height=float(word.split()[1])
             break
-        self.num_pts_delete = _num_pts_delete
-        self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
+        # self.num_pts_delete = _num_pts_delete
+        self.recent_pts = collections.deque(150*[(0.0,0.0)],150)
 
         self.home_path = expanduser("~")
         self.folder_path = self.home_path + "/FEATURE_MATCH/" + time.strftime("%y%m%d_%H%M%S")
@@ -249,6 +249,7 @@ class VisualCompensation():
             # homography_virtual_map=self.crop_image(self.virtual_map) #background is black
             # im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
             # print("inv"+str(im_mask_inv))
+    def relocalization(self, homography):
 
             # im_white=np.full((1280,1280),255)
             # im_white_masked=np.multiply(im_white, np.array(im_mask))
@@ -338,9 +339,9 @@ class VisualCompensation():
 
 
                     if fm.status == True:
-                        # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
-                        # self.app_robotview.remove_points_during_vision_compensation(self.recent_pts)
-                        # self.virtual_map = self.app_robotview.img
+                        self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
+                        self.app_robotview.remove_points_during_vision_compensation(self.recent_pts, int((time.time()-_time)/0.02))
+                        self.virtual_map = self.app_robotview.img
 
                         #Initialize Queue
                         # self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
@@ -606,5 +607,6 @@ class VisualCompensation():
         return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo5, (1280,1280))
 
 if __name__=='__main__':
-    num_pts_delete = 150 #num_of_waypoints_to_delete_in_virtualmap_after_compensation
-    VisualCompensation(num_pts_delete)
+    # num_pts_delete = 150 #num_of_waypoints_to_delete_in_virtualmap_after_compensation
+    # VisualCompensation(num_pts_delete)
+    VisualCompensation()
