@@ -425,7 +425,7 @@ def homography_matrix(index):
 ,[36,518],[124,517],[169,517],[211,517],[254,516],[298,515],[340,515],[383,515],[427,515],[471,514],[515,513],[558,514],[603,513],[647,512],[693,512],[737,512]
 ,[64,476],[104,476],[184,476],[225,475],[306,474],[347,474],[387,474],[508,472],[549,472],[590,471],[630,471],[672,470],[715,470]
 ,[85,441],[124,440],[199,440],[312,439],[388,438],[502,437],[541,436],[617,435],[656,435],[691,435]])
-    objPts = [[[(point_r[1]+3.63)*(2.5)+640.0, point_r[0]*(2.5)+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
+    objPts = [[[(point_r[1]+3.63)*(4)+640.0, point_r[0]*(4)+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
 
     homography, status=cv2.findHomography(np.array(imgPtsArr[index-1]), np.array(objPts[index-1],np.float32), cv2.RANSAC, 10)
 

@@ -17,9 +17,9 @@ import cv2
 sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
 class RobotView():
-    def __init__(self, _img):
+    def __init__(self, _img, ratio):
     #def __init__(self):
-        self.pixMetRatio=250
+        self.pixMetRatio=ratio
         # self.lineThickness=0.01   #original
         self.lineThickness=0.02
 
