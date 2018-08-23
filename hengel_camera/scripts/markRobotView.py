@@ -94,14 +94,14 @@ class RobotView():
         # self.pub3.publish(ttime)
         # print("map making time: "+str(time.time()-_time))
 
-    def remove_points_during_vision_compensation(self, _recent_pts):
+    def remove_points_during_vision_compensation(self, _recent_pts, _num_remove_pts):
         #Make all pixels in recent_pts to white (255)
-        print("remove points during visual compenstaion")
+        print("remove %d points during visual compenstaion" %(_num_remove_pts))
 
         #This should be carefully selected !!!!!!!!!!!!!!!!!!!
         dist=self.lineThickness*self.pixMetRatio
 
-        for ind in range(len(_recent_pts)):
+        for ind in range(len(_num_remove_pts)):
             point_x = _recent_pts[ind][0]
             point_y = _recent_pts[ind][1]
             if point_x != 0.0 and point_y != 0.0:
