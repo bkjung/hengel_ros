@@ -74,6 +74,7 @@ class FeatureMatch():
                                 matchesMask = matchesMask,
                                 flags = 0)
             img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
+            cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)
 
             plt.subplot(223)
             plt.imshow(img3, cmap='gray')

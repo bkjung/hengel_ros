@@ -56,7 +56,7 @@ class VisualCompensation():
 
         self.cropped_virtual_map=np.full((1280,1280),255).astype('uint8')
         self.virtual_map=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
-        self.app_robotview=RobotView(self.virtual_map, self.piMetRatio) # Add the endpoint into the virtual map
+        self.app_robotview=RobotView(self.virtual_map, self.pixMetRatio) # Add the endpoint into the virtual map
 
         self.pi_left_img=np.array([])
         self.pi_right_img=np.array([])
@@ -110,7 +110,7 @@ class VisualCompensation():
         self.ts_2.registerCallback(self.sync_real_callback)
 
 
-        self.pub_offset=rospy.Publisher('/offset_change', Point, queue_size=5)
+        self.vision_offset_publisher=rospy.Publisher('/offset_change', Point, queue_size=5)
         ############################ DEBUG ################################
         # self.pub_pi_l=rospy.Publisher('/pi_left/undist', Image, queue_size=5 )
         # self.pub_pi_r=rospy.Publisher('/pi_right/undist', Image, queue_size=5 )
@@ -250,7 +250,6 @@ class VisualCompensation():
             # homography_virtual_map=self.crop_image(self.virtual_map) #background is black
             # im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
             # print("inv"+str(im_mask_inv))
-    def relocalization(self, homography):
 
             # im_white=np.full((1280,1280),255)
             # im_white_masked=np.multiply(im_white, np.array(im_mask))
