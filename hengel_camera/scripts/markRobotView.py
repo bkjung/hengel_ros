@@ -101,7 +101,9 @@ class RobotView():
         #This should be carefully selected !!!!!!!!!!!!!!!!!!!
         dist=self.lineThickness*self.pixMetRatio
 
-        for ind in range(len(_num_remove_pts)):
+        for ind in range(_num_remove_pts):
+            # print("DEBUG-0")
+            # print(_recend_pts[ind])
             point_x = _recent_pts[ind][0]
             point_y = _recent_pts[ind][1]
             if point_x != 0.0 and point_y != 0.0:

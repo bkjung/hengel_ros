@@ -339,7 +339,6 @@ class VisualCompensation():
 
 
                     if fm.status == True:
-                        self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                         self.app_robotview.remove_points_during_vision_compensation(self.recent_pts, int((time.time()-_time)/0.02))
                         self.virtual_map = self.app_robotview.img
 
@@ -347,7 +346,9 @@ class VisualCompensation():
                         # self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
 
                         __time=time.time()
-                        self.relocalization(M)
+                        _pnt = self.relocalization(M)
+                        # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
+                        self.vision_offset_publisher.publish(_pnt)
                         print("relocation time: "+str(time.time()-__time))
 
             except Exception as e:
@@ -423,7 +424,9 @@ class VisualCompensation():
         self.success_try += 1
         self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)
 
-        self.pub_offset.publish(offset)
+        return offset
+
+        # self.pub_offset.publish(offset)
 
 
     def crop_image(self, _img):
