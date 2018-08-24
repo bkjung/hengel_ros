@@ -52,12 +52,12 @@ class VisualCompensation():
 
         self.isNavigationStarted = False
         self.bridge=CvBridge()
-        self.pixMetRatio=250
+        self.pixMetRatio=400
         self.line_thickness= 0.02
         self.canvas_padding = self.line_thickness * self.pixMetRatio * 2
 
         self.cropped_virtual_map=np.full((1280,1280),255).astype('uint8')
-        self.virtual_map=np.full((int(self.pixMetRatio*self.height + self.canvas_padding), int(self.pixMetRatio*self.width+self.canvas_padding)), 255)
+        self.virtual_map=np.full((int(self.pixMetRatio*self.height + self.canvas_padding*2), int(self.pixMetRatio*self.width+self.canvas_padding*2)), 255)
         self.app_robotview=RobotView(self.virtual_map, self.pixMetRatio, self.line_thickness, self.canvas_padding) # Add the endpoint into the virtual map
 
         self.pi_left_img=np.array([])
@@ -162,7 +162,7 @@ class VisualCompensation():
                 self.isProcessingVirtualmapTime = False
 
                 self.mid_predict_img_x=-self.current_mid_predict_canvas_x *self.pixMetRatio + self.canvas_padding
-                self.mid_predict_img_y=self.virtual_map.shape[0]-self.current_mid_predict_canvas_y*self.pixMetRatio +self.canvas_padding
+                self.mid_predict_img_y=self.virtual_map.shape[0]-(self.current_mid_predict_canvas_y*self.pixMetRatio +self.canvas_padding)
                 self.mid_predict_img_th=-self.current_mid_predict_canvas_th
 
                 # print("Processing Virtualmap Sync Time: "+str(time.time()-_time))
@@ -178,20 +178,25 @@ class VisualCompensation():
                 img2_masked=np.multiply(np.multiply(img2, im_mask13), self.im_mask4).astype('uint8')
                 img4_masked=np.multiply(np.multiply(img4, im_mask13), self.im_mask2).astype('uint8')
 
-                # summed_image=img_white_masked
                 summed_image=img1+img2_masked+img3+img4_masked
                 summed_image=cv2.bitwise_not(summed_image)
 
-                summed_image[531:571,497:577]=156
-                summed_image[535:570,597:706]=150
-                summed_image[620:651, 510:547]=176
-                summed_image[723:744, 617: 708]=135
-                summed_image[608:659, 778:887]=153
-                summed_image[659:692, 866:935]=158
-                summed_image[631:650, 900:980]=165
-                summed_image[589:597, 565:569]=155
-                summed_image[526:599 , 558:725]=150
+                #PixMetRatio 400 version
+                summed_image[640:740, 526:762]=150
+                summed_image[643:697, 501:526]=150
+                summed_image[615:640, 544:568]=150
+                summed_image[571:615, 504:524]=150
+                summed_image[540:617, 522:758]=150
+                summed_image[617:640, 530:542]=150
+                summed_image[537:540 , 664:682]=150
+                summed_image[623:631 , 512:522]=150
 
+
+                summed_image[602:641, 758:793]=150
+                summed_image[603:619, 931:954]=150
+                # summed_image[642:738, 490:507]=150
+                # summed_image[738:762, 507:592]=150
+                # summed_image[509:526, 559:582]=150
 
 
                 # print("summed_image time: "+str(time.time()-_time))
@@ -213,6 +218,7 @@ class VisualCompensation():
                 self.summed_image = summed_image
 
                 homography_virtual_map=self.crop_image(self.virtual_map) #background is black
+
                 self.cropped_virtual_map=cv2.bitwise_not(homography_virtual_map)
 
                 print("sum & crop image time: "+str(time.time()-_time))
@@ -252,7 +258,7 @@ class VisualCompensation():
                             # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                             self.vision_offset_publisher.publish(_pnt)
                             print("relocation time: "+str(time.time()-__time))
-
+                            print("Total Time (visual feedback): "+str(time.time()-_time))
                 except Exception as e:
                     print(e)
                     sys.exit("Feature Match error - debug1")
@@ -261,7 +267,6 @@ class VisualCompensation():
 
             #################
 
-            print("Total Time (visual feedback): "+str(time.time()-_time))
 
             # bridge=CvBridge()
             # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
@@ -339,7 +344,7 @@ class VisualCompensation():
         view_padding=int(ceil(1280*sqrt(2))) #Robot may see outside of canvas
         img_padding=np.full((_img.shape[0]+view_padding*2, _img.shape[1]+view_padding*2),0).astype('uint8')
 
-        img_padding[view_padding+self.canvas_padding:view_padding+self.canvas_padding+_img.shape[0],view_padding+self.canvas_padding:view_padding+self.canvas_padding+_img.shape[1]]= img_not
+        img_padding[view_padding:view_padding+_img.shape[0],view_padding:view_padding+_img.shape[1]]= img_not
 
         half_map_size_diagonal = 1280/sqrt(2)
 
@@ -361,7 +366,7 @@ class VisualCompensation():
                     [x_mid_crop+half_map_size_diagonal*cos(pi/4-self.mid_predict_img_th), y_mid_crop+half_map_size_diagonal*sin(pi/4-self.mid_predict_img_th)],
                     [x_mid_crop+half_map_size_diagonal*cos(pi/4+self.mid_predict_img_th), y_mid_crop-half_map_size_diagonal*sin(pi/4+self.mid_predict_img_th)]]
 
-        imgPts_padding=[[a[0]+view_padding+self.canvas_padding, a[1]+view_padding+self.canvas_padding] for a in imgPts]
+        imgPts_padding=[[a[0]+view_padding, a[1]+view_padding] for a in imgPts]
         # print("points: "+str(imgPts_padding))
 
         imgPts_padding=np.array(imgPts_padding)

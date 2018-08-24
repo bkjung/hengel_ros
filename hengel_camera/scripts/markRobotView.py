@@ -35,7 +35,7 @@ class RobotView():
     def cvtCanvasToImgCoord(self, _canvasPnt):
         imgPnt=Point()
         imgPnt.x= -_canvasPnt.x * self.pixMetRatio + self.canvas_padding
-        imgPnt.y= self.img.shape[0]-_canvasPnt.y*self.pixMetRatio +self.canvas_padding
+        imgPnt.y= self.img.shape[0]-(_canvasPnt.y*self.pixMetRatio +self.canvas_padding)
         imgPnt.z= -_canvasPnt.z
 
         return imgPnt
@@ -87,7 +87,9 @@ class RobotView():
                             if j>0 and j<self.img.shape[0]:
                                 self.img[j][i]=min(self.spray_intensity, self.img[j][i])   
                 else:
-                    print("====Endpoint append- RANGE ERROR!!!!")
+                    print("canvas size: %d, %d" %(self.img.shape[1], self.img.shape[0]))
+                    print("point: %d, %d" %(point_x, point_y))
+
         # ttime=Float32()
         # ttime.data=float(time.time()-_time)
         # self.pub3.publish(ttime)
@@ -101,8 +103,8 @@ class RobotView():
         dist=self.lineThickness*self.pixMetRatio
 
         for ind in range(_num_remove_pts):
-            point_x = self.cvtCanvasToImgCoord(_recent_pts[ind]).x
-            point_y = self.cvtCanvasToImgCoord(_recent_pts[ind]).y
+            point_x = self.cvtCanvasToImgCoord(Point(_recent_pts[ind][0], _recent_pts[ind][1], 0)).x
+            point_y = self.cvtCanvasToImgCoord(Point(_recent_pts[ind][0], _recent_pts[ind][1], 0)).y
 
             if point_x != 0.0 and point_y != 0.0:
                 x1=int(point_x+dist/2)
