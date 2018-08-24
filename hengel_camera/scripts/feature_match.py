@@ -74,7 +74,6 @@ class FeatureMatch():
                                 matchesMask = matchesMask,
                                 flags = 0)
             img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
-            cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)
 
             plt.subplot(223)
             plt.imshow(img3, cmap='gray')
@@ -86,6 +85,7 @@ class FeatureMatch():
         plt.savefig(self.folder_path+"/SIFT_BF_"+file_time+".png")
         cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
         cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
+        cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)
         cv2.destroyAllWindows()
         print("FeatureMatch Saved to "+file_time)
 
