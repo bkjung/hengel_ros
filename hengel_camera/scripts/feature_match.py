@@ -35,6 +35,8 @@ class FeatureMatch():
 
         bf=cv2.BFMatcher(cv2.NORM_L2)
 
+        file_time = time.strftime("%y%m%d_%H%M%S")
+
         if des1 is not None and des2 is not None:
             matches=bf.knnMatch(des2, des1, k=2)
         
@@ -74,6 +76,7 @@ class FeatureMatch():
                                 matchesMask = matchesMask,
                                 flags = 0)
             img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
+            cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)
 
             plt.subplot(223)
             plt.imshow(img3, cmap='gray')
@@ -81,11 +84,9 @@ class FeatureMatch():
         else:
             print("FAILED (Empty Descriptor)")
 
-        file_time = time.strftime("%y%m%d_%H%M%S")
         plt.savefig(self.folder_path+"/SIFT_BF_"+file_time+".png")
         cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
         cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
-        cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)
         cv2.destroyAllWindows()
         print("FeatureMatch Saved to "+file_time)
 
