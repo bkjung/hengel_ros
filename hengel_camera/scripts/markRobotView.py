@@ -17,11 +17,12 @@ import cv2
 sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
 class RobotView():
-    def __init__(self, _img, ratio, thickness):
+    def __init__(self, _img, ratio, thickness, canvas_padding):
     #def __init__(self):
         self.pixMetRatio=ratio
         # self.lineThickness=0.01   #original
         self.lineThickness= thickness
+        self.canvas_padding= canvas_padding
 
         self.img=_img
 
@@ -29,10 +30,12 @@ class RobotView():
         self.pub2=rospy.Publisher('/notMarkedImg', CompressedImage, queue_size=3)
         self.pub3=rospy.Publisher('/time', Float32, queue_size=5)
 
+        self.isPaintStarted = False
+
     def cvtCanvasToImgCoord(self, _canvasPnt):
         imgPnt=Point()
-        imgPnt.x= -_canvasPnt.x * self.pixMetRatio
-        imgPnt.y= self.img.shape[0]-_canvasPnt.y*self.pixMetRatio
+        imgPnt.x= -_canvasPnt.x * self.pixMetRatio + self.canvas_padding
+        imgPnt.y= self.img.shape[0]-_canvasPnt.y*self.pixMetRatio +self.canvas_padding
         imgPnt.z= -_canvasPnt.z
 
         return imgPnt
@@ -62,7 +65,7 @@ class RobotView():
     def add_endpoint(self):
         _time=time.time()
         if self.spray_intensity!=255:
-            print("====Endpoint Append: %d, %d " %(self.end_x, self.end_y))
+            self.isPaintStarted=True
             self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
             dist=self.lineThickness*self.pixMetRatio
             x1=int(self.end_x-dist/2)
@@ -82,9 +85,7 @@ class RobotView():
                         y2=int(self.end_y+y)
                         for j in range(y1, y2+1):
                             if j>0 and j<self.img.shape[0]:
-                                self.img[j][i]=min(self.spray_intensity, self.img[j][i])
-                        
-                    print("====endpoint added")
+                                self.img[j][i]=min(self.spray_intensity, self.img[j][i])   
                 else:
                     print("====Endpoint append- RANGE ERROR!!!!")
         # ttime=Float32()

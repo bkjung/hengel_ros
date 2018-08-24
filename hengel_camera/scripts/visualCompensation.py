@@ -53,10 +53,12 @@ class VisualCompensation():
         self.isNavigationStarted = False
         self.bridge=CvBridge()
         self.pixMetRatio=250
+        self.line_thickness= 0.02
+        self.canvas_padding = self.line_thickness * self.pixMetRatio * 2
 
         self.cropped_virtual_map=np.full((1280,1280),255).astype('uint8')
-        self.virtual_map=np.full((int(self.pixMetRatio*self.height), int(self.pixMetRatio*self.width)), 255)
-        self.app_robotview=RobotView(self.virtual_map, self.pixMetRatio) # Add the endpoint into the virtual map
+        self.virtual_map=np.full((int(self.pixMetRatio*self.height + self.canvas_padding), int(self.pixMetRatio*self.width+self.canvas_padding)), 255)
+        self.app_robotview=RobotView(self.virtual_map, self.pixMetRatio, self.line_thickness, self.canvas_padding) # Add the endpoint into the virtual map
 
         self.pi_left_img=np.array([])
         self.pi_right_img=np.array([])
@@ -79,6 +81,9 @@ class VisualCompensation():
         self.ts.registerCallback(self.sync_virtual_callback)
 
         self.pub_virtual_map=rospy.Publisher('/virtual_map', CompressedImage, queue_size=3)
+
+        self.calculate_homography(self.pixMetRatio)
+
         self.callback1=message_filters.Subscriber('/genius1/compressed', CompressedImage)
         self.callback2=message_filters.Subscriber('/genius2/compressed', CompressedImage)
         self.callback3=message_filters.Subscriber('/genius3/compressed', CompressedImage)
@@ -137,223 +142,122 @@ class VisualCompensation():
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
         if self.isNavigationStarted:
-            print("sync real")
-            _time = time.time()
-            image_time = (_img1.header.stamp.to_nsec()+_img2.header.stamp.to_nsec()+_img3.header.stamp.to_nsec()+_img4.header.stamp.to_nsec())/4.0
+            if self.app_robotview.isPaintStarted == True:
+                print("sync real")
+                _time = time.time()
+                image_time = (_img1.header.stamp.to_nsec()+_img2.header.stamp.to_nsec()+_img3.header.stamp.to_nsec()+_img4.header.stamp.to_nsec())/4.0
 
-            min_diff = 999999999999999.9
-            min_index = -1
-            self.isProcessingVirtualmapTime = True
-            for i in range(len(self.mid_predict_canvas_time)):
-                curr_diff = abs(self.mid_predict_canvas_time[i]-image_time)
-                if (curr_diff < min_diff):
-                    min_diff = curr_diff
-                    min_index = i
+                min_diff = 999999999999999.9
+                min_index = -1
+                self.isProcessingVirtualmapTime = True
+                for i in range(len(self.mid_predict_canvas_time)):
+                    curr_diff = abs(self.mid_predict_canvas_time[i]-image_time)
+                    if (curr_diff < min_diff):
+                        min_diff = curr_diff
+                        min_index = i
 
-            self.current_mid_predict_canvas_x = self.mid_predict_canvas_x[min_index]
-            self.current_mid_predict_canvas_y = self.mid_predict_canvas_y[min_index]
-            self.current_mid_predict_canvas_th = self.mid_predict_canvas_th[min_index]
-            self.isProcessingVirtualmapTime = False
+                self.current_mid_predict_canvas_x = self.mid_predict_canvas_x[min_index]
+                self.current_mid_predict_canvas_y = self.mid_predict_canvas_y[min_index]
+                self.current_mid_predict_canvas_th = self.mid_predict_canvas_th[min_index]
+                self.isProcessingVirtualmapTime = False
 
-            self.mid_predict_img_x=-self.current_mid_predict_canvas_x *self.pixMetRatio
-            self.mid_predict_img_y=self.virtual_map.shape[0]-self.current_mid_predict_canvas_y*self.pixMetRatio
-            self.mid_predict_img_th=-self.current_mid_predict_canvas_th
+                self.mid_predict_img_x=-self.current_mid_predict_canvas_x *self.pixMetRatio + self.canvas_padding
+                self.mid_predict_img_y=self.virtual_map.shape[0]-self.current_mid_predict_canvas_y*self.pixMetRatio +self.canvas_padding
+                self.mid_predict_img_th=-self.current_mid_predict_canvas_th
 
-            # print("Processing Virtualmap Sync Time: "+str(time.time()-_time))
+                # print("Processing Virtualmap Sync Time: "+str(time.time()-_time))
 
-            img1 = self.undistort1(_img1)
-            img2 = self.undistort2(_img2)
-            img3 = self.undistort3(_img3)
-            img4 = self.undistort4(_img4)
-
-            # while len(self.pi_left_img)==0 or len(self.pi_right_img)==0:
-            #     print("empty pi_left or pi_right")
-            #     time.sleep(100)
-
-            # img_left=copy.deepcopy(self.pi_left_img)
-            # img_right=copy.deepcopy(self.pi_right_img)
-####  1  #############################################################################
-            # im_mask_inv1, im_mask1=self.find_mask(img1)
-            # im_mask_inv3, im_mask3=self.find_mask(img3)
-            # im_mask_inv2, im_mask2=self.find_mask(img2)
-            # im_mask_inv4, im_mask4=self.find_mask(img4)
-            # # _, im_mask_l=self.find_mask(img_left)
-            # # _, im_mask_r=self.find_mask(img_right)
-
-            # img_white=np.full((1280, 1280), 255)
-
-            # im_mask13=cv2.bitwise_and(np.array(im_mask1).astype('uint8'), np.array(im_mask3).astype('uint8'))
-
-            # im_mask_inv_13=cv2.bitwise_and(np.array(im_mask_inv1).astype('uint8'), np.array(im_mask_inv3).astype('uint8'))
-            # im_mask_inv_24=cv2.bitwise_and(np.array(im_mask_inv2).astype('uint8'), np.array(im_mask_inv4).astype('uint8'))
-            # im_mask_inv1234=cv2.bitwise_and(im_mask_inv_13, im_mask_inv_24)
-
-            # img_white_masked=np.multiply(img_white, im_mask_inv1234)
-            # img2_masked=np.multiply(np.multiply(img2, im_mask13), im_mask_inv2)
-            # img4_masked=np.multiply(np.multiply(img4, im_mask13), im_mask_inv4)
-            # img1_masked=np.multiply(img1, im_mask_inv1)
-            # img3_masked=np.multiply(img3, im_mask_inv3)
-            # # img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r).astype('uint8')
-            # # img_right_masked=np.multiply(np.multiply(img_right, im_mask1234), im_mask_l).astype('uint8')
-            # summed_image=(img1_masked+img2_masked+img3_masked+img4_masked+img_white_masked).astype('uint8')
-            # summed_image=(img1_masked+img2_masked+img3_masked+img4_masked).astype('uint8')
-            # summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
-
-            # self.pub_sum.publish(summed_msg)
-            # print("summed_image time: "+str(time.time()-_time))
+                img1 = self.undistort1(_img1)
+                img2 = self.undistort2(_img2)
+                img3 = self.undistort3(_img3)
+                img4 = self.undistort4(_img4)
 
 
-            # homography_virtual_map=self.crop_image(self.virtual_map) #background is black
-            # im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
+                im_mask13=cv2.bitwise_and(np.array(self.im_mask1).astype('uint8'), np.array(self.im_mask3).astype('uint8'))
 
-            # im_white=np.full((1280,1280),255).astype('uint8')
-            # im_white_masked=np.multiply(im_white, np.array(im_mask)).astype('uint8')
-            # homography_virtual_map_masked=np.multiply(homography_virtual_map, im_mask_inv).astype('uint8')
-            # self.cropped_virtual_map=homography_virtual_map_masked+im_white_masked
+                img2_masked=np.multiply(np.multiply(img2, im_mask13), self.im_mask4).astype('uint8')
+                img4_masked=np.multiply(np.multiply(img4, im_mask13), self.im_mask2).astype('uint8')
 
-######  2  ############################################################################
-            # im_mask_inv1, im_mask1=self.find_mask(img1)
-            # im_mask_inv3, im_mask3=self.find_mask(img3)
-            # im_mask_inv2, im_mask2=self.find_mask(img2)
-            # im_mask_inv4, im_mask4=self.find_mask(img4)
-            # # _, im_mask_l=self.find_mask(img_left)
-            # # _, im_mask_r=self.find_mask(img_right)
+                # summed_image=img_white_masked
+                summed_image=img1+img2_masked+img3+img4_masked
+                summed_image=cv2.bitwise_not(summed_image)
 
-            # img_white=np.full((1280, 1280), 255)
-
-            # im_mask13=cv2.bitwise_and(im_mask1, im_mask3)
-            # im_mask_inv_13=cv2.bitwise_and(im_mask_inv1, im_mask_inv3)
-            # im_mask_inv_24=cv2.bitwise_and(im_mask_inv2, im_mask_inv4)
-            # im_mask_inv1234=cv2.bitwise_and(im_mask_inv_13, im_mask_inv_24) #mask & mask_inv data type: numpy.ndarray
-            # print("inv1234: "+str(im_mask_inv1234))
-
-            # img_white_masked=np.multiply(img_white, im_mask1234)
-            # # img2_masked=np.multiply(np.multiply(img2, im_mask_inv_13), np.array(im_mask_inv4))
-            # # img4_masked=np.multiply(np.multiply(img4, im_mask_inv_13), np.array(im_mask_inv2))
-            # img2_masked=np.multiply(img2, im_mask13)
-            # img4_masked=np.multiply(img4, im_mask13)
-            # img1_masked=np.multiply(img1, im_mask_inv1)
-            # img3_masked=np.multiply(img3, im_mask_inv3)
-            # # img_left_masked=np.multiply(np.multiply(img_left, im_mask1234), im_mask_r).astype('uint8')
-            # # img_right_masked=np.multiply(np.multiply(img_right, im_mask1234), im_mask_l).astype('uint8')
-
-
-            # # summed_image=(img1+img2_masked+img3+img4_masked+img_white_masked).astype('uint8')
-            # summed_image=(img2_masked+img4_masked+img_white_masked).astype('uint8')
-            # # summed_image=(img1_masked+img2_masked+img3_masked+img4_masked).astype('uint8')
-            # summed_msg=self.bridge.cv2_to_compressed_imgmsg(summed_image)
-
-            # self.pub_sum.publish(summed_msg)
-            # print("summed_image time: "+str(time.time()-_time))
-
-
-            # homography_virtual_map=self.crop_image(self.virtual_map) #background is black
-            # im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
-            # print("inv"+str(im_mask_inv))
-
-            # im_white=np.full((1280,1280),255)
-            # im_white_masked=np.multiply(im_white, np.array(im_mask))
-            # homography_virtual_map_masked=np.multiply(homography_virtual_map, np.array(im_mask_inv))
-            # self.cropped_virtual_map=(homography_virtual_map_masked+im_white_masked).astype('uint8')
-
-##### 3  #############################################################################
-            # im_mask_inv1, im_mask1=self.find_mask(img1)
-            # im_mask_inv3, im_mask3=self.find_mask(img3)
-            # im_mask_inv2, im_mask2=self.find_mask(img2)
-            # im_mask_inv4, im_mask4=self.find_mask(img4)
-
-            im_mask13=cv2.bitwise_and(np.array(self.im_mask1).astype('uint8'), np.array(self.im_mask3).astype('uint8'))
-
-            img2_masked=np.multiply(np.multiply(img2, im_mask13), self.im_mask4).astype('uint8')
-            img4_masked=np.multiply(np.multiply(img4, im_mask13), self.im_mask2).astype('uint8')
-
-    	    # summed_image=img_white_masked
-            summed_image=img1+img2_masked+img3+img4_masked
-            summed_image=cv2.bitwise_not(summed_image)
-
-            summed_image[531:571,497:577]=156
-            summed_image[535:570,597:706]=150
-            summed_image[620:651, 510:547]=176
-            summed_image[723:744, 617: 708]=135
-            summed_image[608:659, 778:887]=153
-            summed_image[659:692, 866:935]=158
-            summed_image[631:650, 900:980]=165
-            summed_image[589:597, 565:569]=155
-            summed_image[526:599 , 558:725]=150
+                summed_image[531:571,497:577]=156
+                summed_image[535:570,597:706]=150
+                summed_image[620:651, 510:547]=176
+                summed_image[723:744, 617: 708]=135
+                summed_image[608:659, 778:887]=153
+                summed_image[659:692, 866:935]=158
+                summed_image[631:650, 900:980]=165
+                summed_image[589:597, 565:569]=155
+                summed_image[526:599 , 558:725]=150
 
 
 
-            # print("summed_image time: "+str(time.time()-_time))
+                # print("summed_image time: "+str(time.time()-_time))
 
-            # for i in range(len(summed_image)):
-            #     for j in range(len(summed_image[i])):
-            #         if summed_image[i][j] >= 90:
-            #             summed_image[i][j] = 255
-            #         else:
-            #             summed_image[i][j] = 0
-            # summed_image = (summed_image <80) * summed_image
-            summed_image= cv2.threshold(summed_image, 70, 255, cv2.THRESH_BINARY)[1]
-            # summed_image= cv2.threshold(summed_image, 90, 255, cv2.THRESH_BINARY)[1]
-            summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
-            # print(summed_image)
-            # summed_image=self.image_processing(summed_image)
-            # print(summed_image.shape)
+                # for i in range(len(summed_image)):
+                #     for j in range(len(summed_image[i])):
+                #         if summed_image[i][j] >= 90:
+                #             summed_image[i][j] = 255
+                #         else:
+                #             summed_image[i][j] = 0
+                # summed_image = (summed_image <80) * summed_image
+                summed_image= cv2.threshold(summed_image, 70, 255, cv2.THRESH_BINARY)[1]
+                # summed_image= cv2.threshold(summed_image, 90, 255, cv2.THRESH_BINARY)[1]
+                summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
+                # print(summed_image)
+                # summed_image=self.image_processing(summed_image)
+                # print(summed_image.shape)
 
-            self.summed_image = summed_image
+                self.summed_image = summed_image
 
-            homography_virtual_map=self.crop_image(self.virtual_map) #background is black
-            # im_mask_inv, im_mask = self.find_mask(homography_virtual_map)
+                homography_virtual_map=self.crop_image(self.virtual_map) #background is black
+                self.cropped_virtual_map=cv2.bitwise_not(homography_virtual_map)
 
-            # im_white=np.full((1280,1280),255).astype('uint8')
-            # im_white_masked=np.multiply(im_white, np.array(im_mask)).astype('uint8')
-            # homography_virtual_map_masked=np.multiply(homography_virtual_map, im_mask_inv).astype('uint8')
+                print("sum & crop image time: "+str(time.time()-_time))
 
-            # self.cropped_virtual_map=im_white_masked+homography_virtual_map_masked
-            # self.cropped_virtual_map=im_white_masked+homography_virtual_map
-            self.cropped_virtual_map=cv2.bitwise_not(homography_virtual_map)
+                self.total_try += 1
 
-            print("sum & crop image time: "+str(time.time()-_time))
-
-            self.total_try += 1
-
-            print("Compensation Success Count = %d/%d" %(self.success_try, self.total_try))
-            print("SUM of Compensation Distance = %f" %(self.sum_compensation_distance))
+                print("Compensation Success Count = %d/%d" %(self.success_try, self.total_try))
+                print("SUM of Compensation Distance = %f" %(self.sum_compensation_distance))
 
 ##################################################################################
+                try:
+                    fm = FeatureMatch(self.folder_path)
+                    # print("img1: "+str(self.virtual_map.shape)+", img2: "+str(summed_image.shape))
+                    # if self.cropped_virtual_map is None or summed_image is None:
+                    if self.cropped_virtual_map is None or summed_image is None:
+                        print("IMAGE EMPTY")
+                        raise Exception("Image Empty")
+                    else:
+                        # M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
 
-            try:
-                fm = FeatureMatch(self.folder_path)
-                # print("img1: "+str(self.virtual_map.shape)+", img2: "+str(summed_image.shape))
-                # if self.cropped_virtual_map is None or summed_image is None:
-                if self.cropped_virtual_map is None or summed_image is None:
-                    print("IMAGE EMPTY")
-                    raise Exception("Image Empty")
-                else:
-                    # M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
-
-                    # M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
-                    M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map)
-                    # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
-                    # M = fm.IMAGE_ALIGNMENT_ecc(summed_image, self.cropped_virtual_map)
-                    # M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map)
+                        # M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
+                        M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map)
+                        # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
+                        # M = fm.IMAGE_ALIGNMENT_ecc(summed_image, self.cropped_virtual_map)
+                        # M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map)
 
 
-                    if fm.status == True:
-                        self.app_robotview.remove_points_during_vision_compensation(self.recent_pts, int((time.time()-_time)/0.02))
-                        self.virtual_map = self.app_robotview.img
+                        if fm.status == True:
+                            self.app_robotview.remove_points_during_vision_compensation(self.recent_pts, int((time.time()-_time)/0.02))
+                            self.virtual_map = self.app_robotview.img
 
-                        #Initialize Queue
-                        # self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
+                            #Initialize Queue
+                            # self.recent_pts = collections.deque(self.num_pts_delete*[(0.0,0.0)],self.num_pts_delete)
 
-                        __time=time.time()
-                        _pnt = self.relocalization(M)
-                        # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
-                        self.vision_offset_publisher.publish(_pnt)
-                        print("relocation time: "+str(time.time()-__time))
+                            __time=time.time()
+                            _pnt = self.relocalization(M)
+                            # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
+                            self.vision_offset_publisher.publish(_pnt)
+                            print("relocation time: "+str(time.time()-__time))
 
-            except Exception as e:
-                print(e)
-                sys.exit("Feature Match error - debug1")
+                except Exception as e:
+                    print(e)
+                    sys.exit("Feature Match error - debug1")
+            else:
+                print("Painting not started yet")
 
             #################
 
@@ -432,27 +336,32 @@ class VisualCompensation():
     def crop_image(self, _img):
         _time=time.time()
         img_not=cv2.bitwise_not(_img)
-        padding=int(ceil(640*sqrt(2)))
-        img_padding=np.full((_img.shape[0]+padding*2, _img.shape[1]+padding*2),0).astype('uint8')
+        view_padding=int(ceil(1280*sqrt(2))) #Robot may see outside of canvas
+        img_padding=np.full((_img.shape[0]+view_padding*2, _img.shape[1]+view_padding*2),0).astype('uint8')
 
-        img_test=img_padding[padding:padding+_img.shape[0],padding:padding+_img.shape[1]]
-
-
-        img_padding[padding:padding+_img.shape[0],padding:padding+_img.shape[1]]= img_not
+        img_padding[view_padding+self.canvas_padding:view_padding+self.canvas_padding+_img.shape[0],view_padding+self.canvas_padding:view_padding+self.canvas_padding+_img.shape[1]]= img_not
 
         half_map_size_diagonal = 1280/sqrt(2)
-        midpnt_offset=55.77116996/2 # in virtual map coordiate
 
         #middle point of the cropped image in virtual map coordinate
-        x_mid_crop=self.mid_predict_img_x-midpnt_offset*cos(self.mid_predict_img_th)
-        y_mid_crop=self.mid_predict_img_y+midpnt_offset*sin(self.mid_predict_img_th)
+        # midpnt_offset=55.77116996/2 # in virtual map coordiate
+        # x_mid_crop=self.mid_predict_img_x-midpnt_offset*cos(self.mid_predict_img_th)
+        # y_mid_crop=self.mid_predict_img_y+midpnt_offset*sin(self.mid_predict_img_th)
+
+        # imgPts=[[x_mid_crop-half_map_size_diagonal*cos(pi/4-self.mid_predict_img_th), y_mid_crop-half_map_size_diagonal*sin(pi/4-self.mid_predict_img_th)],
+        #             [x_mid_crop-half_map_size_diagonal*cos(pi/4+self.mid_predict_img_th), y_mid_crop+half_map_size_diagonal*sin(pi/4+self.mid_predict_img_th)],
+        #             [x_mid_crop+half_map_size_diagonal*cos(pi/4-self.mid_predict_img_th), y_mid_crop+half_map_size_diagonal*sin(pi/4-self.mid_predict_img_th)],
+        #             [x_mid_crop+half_map_size_diagonal*cos(pi/4+self.mid_predict_img_th), y_mid_crop-half_map_size_diagonal*sin(pi/4+self.mid_predict_img_th)]]
+
+        x_mid_crop=self.mid_predict_img_x
+        y_mid_crop=self.mid_predict_img_y
 
         imgPts=[[x_mid_crop-half_map_size_diagonal*cos(pi/4-self.mid_predict_img_th), y_mid_crop-half_map_size_diagonal*sin(pi/4-self.mid_predict_img_th)],
                     [x_mid_crop-half_map_size_diagonal*cos(pi/4+self.mid_predict_img_th), y_mid_crop+half_map_size_diagonal*sin(pi/4+self.mid_predict_img_th)],
                     [x_mid_crop+half_map_size_diagonal*cos(pi/4-self.mid_predict_img_th), y_mid_crop+half_map_size_diagonal*sin(pi/4-self.mid_predict_img_th)],
                     [x_mid_crop+half_map_size_diagonal*cos(pi/4+self.mid_predict_img_th), y_mid_crop-half_map_size_diagonal*sin(pi/4+self.mid_predict_img_th)]]
 
-        imgPts_padding=[[a[0]+padding, a[1]+padding] for a in imgPts]
+        imgPts_padding=[[a[0]+view_padding+self.canvas_padding, a[1]+view_padding+self.canvas_padding] for a in imgPts]
         # print("points: "+str(imgPts_padding))
 
         imgPts_padding=np.array(imgPts_padding)
@@ -514,9 +423,11 @@ class VisualCompensation():
         mtx=np.array([[393.8666817683925, 0.0, 399.6813895086665], [0.0, 394.55108358870405, 259.84676565717876], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0032079005049939543, -0.020856072501002923, 0.000252242294186179, -0.0021042704510431365])
 
-        homo1=np.array([[ -1.89091759e+00  , 1.67769711e+00  , 1.42227655e+03],
- [ -1.42898633e-02 ,  2.16395367e-01 ,  1.51900347e+03],
- [ -3.84577983e-05  , 2.63351099e-03 ,  1.00000000e+00]])
+#         homo1=np.array([[ -1.89091759e+00  , 1.67769711e+00  , 1.42227655e+03],
+#  [ -1.42898633e-02 ,  2.16395367e-01 ,  1.51900347e+03],
+#  [ -3.84577983e-05  , 2.63351099e-03 ,  1.00000000e+00]])
+
+        homo1= self.homography[0]
 
         undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
         if self.is_first1 == True:
@@ -534,9 +445,11 @@ class VisualCompensation():
         mtx=np.array([[382.750581, 0, 422.843185], [0, 385.64829129, 290.20197850], [0.0, 0.0, 1.0]])
         dst=np.array([-0.018077383, -0.0130221045547, 0.0003464289655, 0.00581105231096])
 
-        homo2= np.array([[ -1.39262304e-01 ,  6.28805894e+00  ,-9.61177240e+02],
- [ -3.55876335e+00  , 4.16053251e+00  , 2.06718569e+03],
- [ -2.57089754e-04 ,  6.58048809e-03 ,  1.00000000e+00]])
+#         homo2= np.array([[ -1.39262304e-01 ,  6.28805894e+00  ,-9.61177240e+02],
+#  [ -3.55876335e+00  , 4.16053251e+00  , 2.06718569e+03],
+#  [ -2.57089754e-04 ,  6.58048809e-03 ,  1.00000000e+00]])
+
+        homo2 = self.homography[1]
         
         undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold2, 255, cv2.THRESH_BINARY)[1]
         if self.is_first2 == True:
@@ -552,9 +465,11 @@ class VisualCompensation():
         mtx=np.array([[387.8191999285985, 0.0, 392.3078288789019],[ 0.0, 382.1093651210362, 317.43368009853674], [0.0, 0.0, 1.0]])
         dst=np.array([-0.008671221810333559, -0.013546386893040543, -0.00016537575030651431, 0.002659594999360673])
 
-        homo3= np.array([[  2.22366767e+00   ,2.02162733e+00 , -1.98886694e+02],
- [  6.55555411e-02 ,  3.71279525e+00 , -4.51531523e+02],
- [  6.92542990e-05 ,  3.17103568e-03  , 1.00000000e+00]])
+#         homo3= np.array([[  2.22366767e+00   ,2.02162733e+00 , -1.98886694e+02],
+#  [  6.55555411e-02 ,  3.71279525e+00 , -4.51531523e+02],
+#  [  6.92542990e-05 ,  3.17103568e-03  , 1.00000000e+00]])
+
+        homo3= self.homography[2]
 
         undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
         if self.is_first3 == True:
@@ -571,9 +486,11 @@ class VisualCompensation():
         mtx=np.array([[384.2121883964654, 0.0, 423.16727407803353], [0.0, 386.8188468139677, 359.5190506678551], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0056866549555025896, -0.019460881544303938, 0.0012937686026747307, -0.0031999317338443087])
 
-        homo4= np.array([[  1.83297471e-01  , 4.83709167e+00 ,  5.16429708e+03],
- [  8.67141883e+00  , 9.91352060e+00 , -2.88150843e+03],
- [  3.10194158e-04 ,  1.58077943e-02  , 1.00000000e+00]])
+#         homo4= np.array([[  1.83297471e-01  , 4.83709167e+00 ,  5.16429708e+03],
+#  [  8.67141883e+00  , 9.91352060e+00 , -2.88150843e+03],
+#  [  3.10194158e-04 ,  1.58077943e-02  , 1.00000000e+00]])
+
+        homo4= self.homography[3]
 
         undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold4, 255, cv2.THRESH_BINARY)[1]
         if self.is_first4 == True:
@@ -585,29 +502,117 @@ class VisualCompensation():
         return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo4, (1280,1280))
         
 
-    def undistort_left(self, _img):
-        img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        mtx=np.array([[496.88077412085187, 0.0, 486.19161191113693], [0.0, 497.77308359203073, 348.482250144119], [0.0, 0.0, 1.0]])
-        dst=np.array([-0.27524035766660704, 0.055346669640229516, 0.002041430748143387, -0.0012188333190676689])
+    # def undistort_left(self, _img):
+    #     img=self.bridge.compressed_imgmsg_to_cv2(_img)
+    #     img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    #     mtx=np.array([[496.88077412085187, 0.0, 486.19161191113693], [0.0, 497.77308359203073, 348.482250144119], [0.0, 0.0, 1.0]])
+    #     dst=np.array([-0.27524035766660704, 0.055346669640229516, 0.002041430748143387, -0.0012188333190676689])
 
-        homo5= np.array([[-1.22834137e-01,  1.44439375e+00,  8.77117625e+02],
-            [ 1.50541911e-01,  1.54172775e+00,  5.51290841e+02],
-            [-1.63990036e-04,  2.28324521e-03,  1.00000000e+00]])
-        return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo5, (1280,1280))
-
-
-    def undistort_right(self, _img):
-        img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        mtx=np.array([[494.0169295185964, 0.0, 483.6710483879246], [0.0, 495.87509303786857, 336.69262125267153], [0.0, 0.0, 1.0]])
-        dst=np.array([-0.26693726936305806, 0.05239559897759021, 0.0024912074565555443, -0.0015904998174301696])
+    #     homo5= np.array([[-1.22834137e-01,  1.44439375e+00,  8.77117625e+02],
+    #         [ 1.50541911e-01,  1.54172775e+00,  5.51290841e+02],
+    #         [-1.63990036e-04,  2.28324521e-03,  1.00000000e+00]])
+    #     return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo5, (1280,1280))
 
 
-        homo5= np.array([[-3.31381222e-02,  1.44675753e+00,  8.79627593e+02],
-            [ 2.46158878e-01,  1.37693071e+00,  4.88154549e+02],
-            [-2.73379975e-05,  2.29141411e-03,  1.00000000e+00]])
-        return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo5, (1280,1280))
+    # def undistort_right(self, _img):
+    #     img=self.bridge.compressed_imgmsg_to_cv2(_img)
+    #     img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    #     mtx=np.array([[494.0169295185964, 0.0, 483.6710483879246], [0.0, 495.87509303786857, 336.69262125267153], [0.0, 0.0, 1.0]])
+    #     dst=np.array([-0.26693726936305806, 0.05239559897759021, 0.0024912074565555443, -0.0015904998174301696])
+
+
+    #     homo5= np.array([[-3.31381222e-02,  1.44675753e+00,  8.79627593e+02],
+    #         [ 2.46158878e-01,  1.37693071e+00,  4.88154549e+02],
+    #         [-2.73379975e-05,  2.29141411e-03,  1.00000000e+00]])
+    #     return cv2.warpPerspective( cv2.undistort(img, mtx, dst,None, mtx) , homo5, (1280,1280))
+
+    def calculate_homography(self, _ratio):
+        robotPtsArr=[]
+        imgPtsArr=[]
+
+        #genius1
+        robotPtsArr.append([
+            [75,-80],[55,-80],[55,-100],[35,-80],[15,-80],[65,-60],[45,-60],[25,-60],[5,-60],[15,-50],[35,-50],[55,-50],[65,-40],[45,-40],[25,-40],[45,-30],[45,-20],[10,25],[20,25],[30,25],[40,25],[50,25],[60,35],[50,35],[30,35],[30,45],[40,45],[10,55],[30,55],[40,55],[10,65],[20,65],[50,65],[30,75]
+            ])
+        #genius1
+        imgPtsArr.append([
+            [670,264],[696,330],[776,332],[728,410],[768,513],[607,295],[627,367],[652,456],[658,572],[618,509],[596,407],[578,392],[533,293],[545,366],[559,457],[503,365],[462,365],[239,534],[252,478],[261,427],[270,382],[277,343],[247,307],[236,343],[215,428],[171,428],[184,382],[87,534],[124,427],[140,382],[34,534],[58,477],[115,342],[35,426]
+            ])
+
+        #genius2
+        robotPtsArr.append([
+            [-5,-100],[-25,-100],[75,-100],[-65,-80],[-45,-80],[-25,-80],[-5,-80],[35,-80],[75,-80],[-65,-70],[-5,-70],[45,-70],[75,-60],[45,-60],[-5,-60],[-55,-60],[-85,-60],[-65,-50],[-5,-50],[25,-50],[45,-50],[65,-50],[75,-40],[45,-40],[25,-40],[-25,-40],[-55,-40],[-55,-30],[65,-30]
+            ] )
+        #genius2
+        imgPtsArr.append([
+            [430,285],[495,287],[162,282],[651,344],[579,344],[505,343],[431,342],[283,340],[128,339],[667,379],[432,376],[232,373],[82,414],[217,414],[433,415],[644,418],[771,418],[709,463],[434,461],[294,460],[200,460],[104,460],[19,517],[180,516],[284,516],[535,516],[684,518],[708,580],[38,582]
+            ])
+
+        #genius3
+        robotPtsArr.append([[-10,65], [-30, 65], [-60,65], [-80, 65],
+            [-20, 55], [-30, 55], [-50,55], [-80, 55],
+            [-10,35], [-30, 35], [-50,35], [-80, 35],
+            [-40, 25] , [-60, 25],
+            [-40, 15], [-50, 15], [-70, 15],
+            [ -35, -30], [-45, -30], [-55, -30], [-85, -30], [-105, -30],
+            [ -25 ,-40], [-35, -40], [-45, -40], [-55, -40],
+            [-15, -60], [-25, -60], [-45, -60], [-55, -60], [-65, -60],
+            [-25, -80], [-45, -80], [-65, -80],
+            [-65, -100]]
+            )
+        #genius3
+        imgPtsArr.append([[775.3, 569], [729.3, 460.3], [676.2, 338.8], [648.8, 275],
+            [702.7, 513], [683.7, 462], [650,375.3], [613.8,276],
+            [604, 513.3], [590, 462.3], [567, 375.7], [542.8,276.8],
+            [534.8, 416.5], [520.2, 339],
+            [491, 417], [485.8, 376.5], [475.8, 307.5], 
+            [294.8, 441.8], [300,399.2], [304.2, 360.5], [314.2, 266.5], [318.8, 215.8],
+            [241.8, 490.5], [249.8, 442.7], [257.6, 399.5], [264, 361],
+            [130, 548], [146.8, 492.8], [173.8, 401], [185, 362.3], [232, 327.2],
+            [51.7, 494.3], [88.7, 402.7], [118.3, 329.3], 
+            [41.7, 330.3]])
+
+        #genius4
+        robotPtsArr.append([[70,25], [70,55], [70, 95],
+            [60,55],
+            [50,25], [50,35], [50,45], [50,75], [50, 105],
+            [30,35], [30, 55],
+            [20, 35], [20, 45], [20,105],
+            [0,35], [0,45],
+            [-10, 45], [-10,55], [-10,105],
+            [-20, 55], [-20, 95],
+            [-30, 35], [-30, 55],
+            [-50, 25], [-50, 35], [-50, 95],
+            [-60,45], [-60, 55], [-60, 65], [-60, 85],
+            [-70,25], [-70, 45], [-70, 95],
+            [-80, 35], [-80,55],
+            [-90, 55], [-90, 95]])
+        #genius4
+        imgPtsArr.append([[777,586.7], [704.2, 451.5], [643, 339.5],
+            [664,452.2],
+            [676, 587], [655.8, 535.2], [637.8, 490.4], [611.1, 419.6], [572.9,319.1],
+            [563.2,535.2], [544,452.8],
+            [517.8, 535.8], [511, 492], [484.2, 320.4],
+            [428, 535.8], [428.3, 492.3],
+            [385.3, 493], [387.5, 453.8], [395.6, 320.5],
+            [348.9, 454.5], [363.6, 342.4],
+            [294, 537], [310.2, 455.2],
+            [184.8, 589.2], [203, 538.2], [ 272, 344.8], 
+            [177.2, 494.2], [193, 456.8],[208, 423.2], [231.5, 367.2], 
+            [88.2, 590.2], [134.5, 494.5], [210.2, 344.2], 
+            [68.2, 539], [115.2, 456.8], 
+            [74.8, 457.2], [148, 344]]
+            )
+
+        objPts = [[[(point_r[1]+9.33)*(_ratio/100)+640.0, point_r[0]*(_ratio/100)+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
+
+        self.homography=[]
+
+        for i in xrange(4):
+            hom, _ = cv2.findHomography(np.array(imgPtsArr[i]), np.array(objPts[i]), cv2.RANSAC, 10)
+            self.homography.append(hom)
+            print("%d homography appended" %(i+1))
+
 
 if __name__=='__main__':
     # num_pts_delete = 150 #num_of_waypoints_to_delete_in_virtualmap_after_compensation
