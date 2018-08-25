@@ -554,7 +554,7 @@ class NavigationControl():
 
                                         #cut off value larger than 230 to 230.
                                         input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
-                                        spray_input = 700.0+(1000.0-700.0)*(float(input_pixel_value)/230.0)
+                                        spray_input = 660.0+(1000.0-660.0)*(float(input_pixel_value)/230.0)
                                         # self.spray_intensity_publisher.publish(spray_input)
                                         self.valve_angle_input.goal_position = int(spray_input)
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
@@ -565,10 +565,10 @@ class NavigationControl():
                                         self.valve_angle_input.goal_position = 1000
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
                                     else:
-                                        #self.spray_intensity_publisher.publish(700.0)
+                                        #self.spray_intensity_publisher.publish(660.0)
                                         # self.spray_intensity_publisher.publish(740.0)
                                         input_pixel_value_graphic = 0
-                                        self.valve_angle_input.goal_position = 700
+                                        self.valve_angle_input.goal_position = 660
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
 
 
@@ -771,7 +771,7 @@ class NavigationControl():
 
                         #cut off value larger than 230 to 230.
                         input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
-                        spray_input = 700.0+(1000.0-700.0)*(float(input_pixel_value)/230.0)
+                        spray_input = 660.0+(1000.0-660.0)*(float(input_pixel_value)/230.0)
                         # self.spray_intensity_publisher.publish(spray_input)
                         #self.valve_angle_input.goal_position = int(spray_input)
                         #self.valve_angle_publisher.publish(self.valve_angle_input)
@@ -784,12 +784,12 @@ class NavigationControl():
                         #self.valve_angle_publisher.publish(self.valve_angle_input)
                         self.intensity_publisher.publish(int(1000))
                     else:
-                        #self.spray_intensity_publisher.publish(700.0)
+                        #self.spray_intensity_publisher.publish(660.0)
                         # self.spray_intensity_publisher.publish(740.0)
                         input_pixel_value_graphic = 0
-                        #self.valve_angle_input.goal_position = 700
+                        #self.valve_angle_input.goal_position = 660
                         #self.valve_angle_publisher.publish(self.valve_angle_input)
-                        self.intensity_publisher.publish(int(700))
+                        self.intensity_publisher.publish(int(660))
 
 
             elif self.intensity_option==2:

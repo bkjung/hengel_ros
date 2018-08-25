@@ -52,7 +52,8 @@ class VisualCompensation():
 
         self.isNavigationStarted = False
         self.bridge=CvBridge()
-        self.pixMetRatio=250
+        #self.pixMetRatio=250
+        self.pixMetRatio=350
         self.line_thickness= 0.01
         self.canvas_padding = self.line_thickness * self.pixMetRatio * 2
         self.view_padding=int(ceil(1280*sqrt(2))) #Robot may see outside of canvas
@@ -200,7 +201,7 @@ class VisualCompensation():
                 x2_=[604, 704]
                 y2_=[640, 629]
 
-                
+
                 y1_ratio=[int((y-640)*self.pixMetRatio/float(400)+640) for y in y1]
                 y2_ratio=[int(ceil((y-640)*self.pixMetRatio/float(400)+640)) for y in y2]
                 x1_ratio=[int((x-640)*self.pixMetRatio/float(400)+640) for x in x1]
@@ -220,7 +221,7 @@ class VisualCompensation():
                     summed_image[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=150
                 # for i in xrange(len(y1)):
                 #     summed_image[y1[i]:y2[i], x1[i]:x2[i]]=150
-                
+
 
                 # summed_image[640:740, 526:762]=150
                 # summed_image[643:697, 501:526]=150
@@ -255,7 +256,7 @@ class VisualCompensation():
 
                 homography_virtual_map, homography =self.crop_image(self.virtual_map) #background is black
                 homo_inv= inv(homography)
-                
+
                 self.cropped_virtual_map=cv2.bitwise_not(homography_virtual_map)
                 virtual_map_crop_pts=[[0,0], [0, self.virtual_map.shape[0]], [self.virtual_map.shape[1], self.virtual_map.shape[0]], [self.virtual_map.shape[1],0]]
                 virtual_map_crop_pts_padding=[[a[0]+self.view_padding, a[1]+self.view_padding] for a in virtual_map_crop_pts]
@@ -276,7 +277,7 @@ class VisualCompensation():
                 # summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
 
 
-                                
+
 
                 print("sum & crop image time: "+str(time.time()-_time))
 
@@ -433,7 +434,7 @@ class VisualCompensation():
 
         img_padding=np.uint8(img_padding)
 
-        
+
         return cv2.warpPerspective(img_padding, homography,(1280,1280)), homography
 
     # def find_mask(self, img):

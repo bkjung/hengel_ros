@@ -15,8 +15,8 @@ from navigation_control import NavigationControl
 import cv2
 
 #INTERVAL = 0.0001
-#INTERVAL = 0.0007
-INTERVAL = 0.001
+INTERVAL = 0.0007
+#INTERVAL = 0.001
 #INTERVAL = 0.0025
 # CANVAS_SIDE_LENGTH = 1.0
 #CANVAS_SIDE_LENGTH = 1.5 * 0.58
