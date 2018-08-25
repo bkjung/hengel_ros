@@ -53,7 +53,8 @@ class VisualCompensation():
         self.isNavigationStarted = False
         self.bridge=CvBridge()
         self.pixMetRatio=400
-        self.line_thickness= 0.02
+        # self.line_thickness= 0.02
+        self.line_thickness= 0.01
         self.canvas_padding = self.line_thickness * self.pixMetRatio * 2
         self.view_padding=int(ceil(1280*sqrt(2))) #Robot may see outside of canvas
 
@@ -232,7 +233,7 @@ class VisualCompensation():
                 real_map_crop_pts = np.array([real_map_crop_pts])
 
                 mask=np.zeros((summed_image.shape[0], summed_image.shape[1]),dtype=np.uint8 )
-                    cv2.fillPoly(mask, real_map_crop_pts, (255))
+                cv2.fillPoly(mask, real_map_crop_pts, (255))
                 summed_image_not=cv2.bitwise_not(summed_image)
                 res=cv2.bitwise_and(summed_image_not, summed_image_not, mask=mask)
                 summed_image= cv2.bitwise_not(res)
