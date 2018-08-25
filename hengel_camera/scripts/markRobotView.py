@@ -17,11 +17,12 @@ import cv2
 sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
 class RobotView():
-    def __init__(self, _img, ratio):
+    def __init__(self, _img, ratio, thickness, canvas_padding):
     #def __init__(self):
         self.pixMetRatio=ratio
         # self.lineThickness=0.01   #original
-        self.lineThickness=0.02
+        self.lineThickness= thickness
+        self.canvas_padding= canvas_padding
 
         self.img=_img
 
@@ -29,14 +30,26 @@ class RobotView():
         self.pub2=rospy.Publisher('/notMarkedImg', CompressedImage, queue_size=3)
         self.pub3=rospy.Publisher('/time', Float32, queue_size=5)
 
+        self.isPaintStarted = False
+
+    def cvtCanvasToImgCoord(self, _canvasPnt):
+        imgPnt=Point()
+        imgPnt.x= -_canvasPnt.x * self.pixMetRatio + self.canvas_padding
+        imgPnt.y= self.img.shape[0]-(_canvasPnt.y*self.pixMetRatio +self.canvas_padding)
+        imgPnt.z= -_canvasPnt.z
+
+        return imgPnt
+
     def run(self, _midpoint, _endpoint):
-        self.mid_x=-_midpoint.x*self.pixMetRatio
-        self.mid_y=self.img.shape[0]-_midpoint.y*self.pixMetRatio
-        self.th= -_midpoint.z
-        self.end_x=-_endpoint.x*self.pixMetRatio
-        self.end_y=self.img.shape[0]-_endpoint.y*self.pixMetRatio
-        #self.spray_intensity=_spray.goal_position
+        self.mid_x = self.cvtCanvasToImgCoord(_midpoint).x
+        self.mid_y = self.cvtCanvasToImgCoord(_midpoint).y
+        self.th = self.cvtCanvasToImgCoord(_midpoint).z
+
+        self.end_x= self.cvtCanvasToImgCoord(_endpoint).x
+        self.end_y= self.cvtCanvasToImgCoord(_endpoint).y
+
         self.spray_intensity=_endpoint.z
+
         if self.spray_intensity ==0 :
             self.spray_intensity=1
         # print("end_x: "+str( self.end_x)+", end_y: "+str(self.end_y)+", spray: "+str(self.spray_intensity))
@@ -49,26 +62,10 @@ class RobotView():
             self.add_endpoint()
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
 
-        #self.img=cv2.imread('/home/hengel/globalmap.png')
-        #self.mid_x=int(1000)
-        #self.mid_yx=int(1000)
-        #self.mid_x=15.3502
-        #self.mid_yx=1999.036
-        #self.th=pi/4
-        #print("point: "+str(self.mid_x)+","+str(self.mid_yx)+","+str(self.th))
-
-        # self.viewMarker()
-
-        # cv2.imwrite("/home/hengel/robotview.png", self.markedImg)
-        # cv2.imwrite("/home/hengel/robotview2.png", self.img)
-
-        # return self.img
-
     def add_endpoint(self):
-        # print("endpoint add")
-
         _time=time.time()
         if self.spray_intensity!=255:
+            self.isPaintStarted=True
             self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
             dist=self.lineThickness*self.pixMetRatio
             x1=int(self.end_x-dist/2)
@@ -76,7 +73,7 @@ class RobotView():
 
             for i in range(x1, x2+1):
                 x=self.end_x-i
-                if i>0 and i<self.img.shape[1]:
+                if i>=0 and i<self.img.shape[1]:
                     if abs(x)>dist/2:
                         self.img[int(self.end_y)][i]=min(self.spray_intensity, self.img[int(self.end_y)][i])
                     else:
@@ -88,7 +85,11 @@ class RobotView():
                         y2=int(self.end_y+y)
                         for j in range(y1, y2+1):
                             if j>0 and j<self.img.shape[0]:
-                                self.img[j][i]=min(self.spray_intensity, self.img[j][i])
+                                self.img[j][i]=min(self.spray_intensity, self.img[j][i])   
+                else:
+                    print("canvas size: %d, %d" %(self.img.shape[1], self.img.shape[0]))
+                    print("point: %d, %d" %(point_x, point_y))
+
         # ttime=Float32()
         # ttime.data=float(time.time()-_time)
         # self.pub3.publish(ttime)
@@ -101,9 +102,10 @@ class RobotView():
         #This should be carefully selected !!!!!!!!!!!!!!!!!!!
         dist=self.lineThickness*self.pixMetRatio
 
-        for ind in range(len(_num_remove_pts)):
-            point_x = _recent_pts[ind][0]
-            point_y = _recent_pts[ind][1]
+        for ind in range(_num_remove_pts):
+            point_x = self.cvtCanvasToImgCoord(Point(_recent_pts[ind][0], _recent_pts[ind][1], 0)).x
+            point_y = self.cvtCanvasToImgCoord(Point(_recent_pts[ind][0], _recent_pts[ind][1], 0)).y
+
             if point_x != 0.0 and point_y != 0.0:
                 x1=int(point_x+dist/2)
                 x2=int(point_x+dist/2)
