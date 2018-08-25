@@ -52,8 +52,8 @@ class VisualCompensation():
 
         self.isNavigationStarted = False
         self.bridge=CvBridge()
-        self.pixMetRatio=400
-        self.line_thickness= 0.02
+        self.pixMetRatio=250
+        self.line_thickness= 0.01
         self.canvas_padding = self.line_thickness * self.pixMetRatio * 2
         self.view_padding=int(ceil(1280*sqrt(2))) #Robot may see outside of canvas
 
@@ -144,7 +144,7 @@ class VisualCompensation():
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
         if self.isNavigationStarted:
             if self.app_robotview.isPaintStarted == True:
-                print("sync real")
+                print("\n-----------------sync real-----------------")
                 _time = time.time()
                 image_time = (_img1.header.stamp.to_nsec()+_img2.header.stamp.to_nsec()+_img3.header.stamp.to_nsec()+_img4.header.stamp.to_nsec())/4.0
 
@@ -182,22 +182,58 @@ class VisualCompensation():
                 summed_image=img1+img2_masked+img3+img4_masked
                 summed_image=cv2.bitwise_not(summed_image)
 
+
+                #Summed_image processing
                 #PixMetRatio 400 version
-                summed_image[640:740, 526:762]=150
-                summed_image[643:697, 501:526]=150
-                summed_image[615:640, 544:568]=150
-                summed_image[571:615, 504:524]=150
-                summed_image[540:617, 522:758]=150
-                summed_image[617:640, 530:542]=150
-                summed_image[537:540 , 664:682]=150
-                summed_image[623:631 , 512:522]=150
+                # y1=[640, 643, 615, 571, 540, 617, 537, 623]
+                # y2=[740, 697, 640, 615, 617, 640, 540, 631]
+                # x1=[526, 501, 544, 504 ,522, 530, 664, 512]
+                # x2=[762, 526, 568, 524, 758, 542, 682, 522]
+
+                y1=[640, 643, 615, 571, 540, 617, 537, 623, 602, 603]
+                y2=[740, 697, 640, 615, 617, 640, 540, 631, 641, 619]
+                x1=[526, 501, 544, 504 ,522, 530, 664, 512, 758, 931]
+                x2=[762, 526, 568, 524, 758, 542, 682, 522, 793, 954]
+
+                x1_=[573, 604]
+                y1_=[617, 617]
+                x2_=[604, 704]
+                y2_=[640, 629]
+
+                
+                y1_ratio=[int((y-640)*self.pixMetRatio/float(400)+640) for y in y1]
+                y2_ratio=[int(ceil((y-640)*self.pixMetRatio/float(400)+640)) for y in y2]
+                x1_ratio=[int((x-640)*self.pixMetRatio/float(400)+640) for x in x1]
+                x2_ratio=[int(ceil((x-640)*self.pixMetRatio/float(400)+640)) for x in x2]
+                print(y1_ratio)
+
+                # y1_ratio_=[int((y-640)*self.pixMetRatio/float(250)+640) for y in y1_]
+                # y2_ratio_=[int((y-640)*self.pixMetRatio/float(250)+640) for y in y2_]
+                # x1_ratio_=[int((y-640)*self.pixMetRatio/float(250)+640) for x in x1_]
+                # x2_ratio_=[int((y-640)*self.pixMetRatio/float(250)+640) for x in x2_]
 
 
-                summed_image[602:641, 758:793]=150
-                summed_image[603:619, 931:954]=150
-                # summed_image[642:738, 490:507]=150
-                # summed_image[738:762, 507:592]=150
-                # summed_image[509:526, 559:582]=150
+
+
+                for i in xrange(len(y1)):
+                    print(y1_ratio[i], y2_ratio[i], x1_ratio[i], x2_ratio[i])
+                    summed_image[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=150
+                # for i in xrange(len(y1)):
+                #     summed_image[y1[i]:y2[i], x1[i]:x2[i]]=150
+                
+
+                # summed_image[640:740, 526:762]=150
+                # summed_image[643:697, 501:526]=150
+                # summed_image[615:640, 544:568]=150
+                # summed_image[571:615, 504:524]=150
+                # summed_image[540:617, 522:758]=150
+                # summed_image[617:640, 530:542]=150
+                # summed_image[537:540, 664:682]=150
+                # summed_image[623:631, 512:522]=150
+
+
+                # summed_image[602:641, 758:793]=150
+                # summed_image[603:619, 931:954]=150
 
 
                 # print("summed_image time: "+str(time.time()-_time))
@@ -213,8 +249,8 @@ class VisualCompensation():
                 # print(summed_image)
                 # summed_image=self.image_processing(summed_image)
                 # print(summed_image.shape)
-                summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
 
+                summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
                 self.summed_image = summed_image
 
                 homography_virtual_map, homography =self.crop_image(self.virtual_map) #background is black
@@ -232,7 +268,7 @@ class VisualCompensation():
                 real_map_crop_pts = np.array([real_map_crop_pts])
 
                 mask=np.zeros((summed_image.shape[0], summed_image.shape[1]),dtype=np.uint8 )
-                    cv2.fillPoly(mask, real_map_crop_pts, (255))
+                cv2.fillPoly(mask, real_map_crop_pts, (255))
                 summed_image_not=cv2.bitwise_not(summed_image)
                 res=cv2.bitwise_and(summed_image_not, summed_image_not, mask=mask)
                 summed_image= cv2.bitwise_not(res)
@@ -349,7 +385,7 @@ class VisualCompensation():
         offset.z=del_th_virtual
 
         print(offset)
-        print(homography)
+        # print(homography)
 
         self.success_try += 1
         self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)
@@ -387,7 +423,7 @@ class VisualCompensation():
                     [x_mid_crop+half_map_size_diagonal*cos(pi/4+self.mid_predict_img_th), y_mid_crop-half_map_size_diagonal*sin(pi/4+self.mid_predict_img_th)]]
 
         imgPts_padding=[[a[0]+self.view_padding, a[1]+self.view_padding] for a in imgPts]
-        print(imgPts_padding)
+        # print(imgPts_padding)
         # print("points: "+str(imgPts_padding))
 
         imgPts_padding=np.array(imgPts_padding)
