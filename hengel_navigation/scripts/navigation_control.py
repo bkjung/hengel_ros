@@ -148,7 +148,7 @@ class NavigationControl():
         #self.R = 0.12475/2 #radius of wheel    #CORRECT ONE
         #self.R = 0.1237/2 #radius of wheel
         #self.L = 0.3544/2 #half of distance btw two wheels     #flag_bot
-        self.L = 0.4/2 #half of distance btw two wheels      #red_pipe
+        self.L = 0.404/2 #half of distance btw two wheels      #red_pipe
         #self.L = 0.347/2 #half of distance btw two wheels
         #self.L = 0.357/2 #half of distance btw two wheels
 
