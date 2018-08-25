@@ -893,7 +893,9 @@ class NavigationControl():
             flag_del2_large = abs(delOmega2 - self.pubDelta2) >= 0.01
             flag_stiff_change = flag_del1_large or flag_del2_large
 
-            if self.cnt_waypoints < 150 and flag_stiff_change and self.next_letter_index != -1:
+            #if self.cnt_waypoints < 150 and flag_stiff_change and self.next_letter_index != -1:
+            if self.cnt_waypoints < 0 and flag_stiff_change and self.next_letter_index != -1:
+                print("******In MOTOR SMOOTHING MODE******")
                 pubIter = max(floor(abs(delOmega1 - self.pubDelta1)/0.01), floor(abs(delOmega2 - self.pubDelta2)/0.01))
                 self.cnt_delta_buffer += pubIter
 
