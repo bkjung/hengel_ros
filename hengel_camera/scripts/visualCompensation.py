@@ -142,7 +142,9 @@ class VisualCompensation():
         self.pi_right_img=self.undistort_right(_img)
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
+        self.isNavigationStarted=True
         if self.isNavigationStarted==True:
+            self.app_robotview.isPaintStarted=True
             if self.app_robotview.isPaintStarted == True:
                 print("\n-----------------sync real-----------------")
                 _time = time.time()
@@ -360,8 +362,10 @@ class VisualCompensation():
 
         del_y_virtual=mid_real_virtual_y-self.mid_real_photo_y
         del_th_virtual=-atan2(homography[0][1],homography[0][0])
+        
         rotation=np.array([[cos(self.current_mid_predict_canvas_th), -sin(self.current_mid_predict_canvas_th)],
                             [sin(self.current_mid_predict_canvas_th), cos(self.current_mid_predict_canvas_th)]])
+
         del_x_canvas, del_y_canvas = np.matmul(rotation, [-del_x_virtual, -del_y_virtual])
         # *(-1) in del_x_virtual for calibration of x waypoint coordinate
         # *(-1) in del_y_virtual for calibration of image coordiate to canvas coordinate
@@ -370,8 +374,8 @@ class VisualCompensation():
 
         offset=Point()
         offset.x=del_x_canvas/self.pixMetRatio
-        offset.y=del_y_canvas/self.pixMetRatio
-        offset.z=del_th_virtual
+        offset.y=-del_y_canvas/self.pixMetRatio
+        offset.z=-del_th_virtual
 
         print(offset)
         # print(homography)
