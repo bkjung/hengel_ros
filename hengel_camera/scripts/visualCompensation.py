@@ -52,7 +52,7 @@ class VisualCompensation():
 
         self.isNavigationStarted = False
         self.bridge=CvBridge()
-        self.pixMetRatio=250
+        self.pixMetRatio=300
         self.line_thickness= 0.02
         self.canvas_padding = self.line_thickness * self.pixMetRatio * 2
         self.view_padding=int(ceil(1280*sqrt(2))) #Robot may see outside of canvas
@@ -200,12 +200,12 @@ class VisualCompensation():
                 x2_=[604, 704]
                 y2_=[640, 629]
 
-                
+
                 y1_ratio=[int((y-1-640)*self.pixMetRatio/float(400)+640) for y in y1]
                 y2_ratio=[int(ceil((y+1-640)*self.pixMetRatio/float(400)+640)) for y in y2]
                 x1_ratio=[int((x-1-640)*self.pixMetRatio/float(400)+640) for x in x1]
                 x2_ratio=[int(ceil((x+1-640)*self.pixMetRatio/float(400)+640)) for x in x2]
-                
+
 
                 for i in xrange(len(y1)):
                     summed_image[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=255
