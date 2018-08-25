@@ -200,29 +200,12 @@ class VisualCompensation():
                 x2_=[604, 704]
                 y2_=[640, 629]
 
-<<<<<<< HEAD
                 
                 y1_ratio=[int((y-1-640)*self.pixMetRatio/float(400)+640) for y in y1]
                 y2_ratio=[int(ceil((y+1-640)*self.pixMetRatio/float(400)+640)) for y in y2]
                 x1_ratio=[int((x-1-640)*self.pixMetRatio/float(400)+640) for x in x1]
                 x2_ratio=[int(ceil((x+1-640)*self.pixMetRatio/float(400)+640)) for x in x2]
                 
-=======
-
-                y1_ratio=[int((y-640)*self.pixMetRatio/float(400)+640) for y in y1]
-                y2_ratio=[int(ceil((y-640)*self.pixMetRatio/float(400)+640)) for y in y2]
-                x1_ratio=[int((x-640)*self.pixMetRatio/float(400)+640) for x in x1]
-                x2_ratio=[int(ceil((x-640)*self.pixMetRatio/float(400)+640)) for x in x2]
-                print(y1_ratio)
-
-                # y1_ratio_=[int((y-640)*self.pixMetRatio/float(250)+640) for y in y1_]
-                # y2_ratio_=[int((y-640)*self.pixMetRatio/float(250)+640) for y in y2_]
-                # x1_ratio_=[int((y-640)*self.pixMetRatio/float(250)+640) for x in x1_]
-                # x2_ratio_=[int((y-640)*self.pixMetRatio/float(250)+640) for x in x2_]
-
-
-
->>>>>>> b379c7cdc95e62900c100b6e482143bddf1808fb
 
                 for i in xrange(len(y1)):
                     summed_image[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=255
