@@ -61,13 +61,13 @@ def angle_difference(angle1, angle2):
 
 class NavigationControl():
     def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _isStartEndIndexed, _D):
-        while True:
-            word = raw_input(
-                    "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType :"
-                    )
-            self.motor_buffer_option = int(word)
-            if self.motor_buffer_option == 1 or self.motor_buffer_option ==2 or self.motor_buffer_option ==3:
-                break
+        # while True:
+        #     word = raw_input(
+        #             "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType :"
+        #             )
+        #     self.motor_buffer_option = int(word)
+        #     if self.motor_buffer_option == 1 or self.motor_buffer_option ==2 or self.motor_buffer_option ==3:
+        #         break
 
         self.arr_path = _arr_path
         self.arr_intensity = _arr_intensity
@@ -349,7 +349,6 @@ class NavigationControl():
         pubDelta2=0         #previously published delta_2
         pubIter=0
 
-        cnt_delta_buffer = 0
 
         while self.letter_index < self.cnt_letter:
             if rospy.is_shutdown():
@@ -844,8 +843,8 @@ class NavigationControl():
             #delOmega1= (1/self.R)*(delS+self.L*delOmega)
             #delOmega2= (1/self.R)*(delS-self.L*delOmega)
 
-            if self.motor_buffer_option == 1:       #Motor Smoothing Buffer Enabled
-                pass
+            # if self.motor_buffer_option == 1:       #Motor Smoothing Buffer Enabled
+                # pass
                 '''
                 if abs(delOmega1 - pubDelta1) >= 0.01 and abs(delOmega2 - pubDelta2) >= 0.01:
                     pubIter = max(floor(abs(delOmega1 - pubDelta1)/0.01), floor(abs(delOmega2 - pubDelta2)/0.01))
@@ -889,24 +888,25 @@ class NavigationControl():
                 print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
 
 
-                break
                 '''
 
-            elif self.motor_buffer_option == 2:
-                pass
-                '''
+            # elif self.motor_buffer_option == 2:     
+            # #motor smoothing for initial 150 loops
+            if self.cnt_waypoints < 150:
                 if self.next_letter_index != -1:  # if current waypoint is not the end
+                    cnt_delta_buffer = 0
+
                     if abs(delOmega1 - pubDelta1) >= 0.01 and abs(delOmega2 - pubDelta2) >= 0.01:
                         pubIter = max(floor(abs(delOmega1 - pubDelta1)/0.01), floor(abs(delOmega2 - pubDelta2)/0.01))
                         cnt_delta_buffer += pubIter
-                        # print("---------ITERATION(0/%d)--------- " % (pubIter))
+                        print("---------ITERATION(0/%d)--------- " % (pubIter))
                     elif abs(delOmega1 - pubDelta1) >= 0.01:
                         pubIter = floor(abs(delOmega1 - pubDelta1)/0.01)
-                        # print("---------ITERATION(0/%d)--------- " % (pubIter))
+                        print("---------ITERATION(0/%d)--------- " % (pubIter))
                         cnt_delta_buffer += pubIter
                     elif abs(delOmega2 - pubDelta2) >= 0.01:
                         pubIter = floor(abs(delOmega2 - pubDelta2)/0.01)
-                        # print("---------ITERATION(0/%d)--------- " % (pubIter))
+                        print("---------ITERATION(0/%d)--------- " % (pubIter))
                         cnt_delta_buffer += pubIter
                     else:
                         pubDelta1 = delOmega1
@@ -923,11 +923,11 @@ class NavigationControl():
                                 pow(delXrobotGlobal, 2) +
                                 pow(delYrobotGlobal, 2)
                                 )
-                        print(str(pubDelta1)+"  "+str(pubDelta2)+"  "+str(self.pen_distance_per_loop))
+                        # print(str(pubDelta1)+"  "+str(pubDelta2)+"  "+str(self.pen_distance_per_loop))
 
                         self.r.sleep()
+                        return
 
-                        break
 
                     delX_original= self.current_waypoint[0]-self.endPoint.x
                     delY_original= self.current_waypoint[1]-self.endPoint.y
@@ -969,14 +969,13 @@ class NavigationControl():
                             pow(delXrobotGlobal, 2) +
                             pow(delYrobotGlobal, 2)
                             )
-                        print(str(delOmega1)+"  "+str(delOmega1)+"  "+str(self.pen_distance_per_loop))
+                        # print(str(delOmega1)+"  "+str(delOmega1)+"  "+str(self.pen_distance_per_loop))
                         pubDelta1 = delOmega1
                         pubDelta2 = delOmega2
                         self.r.sleep()
 
-                    break
-
                 #if current waypoint is the end
+                #EXCEPTION HANDLING
                 else:
                     pubDelta1 = delOmega1
                     pubDelta2 = delOmega2
@@ -992,15 +991,16 @@ class NavigationControl():
                             pow(delXrobotGlobal, 2) +
                             pow(delYrobotGlobal, 2)
                             )
-                    print(str(pubDelta1)+"  "+str(pubDelta2)+"  "+str(self.pen_distance_per_loop))
+                    # print(str(pubDelta1)+"  "+str(pubDelta2)+"  "+str(self.pen_distance_per_loop))
 
                     self.r.sleep()
-
-                    break
-                '''
+                    return
 
             #Motor Smoothing Buffer Disabled
-            elif self.motor_buffer_option == 3:
+            #elif self.motor_buffer_option == 3:
+
+            #if waypoint loop count is over initial 150
+            else:
                 pubDelta1 = delOmega1
                 pubDelta2 = delOmega2
                 self.pub_delta_theta_1.publish(pubDelta1)
@@ -1017,6 +1017,7 @@ class NavigationControl():
                 #print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
 
                 self.r.sleep()
+                return
 
         except KeyboardInterrupt:
             print("Got KeyboardInterrupt")
