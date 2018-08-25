@@ -2,6 +2,7 @@
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
+from math import sqrt, pow, atan2
 import numpy as np
 import cv2
 import time
@@ -52,22 +53,26 @@ class FeatureMatch():
                 src_pts=np.float32([kp2[m.queryIdx].pt for m in good]).reshape(-1,1,2)
                 dst_pts=np.float32([kp1[m.trainIdx].pt for m in good]).reshape(-1,1,2)
 
-                # M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
-                # H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
                 H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
-                M=np.eye(3)
-                M[:2]=H
 
                 if H is None:
                     print("FAILED (Homography mtx M is None")
                 else:
-                    self.status=True
-                    print("sift_bf match finished")
-                    print(M)
-                    img4=cv2.warpPerspective(img1, M, (1280,1280))
+                    M=np.eye(3)
+                    M[:2]=H
+                    scale= sqrt(pow(H[0][0],2)+pow(H[0][1], 2))
+                    if scale <=0.8 or scale>=1.2:
+                        print("FAILED (scale error)")
+                    elif abs(atan2(M[0][1],M[0][0])) >= 0.3:
+                        print("FAILED (angel error")
+                    else:
+                        self.status=True
+                        print("sift_bf match finished")
+                        print(M)
+                        img4=cv2.warpPerspective(img1, M, (1280,1280))
 
-                    plt.subplot(224)
-                    plt.imshow(img4, cmap='gray')
+                        plt.subplot(224)
+                        plt.imshow(img4, cmap='gray')
             
             else:
                 print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
@@ -77,8 +82,8 @@ class FeatureMatch():
                                 matchesMask = matchesMask,
                                 flags = 0)
             img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
-            cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)
 
+            cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)
             plt.subplot(223)
             plt.imshow(img3, cmap='gray')
 
@@ -86,8 +91,8 @@ class FeatureMatch():
             print("FAILED (Empty Descriptor)")
 
         plt.savefig(self.folder_path+"/SIFT_BF_"+file_time+".png")
-        cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
-        cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
+        # cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
+        # cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
         cv2.destroyAllWindows()
         print("FeatureMatch Saved to "+file_time)
 
