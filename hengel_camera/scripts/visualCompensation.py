@@ -53,7 +53,7 @@ class VisualCompensation():
         self.isNavigationStarted = False
         self.bridge=CvBridge()
         self.pixMetRatio=250
-        self.line_thickness= 0.01
+        self.line_thickness= 0.02
         self.canvas_padding = self.line_thickness * self.pixMetRatio * 2
         self.view_padding=int(ceil(1280*sqrt(2))) #Robot may see outside of canvas
 
@@ -108,10 +108,10 @@ class VisualCompensation():
         self.is_first3=True
         self.is_first4=True
 
-        self.threshold1=100
-        self.threshold2=100
-        self.threshold3=100
-        self.threshold4=100
+        self.threshold1=110
+        self.threshold2=110
+        self.threshold3=110
+        self.threshold4=110
 
         self.ts_2.registerCallback(self.sync_real_callback)
 
@@ -201,23 +201,14 @@ class VisualCompensation():
                 y2_=[640, 629]
 
                 
-                y1_ratio=[int((y-640)*self.pixMetRatio/float(400)+640) for y in y1]
-                y2_ratio=[int(ceil((y-640)*self.pixMetRatio/float(400)+640)) for y in y2]
-                x1_ratio=[int((x-640)*self.pixMetRatio/float(400)+640) for x in x1]
-                x2_ratio=[int(ceil((x-640)*self.pixMetRatio/float(400)+640)) for x in x2]
-                print(y1_ratio)
-
-                # y1_ratio_=[int((y-640)*self.pixMetRatio/float(250)+640) for y in y1_]
-                # y2_ratio_=[int((y-640)*self.pixMetRatio/float(250)+640) for y in y2_]
-                # x1_ratio_=[int((y-640)*self.pixMetRatio/float(250)+640) for x in x1_]
-                # x2_ratio_=[int((y-640)*self.pixMetRatio/float(250)+640) for x in x2_]
-
-
-
+                y1_ratio=[int((y-1-640)*self.pixMetRatio/float(400)+640) for y in y1]
+                y2_ratio=[int(ceil((y+1-640)*self.pixMetRatio/float(400)+640)) for y in y2]
+                x1_ratio=[int((x-1-640)*self.pixMetRatio/float(400)+640) for x in x1]
+                x2_ratio=[int(ceil((x+1-640)*self.pixMetRatio/float(400)+640)) for x in x2]
+                
 
                 for i in xrange(len(y1)):
-                    print(y1_ratio[i], y2_ratio[i], x1_ratio[i], x2_ratio[i])
-                    summed_image[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=150
+                    summed_image[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=255
                 # for i in xrange(len(y1)):
                 #     summed_image[y1[i]:y2[i], x1[i]:x2[i]]=150
                 
@@ -249,8 +240,7 @@ class VisualCompensation():
                 # print(summed_image)
                 # summed_image=self.image_processing(summed_image)
                 # print(summed_image.shape)
-
-                summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
+                # summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
                 self.summed_image = summed_image
 
                 homography_virtual_map, homography =self.crop_image(self.virtual_map) #background is black
@@ -546,6 +536,7 @@ class VisualCompensation():
 
     def undistort4(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        cv2.imwrite('/home/mjlee/genius4_before_thresholding.png', img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mtx=np.array([[384.2121883964654, 0.0, 423.16727407803353], [0.0, 386.8188468139677, 359.5190506678551], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0056866549555025896, -0.019460881544303938, 0.0012937686026747307, -0.0031999317338443087])
