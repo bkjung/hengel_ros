@@ -53,6 +53,7 @@ class FeatureMatch():
                 dst_pts=np.float32([kp1[m.trainIdx].pt for m in good]).reshape(-1,1,2)
 
                 # M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+                # H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
                 H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
                 M=np.eye(3)
                 M[:2]=H
@@ -61,8 +62,8 @@ class FeatureMatch():
                     print("FAILED (Homography mtx M is None")
                 else:
                     self.status=True
-                    print("sift_flann match finished")
-                    # print(M)
+                    print("sift_bf match finished")
+                    print(M)
                     img4=cv2.warpPerspective(img1, M, (1280,1280))
 
                     plt.subplot(224)
@@ -133,6 +134,7 @@ class FeatureMatch():
                 print("Homography mtx M is None !!!!")
             else:
                 self.status = True
+                print(M)
                 print("sift_flann match finished")
                 img4= cv2.warpPerspective(img1, M, (1280,1280))
                 plt.subplot(224)
@@ -308,6 +310,7 @@ class FeatureMatch():
                 else:
                     self.status = True
                     print("sift_flann match finished")
+                    print(M)
             else:
                 print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
 
