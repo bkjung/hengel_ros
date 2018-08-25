@@ -54,6 +54,7 @@ class VisualCompensation():
         self.bridge=CvBridge()
         #self.pixMetRatio=250
         self.pixMetRatio=350
+        # self.line_thickness= 0.02
         self.line_thickness= 0.01
         self.canvas_padding = self.line_thickness * self.pixMetRatio * 2
         self.view_padding=int(ceil(1280*sqrt(2))) #Robot may see outside of canvas
