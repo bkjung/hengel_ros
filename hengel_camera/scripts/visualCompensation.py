@@ -374,8 +374,8 @@ class VisualCompensation():
 
         offset=Point()
         offset.x=del_x_canvas/self.pixMetRatio
-        offset.y=-del_y_canvas/self.pixMetRatio
-        offset.z=-del_th_virtual
+        offset.y=del_y_canvas/self.pixMetRatio
+        offset.z=del_th_virtual
 
         print(offset)
         # print(homography)
