@@ -52,8 +52,8 @@ class VisualCompensation():
 
         self.isNavigationStarted = False
         self.bridge=CvBridge()
-        self.pixMetRatio=250
-        self.line_thickness= 0.02
+        self.pixMetRatio=400
+        self.line_thickness= 0.022
         self.canvas_padding = self.line_thickness * self.pixMetRatio * 2
         self.view_padding=int(ceil(1280*sqrt(2))) #Robot may see outside of canvas
 
@@ -141,8 +141,8 @@ class VisualCompensation():
         # print("right")
         self.pi_right_img=self.undistort_right(_img)
 
-    def sync_real_callback(self, _img1, _img2, _img3, _img4):
-        if self.isNavigationStarted:
+    def sync_real_callback(self, _img1, _img2, _img3, _img4):        
+        if self.isNavigationStarted==True:
             if self.app_robotview.isPaintStarted == True:
                 print("\n-----------------sync real-----------------")
                 _time = time.time()
@@ -292,7 +292,6 @@ class VisualCompensation():
                         # M = fm.IMAGE_ALIGNMENT_ecc(summed_image, self.cropped_virtual_map)
                         # M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map)
 
-
                         if fm.status == True:
                             self.app_robotview.remove_points_during_vision_compensation(self.recent_pts, int((time.time()-_time)/0.02))
                             self.virtual_map = self.app_robotview.img
@@ -304,7 +303,7 @@ class VisualCompensation():
                             _pnt = self.relocalization(M)
                             # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                             self.vision_offset_publisher.publish(_pnt)
-                            print("relocation time: "+str(time.time()-__time))
+                            # print("relocation time: "+str(time.time()-__time))
                             print("Total Time (visual feedback): "+str(time.time()-_time))
                 except Exception as e:
                     print(e)
@@ -367,7 +366,7 @@ class VisualCompensation():
         # *(-1) in del_x_virtual for calibration of x waypoint coordinate
         # *(-1) in del_y_virtual for calibration of image coordiate to canvas coordinate
 
-        print("virtual photo mid: %d, %d / real photo midpnt: %d, %d" %(mid_real_virtual_x, mid_real_virtual_y, self.mid_real_photo_x, self.mid_real_photo_y))
+        # print("virtual photo mid: %d, %d / real photo midpnt: %d, %d" %(mid_real_virtual_x, mid_real_virtual_y, self.mid_real_photo_x, self.mid_real_photo_y))
 
         offset=Point()
         offset.x=del_x_canvas/self.pixMetRatio
@@ -488,8 +487,9 @@ class VisualCompensation():
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo1, (1280, 1280))
             self.im_mask_inv1, self.im_mask1 = self.find_mask(img_for_mask)
             self.is_first1=False
-
+    
         return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo1, (1280,1280))
+        
 
 
 
@@ -536,7 +536,6 @@ class VisualCompensation():
 
     def undistort4(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
-        cv2.imwrite('/home/mjlee/genius4_before_thresholding.png', img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mtx=np.array([[384.2121883964654, 0.0, 423.16727407803353], [0.0, 386.8188468139677, 359.5190506678551], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0056866549555025896, -0.019460881544303938, 0.0012937686026747307, -0.0031999317338443087])
@@ -659,7 +658,7 @@ class VisualCompensation():
             [74.8, 457.2], [148, 344]]
             )
 
-        objPts = [[[(point_r[1]+9.33)*(_ratio/100)+640.0, point_r[0]*(_ratio/100)+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
+        objPts = [[[(point_r[1]+9.33)*(_ratio/float(100))+640.0, point_r[0]*(_ratio/float(100))+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
 
         self.homography=[]
 
