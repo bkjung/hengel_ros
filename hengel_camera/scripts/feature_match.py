@@ -40,7 +40,7 @@ class FeatureMatch():
 
         if des1 is not None and des2 is not None:
             matches=bf.knnMatch(des2, des1, k=2)
-        
+
             good=[]
             ratio= 0.7
 
@@ -61,7 +61,7 @@ class FeatureMatch():
                     M=np.eye(3)
                     M[:2]=H
                     scale= sqrt(pow(H[0][0],2)+pow(H[0][1], 2))
-                    if scale <=0.8 or scale>=1.2:
+                    if scale <=0.9 or scale>=1.1:
                         print("FAILED (scale error)")
                     elif abs(atan2(M[0][1],M[0][0])) >= 0.3:
                         print("FAILED (angel error")
@@ -73,7 +73,7 @@ class FeatureMatch():
 
                         plt.subplot(224)
                         plt.imshow(img4, cmap='gray')
-            
+
             else:
                 print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
 
@@ -144,7 +144,7 @@ class FeatureMatch():
                 img4= cv2.warpPerspective(img1, M, (1280,1280))
                 plt.subplot(224)
                 plt.imshow(img4, cmap='gray')
-            
+
         else:
             print("Feature Match FAILED (Empty Descriptor)")
 
@@ -167,7 +167,7 @@ class FeatureMatch():
 
         # if des1 is not None and des2 is not None:
         #     matches=bf.knnMatch(des2, des1, k=2)
-        
+
         #     good=[]
         #     ratio= 0.7
 
@@ -195,7 +195,7 @@ class FeatureMatch():
 
         #             plt.subplot(224)
         #             plt.imshow(img4, cmap='gray')
-            
+
         #     else:
         #         print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
 
@@ -379,7 +379,7 @@ class FeatureMatch():
 
         if des1 is not None and des2 is not None:
             matches=bf.knnMatch(des2, des1, k=2)
-        
+
             good=[]
             ratio= 0.7
 
@@ -407,7 +407,7 @@ class FeatureMatch():
 
                     plt.subplot(224)
                     plt.imshow(img4, cmap='gray')
-            
+
             else:
                 print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
 
@@ -432,7 +432,7 @@ class FeatureMatch():
         plt.close("all")
 
         return M
-        
+
 
 if __name__=="__main__":
     img_virtual= cv2.imread("/home/bkjung/Pictures/virtual_B_thin.png", cv2.IMREAD_GRAYSCALE)
