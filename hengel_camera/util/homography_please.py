@@ -13,7 +13,7 @@ import cv2
 from cv_bridge import CvBridge
 import message_filters
 import collections
-from feature_match import FeatureMatch
+#from feature_match import FeatureMatch
 from matplotlib import pyplot as plt
 
 class VisualCompensation():

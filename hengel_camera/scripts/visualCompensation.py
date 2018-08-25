@@ -94,7 +94,7 @@ class VisualCompensation():
         self.summed_image_prev = None
 
         self.ts_2=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=False)
-        
+
         rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.callback_left)
         rospy.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage, self.callback_right)
 
@@ -111,7 +111,7 @@ class VisualCompensation():
         self.threshold1=100
         self.threshold2=100
         self.threshold3=100
-        self.threshold4=100        
+        self.threshold4=100
 
         self.ts_2.registerCallback(self.sync_real_callback)
 
@@ -328,11 +328,11 @@ class VisualCompensation():
 
 
     def relocalization(self, homography):
-        
+
         mid_real_virtual_x, mid_real_virtual_y, _= np.matmul(homography, [self.mid_real_photo_x, self.mid_real_photo_y, 1])
 
         del_x_virtual=mid_real_virtual_x-self.mid_real_photo_x
-        
+
         del_y_virtual=mid_real_virtual_y-self.mid_real_photo_y
         del_th_virtual=-atan2(homography[0][1],homography[0][0])
         rotation=np.array([[cos(self.current_mid_predict_canvas_th), -sin(self.current_mid_predict_canvas_th)],
@@ -462,7 +462,7 @@ class VisualCompensation():
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo1, (1280, 1280))
             self.im_mask_inv1, self.im_mask1 = self.find_mask(img_for_mask)
             self.is_first1=False
-        
+
         return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo1, (1280,1280))
 
 
@@ -478,13 +478,13 @@ class VisualCompensation():
 #  [ -2.57089754e-04 ,  6.58048809e-03 ,  1.00000000e+00]])
 
         homo2 = self.homography[1]
-        
+
         undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold2, 255, cv2.THRESH_BINARY)[1]
         if self.is_first2 == True:
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo2, (1280, 1280))
             self.im_mask_inv2, self.im_mask2 = self.find_mask(img_for_mask)
             self.is_first2=False
-                   
+
         return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo2, (1280,1280))
 
     def undistort3(self, _img):
@@ -504,7 +504,7 @@ class VisualCompensation():
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo3, (1280, 1280))
             self.im_mask_inv3, self.im_mask3 = self.find_mask(img_for_mask)
             self.is_first3=False
-        
+
         return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo3, (1280,1280))
 
 
@@ -525,10 +525,10 @@ class VisualCompensation():
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo4, (1280, 1280))
             self.im_mask_inv4, self.im_mask4 = self.find_mask(img_for_mask)
             self.is_first4=False
-        
+
 
         return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo4, (1280,1280))
-        
+
 
     # def undistort_left(self, _img):
     #     img=self.bridge.compressed_imgmsg_to_cv2(_img)
@@ -593,11 +593,11 @@ class VisualCompensation():
             [702.7, 513], [683.7, 462], [650,375.3], [613.8,276],
             [604, 513.3], [590, 462.3], [567, 375.7], [542.8,276.8],
             [534.8, 416.5], [520.2, 339],
-            [491, 417], [485.8, 376.5], [475.8, 307.5], 
+            [491, 417], [485.8, 376.5], [475.8, 307.5],
             [294.8, 441.8], [300,399.2], [304.2, 360.5], [314.2, 266.5], [318.8, 215.8],
             [241.8, 490.5], [249.8, 442.7], [257.6, 399.5], [264, 361],
             [130, 548], [146.8, 492.8], [173.8, 401], [185, 362.3], [232, 327.2],
-            [51.7, 494.3], [88.7, 402.7], [118.3, 329.3], 
+            [51.7, 494.3], [88.7, 402.7], [118.3, 329.3],
             [41.7, 330.3]])
 
         #genius4
@@ -625,10 +625,10 @@ class VisualCompensation():
             [385.3, 493], [387.5, 453.8], [395.6, 320.5],
             [348.9, 454.5], [363.6, 342.4],
             [294, 537], [310.2, 455.2],
-            [184.8, 589.2], [203, 538.2], [ 272, 344.8], 
-            [177.2, 494.2], [193, 456.8],[208, 423.2], [231.5, 367.2], 
-            [88.2, 590.2], [134.5, 494.5], [210.2, 344.2], 
-            [68.2, 539], [115.2, 456.8], 
+            [184.8, 589.2], [203, 538.2], [ 272, 344.8],
+            [177.2, 494.2], [193, 456.8],[208, 423.2], [231.5, 367.2],
+            [88.2, 590.2], [134.5, 494.5], [210.2, 344.2],
+            [68.2, 539], [115.2, 456.8],
             [74.8, 457.2], [148, 344]]
             )
 
