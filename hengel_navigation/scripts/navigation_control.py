@@ -297,6 +297,8 @@ class NavigationControl():
                 '/intensity', Int32, queue_size=5)
         self.height_publisher = rospy.Publisher(
                 '/height', Int32, queue_size=5)
+        self.distance_publisher = rospy.Publisher(
+                '/distance', Float32, queue_size=5)
         #self.valve_operation_mode_publisher = rospy.Publisher(
         #        '/operation_mode', OperationMode, queue_size=5)
         #self.valve_operation_mode_publisher.publish(
@@ -377,7 +379,7 @@ class NavigationControl():
                         ]
                     self.cnt_waypoints += 1
 
-                    if self.offset_accepted == True:
+                    if self.offset_accepted == True and self.cnt_waypoints>5000:
                         new_point_x=self.point.x + self.offset_x
                         new_point_y=self.point.y + self.offset_y
                         new_point_theta = self.heading.data + self.offset_theta
@@ -393,8 +395,8 @@ class NavigationControl():
                             print("VISUAL OFFSET is too LARGE!!! (Dismissing the calculated offset)")
                             pass
 
-                        elif dist>0.001*2.0:
-                            div=int(ceil(dist/0.001))
+                        elif dist>0.0007*2.0:
+                            div=int(ceil(dist/0.0007))
                             print("VISUAL OFFSET inserted %d waypoints" % (div))
 
                             self.point.x=new_point_x
@@ -808,7 +810,7 @@ class NavigationControl():
             self.pub_midpoint_time.publish(msg_time)
 
             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
-            print(str(self.endPoint.x)+"  "+str(self.endPoint.y))
+            print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.cnt_waypoints))
             # print(str(self.point.x)+"  "+str(self.point.y)+"  "+str(self.heading.data*180.0/pi))
 
             #print("distance: ", distance)
@@ -825,9 +827,21 @@ class NavigationControl():
             c = b - self.D
             if self.arr_delOmega:
                 # D(k) optimization
-                #self.D = self.calculate_optimal_D(delX, delY, th, self.D, arr_delOmega[-1][0], arr_delOmega[-1][1])
+                calculated_D = self.calculate_optimal_D(delX, delY, th, self.D, self.arr_delOmega[-1][0], self.arr_delOmega[-1][1])
+                if abs(self.D-calculated_D)>0.0023:
+                    if self.D>calculated_D:
+                        self.D = self.D - 0.0023
+                    else:
+                        self.D = self.D + 0.0023
+                else:
+                    self.D = calculated_D
+
+                print(str(self.D))
+                msg_distance = Float32()
+                msg_distance.data = self.D
+                self.distance_publisher.publish(msg_distance)
                 # D(k) constant
-                self.D = 0.1995
+                # self.D = 0.1995
 
             delOmega = asin(a/self.D)
             delS = self.D*cos(delOmega) + c
