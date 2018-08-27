@@ -155,7 +155,7 @@ class VisualCompensation():
         print("----------------------")
         self.isNavigationStarted=True
         if self.isNavigationStarted==True:
-            # self.app_robotview.isPaintStarted=True
+            self.app_robotview.isPaintStarted=True
             if self.app_robotview.isPaintStarted == True:
                 print("\n-----------------sync real-----------------")
                 _time = time.time()
