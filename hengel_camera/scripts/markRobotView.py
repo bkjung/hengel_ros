@@ -124,6 +124,7 @@ class RobotView():
                             y2=int(point_y+y)
                             for j in range(y1, y2+1):
                                 if j>0 and j<self.img.shape[0]:
+                                    print("removed (%d, %d)" %(j, i))
                                     self.img[j][i]=255
 
 
