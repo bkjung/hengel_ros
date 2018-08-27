@@ -52,7 +52,7 @@ class VisualCompensation():
 
         self.isNavigationStarted = False
         self.bridge=CvBridge()
-        self.pixMetRatio=300
+        self.pixMetRatio=400
         self.line_thickness= 0.022
         self.canvas_padding = self.line_thickness * self.pixMetRatio * 2
         self.view_padding=int(ceil(1280*sqrt(2))) #Robot may see outside of canvas
@@ -128,6 +128,11 @@ class VisualCompensation():
 
         self.sum_compensation_distance = 0.0
 
+        self.x_img_max=0
+        self.x_img_min=0
+        self.y_img_max=0
+        self.y_img_min=0
+
 
         rospy.spin()
 
@@ -142,9 +147,9 @@ class VisualCompensation():
         self.pi_right_img=self.undistort_right(_img)
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
-        self.isNavigationStarted=True
+        # self.isNavigationStarted=True
         if self.isNavigationStarted==True:
-            self.app_robotview.isPaintStarted=True
+            # self.app_robotview.isPaintStarted=True
             if self.app_robotview.isPaintStarted == True:
                 print("\n-----------------sync real-----------------")
                 _time = time.time()
@@ -185,23 +190,11 @@ class VisualCompensation():
                 summed_image=cv2.bitwise_not(summed_image)
 
 
-                #Summed_image processing
-                #PixMetRatio 400 version
-                # y1=[640, 643, 615, 571, 540, 617, 537, 623]
-                # y2=[740, 697, 640, 615, 617, 640, 540, 631]
-                # x1=[526, 501, 544, 504 ,522, 530, 664, 512]
-                # x2=[762, 526, 568, 524, 758, 542, 682, 522]
-
-                y1=[640, 643, 615, 571, 540, 617, 537, 623, 602, 603]
-                y2=[740, 697, 640, 615, 617, 640, 540, 631, 641, 619]
-                x1=[526, 501, 544, 504 ,522, 530, 664, 512, 758, 931]
-                x2=[762, 526, 568, 524, 758, 542, 682, 522, 793, 954]
-
-                x1_=[573, 604]
-                y1_=[617, 617]
-                x2_=[604, 704]
-                y2_=[640, 629]
-
+                #Summed_image processing,
+                x1=[526, 759, 732, 475, 503, 500, 521, 568, 758, 758, 659, 710, 534, 508, 538, 583, 561, 567, 588, 659, 660, 654, 629, 589, 597, 588, 603, 631, 765, 755]
+                y1=[541, 564, 539, 616, 576, 578, 572, 616, 593, 604, 642, 681, 643, 644, 522, 529, 678, 688, 669, 681, 685, 694, 688, 691, 689, 643, 643, 643, 597, 618]
+                x2=[759, 762, 745, 568, 758, 503, 526, 764, 774, 764, 754, 740, 588, 534, 583, 628, 594, 589, 603, 696, 693, 688, 655, 597, 629, 603, 631, 659, 801, 764]
+                y2=[576, 572, 541, 644, 616, 591, 576, 618, 604, 616, 681, 687, 678, 662, 541, 541, 688, 700, 679, 685, 694, 704, 705, 695, 699, 669, 682, 678, 642, 619]
                 
                 y1_ratio=[int((y-1-640)*self.pixMetRatio/float(400)+640) for y in y1]
                 y2_ratio=[int(ceil((y+1-640)*self.pixMetRatio/float(400)+640)) for y in y2]
@@ -211,22 +204,6 @@ class VisualCompensation():
 
                 for i in xrange(len(y1)):
                     summed_image[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=255
-                # for i in xrange(len(y1)):
-                #     summed_image[y1[i]:y2[i], x1[i]:x2[i]]=150
-
-
-                # summed_image[640:740, 526:762]=150
-                # summed_image[643:697, 501:526]=150
-                # summed_image[615:640, 544:568]=150
-                # summed_image[571:615, 504:524]=150
-                # summed_image[540:617, 522:758]=150
-                # summed_image[617:640, 530:542]=150
-                # summed_image[537:540, 664:682]=150
-                # summed_image[623:631, 512:522]=150
-
-
-                # summed_image[602:641, 758:793]=150
-                # summed_image[603:619, 931:954]=150
 
 
                 # print("summed_image time: "+str(time.time()-_time))
@@ -246,30 +223,35 @@ class VisualCompensation():
                 self.summed_image = summed_image
 
                 homography_virtual_map, homography =self.crop_image(self.virtual_map) #background is black
-                # homo_inv= inv(homography)
+                homo_inv= inv(homography)
+                self.cropped_virtual_map=cv2.bitwise_not(homography_virtual_map)
 
-                # self.cropped_virtual_map=cv2.bitwise_not(homography_virtual_map)
+                #Cover area outside of canvas
                 # virtual_map_crop_pts=[[0,0], [0, self.virtual_map.shape[0]], [self.virtual_map.shape[1], self.virtual_map.shape[0]], [self.virtual_map.shape[1],0]]
-                # virtual_map_crop_pts_padding=[[a[0]+self.view_padding, a[1]+self.view_padding] for a in virtual_map_crop_pts]
+                # virtual_map_crop_pts=[[0,0], [0, self.height*self.pixMetRatio], [self.width*self.pixMetRatio, self.height*self.pixMetRatio], [self.width*self.pixMetRatio, 0]]
+                virtual_map_crop_pts=[[self.x_img_min, self.y_img_min], [self.x_img_min, self.y_img_max], [self.x_img_max, self.y_img_max], [self.x_img_max, self.y_img_min]]
+                virtual_map_padding=[[0,0],[0,2*self.canvas_padding], [2*self.canvas_padding, 2*self.canvas_padding], [2*self.canvas_padding, 0]] #canvas padding
 
-                # real_map_crop_pts=[]
+                virtual_map_crop_pts=np.matrix(virtual_map_crop_pts)+np.matrix(virtual_map_padding)
+                virtual_map_crop_pts_padding=[[a.item(0)+self.view_padding, a.item(1)+self.view_padding] for a in virtual_map_crop_pts] #Add view point
 
-                # for i in xrange(4):
-                #     real_map_crop_pnt= np.matmul(homography, [virtual_map_crop_pts_padding[i][0],virtual_map_crop_pts_padding[i][1],1])
-                #     real_map_crop_pts.append([int(real_map_crop_pnt[0]), int(real_map_crop_pnt[1])])
-                # real_map_crop_pts = np.array([real_map_crop_pts])
+                real_map_crop_pts=[]
 
-                # mask=np.zeros((summed_image.shape[0], summed_image.shape[1]),dtype=np.uint8 )
-                # cv2.fillPoly(mask, real_map_crop_pts, (255))
-                # summed_image_not=cv2.bitwise_not(summed_image)
-                # res=cv2.bitwise_and(summed_image_not, summed_image_not, mask=mask)
-                # summed_image= cv2.bitwise_not(res)
+                for i in xrange(4):
+                    real_map_crop_pnt= np.matmul(homography, [virtual_map_crop_pts_padding[i][0],virtual_map_crop_pts_padding[i][1],1])
+                    real_map_crop_pts.append([int(real_map_crop_pnt[0]), int(real_map_crop_pnt[1])])
+                real_map_crop_pts = np.array([real_map_crop_pts])
 
-                # summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
-                summed_image= homography_virtual_map
+                mask=np.zeros((summed_image.shape[0], summed_image.shape[1]),dtype=np.uint8 )
+                cv2.fillPoly(mask, real_map_crop_pts, (255))
+                summed_image_not=cv2.bitwise_not(summed_image)
 
 
+                # summed_image_not=np.full((1280,1280), 255, dtype=np.uint8) ###DEBUG
+                res=cv2.bitwise_and(summed_image_not, summed_image_not, mask=mask)
 
+                summed_image= cv2.bitwise_not(res)
+                # summed_image= homography_virtual_map
 
                 print("sum & crop image time: "+str(time.time()-_time))
 
@@ -336,10 +318,19 @@ class VisualCompensation():
         # _time=time.time()
 
         if not self.isProcessingVirtualmapTime:
+            
             self.mid_predict_canvas_x.appendleft(_midPoint.x)
             self.mid_predict_canvas_y.appendleft(_midPoint.y)
             self.mid_predict_canvas_th.appendleft(_midPoint.z)
             self.mid_predict_canvas_time.appendleft(_midPointTime.data.to_nsec())
+
+            self.end_predict_img_y=(self.height-_midPoint.y)*self.pixMetRatio
+            self.end_predict_img_x=-_midPoint.x * self.pixMetRatio
+
+            self.x_img_max=max(self.x_img_max, self.end_predict_img_x)
+            self.x_img_min=min(self.x_img_min, self.end_predict_img_x)
+            self.y_img_max=max(self.y_img_max, self.end_predict_img_y)
+            self.y_img_min=min(self.y_img_min, self.end_predict_img_y)
 
             self.recent_pts.appendleft((_midPoint.x, _midPoint.y))
 

@@ -35,7 +35,6 @@ class FeatureMatch():
         MIN_MATCH_COUNT=5
 
         bf=cv2.BFMatcher(cv2.NORM_L2)
-
         file_time = time.strftime("%y%m%d_%H%M%S")
 
         if des1 is not None and des2 is not None:
@@ -43,7 +42,6 @@ class FeatureMatch():
         
             good=[]
             ratio= 0.7
-
             matchesMask=[[0,0] for i in range(len(matches))]
             for i, (m,n) in enumerate(matches):
                 if m.distance < 0.7* n.distance:
