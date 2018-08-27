@@ -193,7 +193,8 @@ class VisualCompensation():
                 img4_masked=np.multiply(np.multiply(img4, im_mask13), self.im_mask2).astype('uint8')
 
                 summed_image=img1+img2_masked+img3+img4_masked
-                summed_image=cv2.bitwise_not(summed_image)
+                cv2.imwrite('/home/mjlee/SUMMED_IMAGE'+time.strftime("%y%m%d_%H%M%S")+'.png', summed_image)
+                # summed_image=cv2.bitwise_not(summed_image)
 
 
                 #Summed_image processing,
@@ -301,18 +302,19 @@ class VisualCompensation():
                 except Exception as e:
                     print(e)
                     sys.exit("Feature Match error - debug1")
+            #################
+
+                #ONLY FOR DEBUGGING!!!!!!!
+                bridge=CvBridge()
+                summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
+                self.pub_sum.publish(summed_msg)
+                #ONLY FOR DEBUGGING!!!!!!!
+
+                self.summed_image_prev = self.summed_image
             else:
                 print("Painting not started yet")
 
-            #################
-
-            #ONLY FOR DEBUGGING!!!!!!!
-            bridge=CvBridge()
-            summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
-            self.pub_sum.publish(summed_msg)
-            #ONLY FOR DEBUGGING!!!!!!!
-
-            # self.summed_image_prev = self.summed_image
+            
 
         else:
             print("Navigation not started yet")
@@ -495,13 +497,17 @@ class VisualCompensation():
 
         homo1= self.homography[0]
 
-        undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
+        # undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
+        undist_img_binary=cv2.undistort(img, mtx, None, mtx)
+        cv2.imwrite(self.folder_path+"/img1_undist_"+time.strftime("%y%m%d_%H%M%S")+".png", cv2.warpPerspective(undist_img_binary, homo1, (1280,1280)))
+
         if self.is_first1 == True:
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo1, (1280, 1280))
             self.im_mask_inv1, self.im_mask1 = self.find_mask(img_for_mask)
             self.is_first1=False
 
-        return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo1, (1280,1280))
+        # return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo1, (1280,1280))
+        return cv2.warpPerspective(undist_img_binary, homo1, (1280, 1280))
 
 
 
@@ -519,18 +525,22 @@ class VisualCompensation():
 
         homo2 = self.homography[1]
 
-        undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold2, 255, cv2.THRESH_BINARY)[1]
+        # undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold2, 255, cv2.THRESH_BINARY)[1]
+        undist_img_binary= cv2.undistort(img,mtx,None,mtx)
+        cv2.imwrite(self.folder_path+"/img2_undist_"+time.strftime("%y%m%d_%H%M%S")+".png", cv2.warpPerspective(undist_img_binary, homo2, (1280,1280)))
+
         if self.is_first2 == True:
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo2, (1280, 1280))
             self.im_mask_inv2, self.im_mask2 = self.find_mask(img_for_mask)
             self.is_first2=False
 
-        return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo2, (1280,1280))
+        # return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo2, (1280,1280))
+        return cv2.warpPerspective(undist_img_binary, homo2, (1280, 1280))
 
     def undistort3(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        cv2.imwrite(self.folder_path+"/img3_"+time.strftime("%y%m%d_%H%M%S")+".png",img)
+        # cv2.imwrite(self.folder_path+"/img3_"+time.strftime("%y%m%d_%H%M%S")+".png",img)
         mtx=np.array([[387.8191999285985, 0.0, 392.3078288789019],[ 0.0, 382.1093651210362, 317.43368009853674], [0.0, 0.0, 1.0]])
         dst=np.array([-0.008671221810333559, -0.013546386893040543, -0.00016537575030651431, 0.002659594999360673])
 
@@ -540,13 +550,17 @@ class VisualCompensation():
 
         homo3= self.homography[2]
 
-        undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
+        # undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
+        undist_img_binary=cv2.undistort(img, mtx, None, mtx)
+        cv2.imwrite(self.folder_path+"/img3_undist_"+time.strftime("%y%m%d_%H%M%S")+".png", cv2.warpPerspective(undist_img_binary, homo3, (1280,1280)))
+
         if self.is_first3 == True:
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo3, (1280, 1280))
             self.im_mask_inv3, self.im_mask3 = self.find_mask(img_for_mask)
             self.is_first3=False
 
-        return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo3, (1280,1280))
+        # return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo3, (1280,1280))
+        return cv2.warpPerspective(undist_img_binary, homo3, (1280, 1280))
 
 
     def undistort4(self, _img):
@@ -562,14 +576,18 @@ class VisualCompensation():
 
         homo4= self.homography[3]
 
-        undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold4, 255, cv2.THRESH_BINARY)[1]
+        # undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold4, 255, cv2.THRESH_BINARY)[1]
+        undist_img_binary=cv2.undistort(img, mtx, dst, None, mtx)
+        cv2.imwrite(self.folder_path+"/img4_undist_"+time.strftime("%y%m%d_%H%M%S")+".png", cv2.warpPerspective(undist_img_binary, homo4, (1280,1280)))
+
         if self.is_first4 == True:
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo4, (1280, 1280))
             self.im_mask_inv4, self.im_mask4 = self.find_mask(img_for_mask)
             self.is_first4=False
 
 
-        return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo4, (1280,1280))
+        # return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo4, (1280,1280))
+        return cv2.warpPerspective(undist_img_binary, homo4, (1280, 1280))
 
 
     # def undistort_left(self, _img):
