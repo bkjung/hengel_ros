@@ -147,15 +147,15 @@ class VisualCompensation():
         self.pi_right_img=self.undistort_right(_img)
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
-        print("------image time------")
-        print(_img1.header.stamp.to_nsec())
-        print(_img2.header.stamp.to_nsec())
-        print(_img3.header.stamp.to_nsec())
-        print(_img4.header.stamp.to_nsec())
-        print("----------------------")
-        self.isNavigationStarted=True
+        #print("------image time------")
+        #print(_img1.header.stamp.to_nsec())
+        #print(_img2.header.stamp.to_nsec())
+        #print(_img3.header.stamp.to_nsec())
+        #print(_img4.header.stamp.to_nsec())
+        #print("----------------------")
+        #self.isNavigationStarted=True
         if self.isNavigationStarted==True:
-            self.app_robotview.isPaintStarted=True
+            #self.app_robotview.isPaintStarted=True
             if self.app_robotview.isPaintStarted == True:
                 print("\n-----------------sync real-----------------")
                 _time = time.time()
@@ -314,7 +314,7 @@ class VisualCompensation():
             else:
                 print("Painting not started yet")
 
-            
+
 
         else:
             print("Navigation not started yet")

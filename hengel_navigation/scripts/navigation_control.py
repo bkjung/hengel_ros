@@ -839,7 +839,7 @@ class NavigationControl():
                 print(str(self.D))
                 msg_distance = Float32()
                 msg_distance.data = self.D
-                self.distance_publisher.publish(msg_distance)
+                #self.distance_publisher.publish(msg_distance)
                 # D(k) constant
                 # self.D = 0.1995
 
