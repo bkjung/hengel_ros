@@ -142,6 +142,12 @@ class VisualCompensation():
         self.pi_right_img=self.undistort_right(_img)
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
+        print("------image time------")
+        print(_img1.header.stamp.to_nsec())
+        print(_img2.header.stamp.to_nsec())
+        print(_img3.header.stamp.to_nsec())
+        print(_img4.header.stamp.to_nsec())
+        print("----------------------")
         self.isNavigationStarted=True
         if self.isNavigationStarted==True:
             self.app_robotview.isPaintStarted=True
@@ -211,23 +217,6 @@ class VisualCompensation():
 
                 for i in xrange(len(y1)):
                     summed_image[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=255
-                # for i in xrange(len(y1)):
-                #     summed_image[y1[i]:y2[i], x1[i]:x2[i]]=150
-
-
-                # summed_image[640:740, 526:762]=150
-                # summed_image[643:697, 501:526]=150
-                # summed_image[615:640, 544:568]=150
-                # summed_image[571:615, 504:524]=150
-                # summed_image[540:617, 522:758]=150
-                # summed_image[617:640, 530:542]=150
-                # summed_image[537:540, 664:682]=150
-                # summed_image[623:631, 512:522]=150
-
-
-                # summed_image[602:641, 758:793]=150
-                # summed_image[603:619, 931:954]=150
-
 
                 # print("summed_image time: "+str(time.time()-_time))
 
@@ -243,29 +232,29 @@ class VisualCompensation():
                 # summed_image=self.image_processing(summed_image)
                 # print(summed_image.shape)
                 # summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
-                self.summed_image = summed_image
+                #self.summed_image = summed_image
 
                 homography_virtual_map, homography =self.crop_image(self.virtual_map) #background is black
-                homo_inv= inv(homography)
-
                 self.cropped_virtual_map=cv2.bitwise_not(homography_virtual_map)
-                virtual_map_crop_pts=[[0,0], [0, self.virtual_map.shape[0]], [self.virtual_map.shape[1], self.virtual_map.shape[0]], [self.virtual_map.shape[1],0]]
-                virtual_map_crop_pts_padding=[[a[0]+self.view_padding, a[1]+self.view_padding] for a in virtual_map_crop_pts]
+                #homo_inv= inv(homography)
 
-                real_map_crop_pts=[]
+                #virtual_map_crop_pts=[[0,0], [0, self.virtual_map.shape[0]], [self.virtual_map.shape[1], self.virtual_map.shape[0]], [self.virtual_map.shape[1],0]]
+                #virtual_map_crop_pts_padding=[[a[0]+self.view_padding, a[1]+self.view_padding] for a in virtual_map_crop_pts]
 
-                for i in xrange(4):
-                    real_map_crop_pnt= np.matmul(homography, [virtual_map_crop_pts_padding[i][0],virtual_map_crop_pts_padding[i][1],1])
-                    real_map_crop_pts.append([int(real_map_crop_pnt[0]), int(real_map_crop_pnt[1])])
-                real_map_crop_pts = np.array([real_map_crop_pts])
+                #real_map_crop_pts=[]
 
-                mask=np.zeros((summed_image.shape[0], summed_image.shape[1]),dtype=np.uint8 )
-                cv2.fillPoly(mask, real_map_crop_pts, (255))
-                summed_image_not=cv2.bitwise_not(summed_image)
-                res=cv2.bitwise_and(summed_image_not, summed_image_not, mask=mask)
-                summed_image= cv2.bitwise_not(res)
+                #for i in xrange(4):
+                #    real_map_crop_pnt= np.matmul(homography, [virtual_map_crop_pts_padding[i][0],virtual_map_crop_pts_padding[i][1],1])
+                #    real_map_crop_pts.append([int(real_map_crop_pnt[0]), int(real_map_crop_pnt[1])])
+                #real_map_crop_pts = np.array([real_map_crop_pts])
 
-                # summed_image= cv2.threshold(summed_image, 110, 255, cv2.THRESH_BINARY)[1]
+                #mask=np.zeros((summed_image.shape[0], summed_image.shape[1]),dtype=np.uint8 )
+                #cv2.fillPoly(mask, real_map_crop_pts, (255))
+                #summed_image_not=cv2.bitwise_not(summed_image)
+                #res=cv2.bitwise_and(summed_image_not, summed_image_not, mask=mask)
+                #summed_image= cv2.bitwise_not(res)
+
+
 
 
 
@@ -295,7 +284,7 @@ class VisualCompensation():
                         # M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map)
 
                         if fm.status == True:
-                            self.app_robotview.remove_points_during_vision_compensation(self.recent_pts, int((time.time()-_time)/0.02))
+                            #self.app_robotview.remove_points_during_vision_compensation(self.recent_pts, int((time.time()-_time)/0.02))
                             self.virtual_map = self.app_robotview.img
 
                             #Initialize Queue
@@ -315,10 +304,11 @@ class VisualCompensation():
 
             #################
 
-
-            # bridge=CvBridge()
-            # summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
-            # self.sum_pub.publish(summed_msg)
+            #ONLY FOR DEBUGGING!!!!!!!
+            bridge=CvBridge()
+            summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
+            self.pub_sum.publish(summed_msg)
+            #ONLY FOR DEBUGGING!!!!!!!
 
             # self.summed_image_prev = self.summed_image
 
@@ -362,7 +352,7 @@ class VisualCompensation():
 
         del_y_virtual=mid_real_virtual_y-self.mid_real_photo_y
         del_th_virtual=-atan2(homography[0][1],homography[0][0])
-        
+
         rotation=np.array([[cos(self.current_mid_predict_canvas_th), -sin(self.current_mid_predict_canvas_th)],
                             [sin(self.current_mid_predict_canvas_th), cos(self.current_mid_predict_canvas_th)]])
 
@@ -381,8 +371,14 @@ class VisualCompensation():
         # print(homography)
 
         self.success_try += 1
-        self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)
 
+        dist= sqrt(pow(offset.x,2)+pow(offset.y,2))
+
+        if dist>=0.02:
+            offset=Point()
+        else:
+            print("OFFSET less than limit (= 0.02)")
+            self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)
         return offset
 
         # self.pub_offset.publish(offset)
@@ -427,6 +423,7 @@ class VisualCompensation():
         img_padding=np.uint8(img_padding)
 
 
+#        return cv2.bitwise_not(cv2.warpPerspective(img_padding, homography,(1280,1280))), homography
         return cv2.warpPerspective(img_padding, homography,(1280,1280)), homography
 
     # def find_mask(self, img):
@@ -477,6 +474,7 @@ class VisualCompensation():
     def undistort1(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite(self.folder_path+"/img1_"+time.strftime("%y%m%d_%H%M%S")+".png",img)
         mtx=np.array([[393.8666817683925, 0.0, 399.6813895086665], [0.0, 394.55108358870405, 259.84676565717876], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0032079005049939543, -0.020856072501002923, 0.000252242294186179, -0.0021042704510431365])
 
@@ -500,6 +498,7 @@ class VisualCompensation():
     def undistort2(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite(self.folder_path+"/img2_"+time.strftime("%y%m%d_%H%M%S")+".png",img)
         mtx=np.array([[382.750581, 0, 422.843185], [0, 385.64829129, 290.20197850], [0.0, 0.0, 1.0]])
         dst=np.array([-0.018077383, -0.0130221045547, 0.0003464289655, 0.00581105231096])
 
@@ -520,6 +519,7 @@ class VisualCompensation():
     def undistort3(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite(self.folder_path+"/img3_"+time.strftime("%y%m%d_%H%M%S")+".png",img)
         mtx=np.array([[387.8191999285985, 0.0, 392.3078288789019],[ 0.0, 382.1093651210362, 317.43368009853674], [0.0, 0.0, 1.0]])
         dst=np.array([-0.008671221810333559, -0.013546386893040543, -0.00016537575030651431, 0.002659594999360673])
 
@@ -541,6 +541,7 @@ class VisualCompensation():
     def undistort4(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite(self.folder_path+"/img4_"+time.strftime("%y%m%d_%H%M%S")+".png",img)
         mtx=np.array([[384.2121883964654, 0.0, 423.16727407803353], [0.0, 386.8188468139677, 359.5190506678551], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0056866549555025896, -0.019460881544303938, 0.0012937686026747307, -0.0031999317338443087])
 
