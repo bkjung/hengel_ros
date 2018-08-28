@@ -60,11 +60,11 @@ class VisualCompensation():
 
         self.isNavigationStarted = False
         self.bridge=CvBridge()
-        self.pixMetRatio=400
+        self.pixMetRatio=300
         self.line_thickness= 0.022
         self.canvas_padding = self.line_thickness * self.pixMetRatio * 2        #2 means each side
         self.real_canvas_crop_padding = 0.3 * self.pixMetRatio
-        
+
         self.view_padding=int(ceil(1280*sqrt(2))) #Robot may see outside of canvas
 
         self.cropped_virtual_map=np.full((1280,1280),255).astype('uint8')
@@ -227,8 +227,6 @@ class VisualCompensation():
                 x1_ratio=[int((x-1-640)*self.pixMetRatio/float(400)+640) for x in x1]
                 x2_ratio=[int(ceil((x+1-640)*self.pixMetRatio/float(400)+640)) for x in x2]
 
-                for i in xrange(len(y1)):
-                    summed_image_not[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=0
 
                 #ONLY FOR DEBUGGING!!!!!!!
                 #if self.option_debug:
@@ -255,6 +253,10 @@ class VisualCompensation():
 
                 homography_virtual_map, homography =self.crop_image(self.virtual_map) #background is black
                 self.cropped_virtual_map=cv2.bitwise_not(homography_virtual_map)
+
+                for i in xrange(len(y1)):
+                    summed_image_not[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=0
+                    self.cropped_virtual_map[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=255
 
                 #Cover area outside of canvas
                 #Make homography
