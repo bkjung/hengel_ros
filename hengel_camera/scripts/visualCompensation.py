@@ -31,7 +31,15 @@ sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 #     return msg_time.sec+msg_time.nsec*0.000000001
 
 class VisualCompensation():
-    def __init__(self):
+    def __init__(self, option_str):
+        if option_str=='debug':
+            self.option_debug = True
+        elif option_str=='run':
+            self.option_debug = False
+        else:
+            print("Wrong Argument")
+            sys.exit(1)
+
         while True:
             word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
             self.width=float(word.split()[0])
@@ -153,9 +161,11 @@ class VisualCompensation():
         #print(_img3.header.stamp.to_nsec())
         #print(_img4.header.stamp.to_nsec())
         #print("----------------------")
-        #self.isNavigationStarted=True
+        if self.option_debug:
+            self.isNavigationStarted=True
+            self.app_robotview.isPaintStarted=True
+
         if self.isNavigationStarted==True:
-            #self.app_robotview.isPaintStarted=True
             if self.app_robotview.isPaintStarted == True:
                 print("\n-----------------sync real-----------------")
                 _time = time.time()
@@ -185,6 +195,11 @@ class VisualCompensation():
                 img2 = self.undistort2(_img1)
                 img3 = self.undistort3(_img3)
                 img4 = self.undistort4(_img4)
+                #ONLY FOR DEBUGGING!!!!!!!
+                if self.option_debug:
+                    bridge=CvBridge()
+                    summed_msg=bridge.cv2_to_compressed_imgmsg(img1+img2+img3+img4)
+                    self.pub_sum.publish(summed_msg)
 
 
                 im_mask13=cv2.bitwise_and(np.array(self.im_mask1).astype('uint8'), np.array(self.im_mask3).astype('uint8'))
@@ -193,6 +208,11 @@ class VisualCompensation():
                 img4_masked=np.multiply(np.multiply(img4, im_mask13), self.im_mask2).astype('uint8')
 
                 summed_image_not=img1+img2_masked+img3+img4_masked
+                #ONLY FOR DEBUGGING!!!!!!!
+                #if self.option_debug:
+                #    bridge=CvBridge()
+                #    summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image_not)
+                #    self.pub_sum.publish(summed_msg)
 
                 #Cover robot area
                 x1=[589, 831, 831, 831, 831, 729, 555, 583]
@@ -207,6 +227,12 @@ class VisualCompensation():
 
                 for i in xrange(len(y1)):
                     summed_image_not[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=0
+
+                #ONLY FOR DEBUGGING!!!!!!!
+                #if self.option_debug:
+                #    bridge=CvBridge()
+                #    summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image_not)
+                #    self.pub_sum.publish(summed_msg)
 
                 # print("summed_image time: "+str(time.time()-_time))
 
@@ -296,10 +322,10 @@ class VisualCompensation():
             #################
 
                 #ONLY FOR DEBUGGING!!!!!!!
-                bridge=CvBridge()
-                summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
-                self.pub_sum.publish(summed_msg)
-                #ONLY FOR DEBUGGING!!!!!!!
+                #if self.option_debug:
+                #    bridge=CvBridge()
+                #    summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
+                #    self.pub_sum.publish(summed_msg)
 
                 # self.summed_image_prev = self.summed_image
             else:
@@ -659,4 +685,9 @@ class VisualCompensation():
 if __name__=='__main__':
     # num_pts_delete = 150 #num_of_waypoints_to_delete_in_virtualmap_after_compensation
     # VisualCompensation(num_pts_delete)
-    VisualCompensation()
+    if len(sys.argv)==1:
+        VisualCompensation('run')
+    elif len(sys.argv)==2 and sys.argv[1]=='debug':
+        VisualCompensation('debug')
+    else:
+        print("Wrong Argument")
