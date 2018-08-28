@@ -90,7 +90,7 @@ class FeatureMatch():
 
         plt.savefig(self.folder_path+"/SIFT_BF_"+file_time+".png")
         # cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
-        # cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
+        cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
         cv2.destroyAllWindows()
         print("FeatureMatch Saved to "+file_time)
 
