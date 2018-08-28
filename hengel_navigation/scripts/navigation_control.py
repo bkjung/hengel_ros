@@ -1002,7 +1002,7 @@ class NavigationControl():
         arr_error = []
         _a = _delX*sin(_th) - _delY*cos(_th)
         _b = _delX*cos(_th) + _delY*sin(_th)
-        x1 = 0.2
+        x1 = 0.205
         x2 = 0.3
         x3 = 0
         error = 0
@@ -1018,19 +1018,19 @@ class NavigationControl():
             y1 = self.derivative_cost_function(x1, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
             y2 = self.derivative_cost_function(x2, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
         f_x3 = self.cost_function(x3, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
-        f_low = self.cost_function(0.2, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
+        f_low = self.cost_function(0.205, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
         f_high = self.cost_function(0.3, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
         if f_x3 <= f_low and f_x3 <= f_high:
-            if x3 >= 0.2 and x3 <= 0.3:
+            if x3 >= 0.205 and x3 <= 0.3:
                 return self.bound_function(0.0023, x3, _prev_D)
             else:
                 if f_low <= f_high:
-                    return self.bound_function(0.0023, 0.2, _prev_D)
+                    return self.bound_function(0.0023, 0.205, _prev_D)
                 else:
                     return self.bound_function(0.0023, 0.3, _prev_D)
         else:
             if f_low <= f_high:
-                return self.bound_function(0.0023, 0.2, _prev_D)
+                return self.bound_function(0.0023, 0.205, _prev_D)
             else:
                 return self.bound_function(0.0023, 0.3, _prev_D)
 
