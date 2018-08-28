@@ -238,7 +238,7 @@ class PaintSelectfile():
 
 
     def run(self):
-        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.isStartEndIndexed, self.D)
+        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.isStartEndIndexed, self.D, self.interval)
 
 
 if __name__ == '__main__':
