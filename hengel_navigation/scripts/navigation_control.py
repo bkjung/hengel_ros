@@ -77,6 +77,7 @@ class NavigationControl():
         self.isIntensityControl = _isIntensityControl
         self.isStartEndIndexed = _isStartEndIndexed
         self.D=_D
+        self.D_prev = _D
         self.img=np.full((2000,2000), 255)
 
         self.offset_accepted = False
@@ -308,7 +309,7 @@ class NavigationControl():
         self.height_publisher = rospy.Publisher(
                 '/height', Int32, queue_size=5)
         self.distance_publisher = rospy.Publisher(
-                '/distance', Float32, queue_size=5)
+                '/delta_distance', Float32, queue_size=5)
         #self.valve_operation_mode_publisher = rospy.Publisher(
         #        '/operation_mode', OperationMode, queue_size=5)
         #self.valve_operation_mode_publisher.publish(
@@ -849,8 +850,10 @@ class NavigationControl():
 
                     print(str(self.D))
                     msg_distance = Float32()
-                    msg_distance.data = self.D
+                    #msg_distance.data = self.D
+                    msg_distance.data = self.D - self.D_prev
                     self.distance_publisher.publish(msg_distance)
+                    self.D_prev = self.D
                 else:
                     # D(k) constant
                     self.D = 0.1995
@@ -1117,6 +1120,9 @@ class NavigationControl():
         #self.valve_angle_input.goal_position = 1000
         #self.valve_angle_publisher.publish(self.valve_angle_input)
         self.intensity_publisher.publish(int(1000))
+        msg_distance = Float32()
+        msg_distance.data = 0
+        self.distance_publisher.publish(msg_distance)
         self.r.sleep()
 
     def shutdown_for_seconds(self, _input):
