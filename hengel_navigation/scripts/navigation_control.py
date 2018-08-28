@@ -152,7 +152,9 @@ class NavigationControl():
         #test flag bot
         #self.R = 0.11/2 #radius of wheel
         #self.R = 0.1249/2 #radius of wheel     #flag_bot
-        self.R = 0.12475/2 #radius of wheel      #red_pipe
+        self.R_right = 0.124246/2 #radius of wheel_right      #red_pipe
+        self.R_left = 0.1245106/2 #radius of wheel_left      #red_pipe
+        self.R_average = (self.R_right + self.R_left)/2.0
         #self.R = 0.12475/2 #radius of wheel    #CORRECT ONE
         #self.R = 0.1237/2 #radius of wheel
         #self.L = 0.3544/2 #half of distance btw two wheels     #flag_bot
@@ -855,8 +857,8 @@ class NavigationControl():
 
             delOmega = asin(a/self.D)
             delS = self.D*cos(delOmega) + c
-            delOmega1 = (1/self.R)*(delS + self.L*delOmega)
-            delOmega2 = (1/self.R)*(delS - self.L*delOmega)
+            delOmega1 = (1/self.R_left)*(delS + self.L*delOmega)
+            delOmega2 = (1/self.R_right)*(delS - self.L*delOmega)
             self.arr_delOmega.append([delOmega1, delOmega2])
 
             #delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
@@ -898,8 +900,8 @@ class NavigationControl():
                     delOmega= asin((delX*sin(th)-delY*cos(th))/(self.D))
                     delS= self.D*cos(delOmega)-self.D+delX*cos(th)+delY*sin(th)
 
-                    delOmega1= (1/self.R)*(delS+2*self.L*delOmega)
-                    delOmega2= (1/self.R)*(delS-2*self.L*delOmega)
+                    delOmega1= (1/self.R_left)*(delS+2*self.L*delOmega)
+                    delOmega2= (1/self.R_right)*(delS-2*self.L*delOmega)
 
                     self.pub_delta_theta_1.publish(delOmega1)
                     self.pub_delta_theta_2.publish(delOmega2)
@@ -911,7 +913,8 @@ class NavigationControl():
                     delXrobotGlobal, delYrobotGlobal = np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
                     self.point.x=self.point.x+delXrobotGlobal
                     self.point.y=self.point.y+delYrobotGlobal
-                    self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                    #self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                    self.heading.data=self.heading.data+(self.R_left*delOmega1-self.R_right*delOmega2)/(2*self.L)
                     self.pen_distance_per_loop=sqrt(
                         pow(delXrobotGlobal, 2) +
                         pow(delYrobotGlobal, 2)
@@ -935,7 +938,8 @@ class NavigationControl():
                 delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
                 self.point.x=self.point.x+delXrobotGlobal
                 self.point.y=self.point.y+delYrobotGlobal
-                self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                #self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
+                self.heading.data=self.heading.data+(self.R_left*delOmega1-self.R_right*delOmega2)/(2*self.L)
                 self.pen_distance_per_loop=sqrt(
                     pow(delXrobotGlobal, 2) +
                     pow(delYrobotGlobal, 2)
@@ -969,16 +973,16 @@ class NavigationControl():
     #     # return 0.2 + arr_error.index(min(arr_error))*0.5/MOTOR_RESOLUTION
 
     def derivative_cost_function(self, x, _a, _b, _c, _e, _f):
-        value1 = ((1/self.R)*(sqrt(pow(x,2) - pow(_a,2)) + _c + self.L*asin(_a/x)) - _e)*(1/self.R)*(pow(x,2)-self.L*_a)/(x*sqrt(pow(x,2) - pow(_a,2)))
-        value2 = ((1/self.R)*(sqrt(pow(x,2) - pow(_a,2)) + _c - self.L*asin(_a/x)) - _f)*(1/self.R)*(pow(x,2)+self.L*_a)/(x*sqrt(pow(x,2) - pow(_a,2)))
+        value1 = ((1/self.R_average)*(sqrt(pow(x,2) - pow(_a,2)) + _c + self.L*asin(_a/x)) - _e)*(1/self.R_average)*(pow(x,2)-self.L*_a)/(x*sqrt(pow(x,2) - pow(_a,2)))
+        value2 = ((1/self.R_average)*(sqrt(pow(x,2) - pow(_a,2)) + _c - self.L*asin(_a/x)) - _f)*(1/self.R_average)*(pow(x,2)+self.L*_a)/(x*sqrt(pow(x,2) - pow(_a,2)))
         value = value1 + value2
         return value
 
     def cost_function(self, x, _a, _b, _c, _e, _f):
         _delOmega = asin(_a/x)
         _delS = sqrt(x*x-_a*_a) + _c
-        _delOmega1 = (1/self.R)*(_delS + self.L*_delOmega)
-        _delOmega2 = (1/self.R)*(_delS - self.L*_delOmega)
+        _delOmega1 = (1/self.R_average)*(_delS + self.L*_delOmega)
+        _delOmega2 = (1/self.R_average)*(_delS - self.L*_delOmega)
         value = pow(_delOmega1 - _e, 2) + pow(_delOmega2 - _f, 2)
         return value
 
