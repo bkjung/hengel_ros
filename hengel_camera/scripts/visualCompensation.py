@@ -62,7 +62,9 @@ class VisualCompensation():
         self.bridge=CvBridge()
         self.pixMetRatio=400
         self.line_thickness= 0.022
-        self.canvas_padding = self.line_thickness * self.pixMetRatio * 2
+        self.canvas_padding = self.line_thickness * self.pixMetRatio * 2        #2 means each side
+        self.real_canvas_crop_padding = 0.3 * self.pixMetRatio
+        
         self.view_padding=int(ceil(1280*sqrt(2))) #Robot may see outside of canvas
 
         self.cropped_virtual_map=np.full((1280,1280),255).astype('uint8')
@@ -261,7 +263,9 @@ class VisualCompensation():
                 ####ONLY FOR DEBUGGING####
                 #Compute vertices of canvas
                 virtual_map_crop_pts=[[self.x_img_min, self.y_img_min], [self.x_img_min, self.y_img_max], [self.x_img_max, self.y_img_max], [self.x_img_max, self.y_img_min]]
-                virtual_map_padding=[[0,0],[0,2*self.canvas_padding], [2*self.canvas_padding, 2*self.canvas_padding], [2*self.canvas_padding, 0]] #canvas padding
+                virtual_map_padding=[[-self.real_canvas_crop_padding, -self.real_canvas_crop_padding],[-self.real_canvas_crop_padding,2*self.canvas_padding+self.real_canvas_crop_padding], [2*self.canvas_padding+self.real_canvas_crop_padding, 2*self.canvas_padding+self.real_canvas_crop_padding], [2*self.canvas_padding+self.real_canvas_crop_padding, -self.real_canvas_crop_padding]] #canvas padding
+                # virtual_map_padding=[[-self.real_canvas_crop_padding,-self.real_canvas_crop_padding],[-self.real_canvas_crop_padding,3*self.real_canvas_crop_padding], [3*self.real_canvas_crop_padding, 3*self.real_canvas_crop_padding], [3*self.real_canvas_crop_padding, -self.real_canvas_crop_padding]] #canvas padding
+                # virtual_map_padding=[[-2*self.real_canvas_crop_padding,-2*self.real_canvas_crop_padding],[-2*self.real_canvas_crop_padding,4*self.real_canvas_crop_padding], [4*self.real_canvas_crop_padding, 4*self.real_canvas_crop_padding], [4*self.real_canvas_crop_padding, -2*self.real_canvas_crop_padding]] #canvas padding
 
                 virtual_map_crop_pts=np.matrix(virtual_map_crop_pts)+np.matrix(virtual_map_padding)
                 virtual_map_crop_pts_padding=[[a.item(0)+self.view_padding, a.item(1)+self.view_padding] for a in virtual_map_crop_pts] #Add view point
@@ -278,6 +282,8 @@ class VisualCompensation():
                 mask=np.zeros((summed_image_not.shape[0], summed_image_not.shape[1]),dtype=np.uint8 )
                 cv2.fillPoly(mask, real_map_crop_pts, (255))
                 res=cv2.bitwise_and(summed_image_not, summed_image_not, mask=mask)
+                # img_white=np.full((1280,1280),(255)).astype('uint8')
+                # res=cv2.bitwise_and(img_white, img_white, mask=mask)
                 summed_image= cv2.bitwise_not(res)
 
                 print("sum & crop image time: "+str(time.time()-_time))
@@ -682,7 +688,7 @@ class VisualCompensation():
             [74.8, 457.2], [148, 344]]
             )
 
-        objPts = [[[-(point_r[1]+9.33)*(_ratio/float(100))+640.0, -point_r[0]*(_ratio/float(100))+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
+        objPts = [[[(point_r[1]+9.33)*(_ratio/float(100))+640.0, point_r[0]*(_ratio/float(100))+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
 
         self.homography=[]
 
