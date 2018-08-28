@@ -977,9 +977,9 @@ class NavigationControl():
     def bound_function(self, limit, curr, prev):
         if abs(curr - prev) > limit:
             if prev > curr:
-                prev = curr - limit
+                prev = prev - limit
             else:
-                prev= curr + limit
+                prev = prev + limit
         else:
             prev = curr
         return prev
