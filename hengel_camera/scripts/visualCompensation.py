@@ -31,7 +31,15 @@ sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 #     return msg_time.sec+msg_time.nsec*0.000000001
 
 class VisualCompensation():
-    def __init__(self):
+    def __init__(self, option_str):
+        if option_str=='debug':
+            self.option_debug = True
+        elif option_str=='run':
+            self.option_debug = False
+        else:
+            print("Wrong Argument")
+            sys.exit(1)
+
         while True:
             word= raw_input("WHAT IS THE WIDTH AND HEIGHT OF CANVAS?\n Type: ")
             self.width=float(word.split()[0])
@@ -147,15 +155,17 @@ class VisualCompensation():
         self.pi_right_img=self.undistort_right(_img)
 
     def sync_real_callback(self, _img1, _img2, _img3, _img4):
-        # print("------image time------")
-        # print(_img1.header.stamp.to_nsec())
-        # print(_img2.header.stamp.to_nsec())
-        # print(_img3.header.stamp.to_nsec())
-        # print(_img4.header.stamp.to_nsec())
-        # print("----------------------")
-        # self.isNavigationStarted=True
+        #print("------image time------")
+        #print(_img1.header.stamp.to_nsec())
+        #print(_img2.header.stamp.to_nsec())
+        #print(_img3.header.stamp.to_nsec())
+        #print(_img4.header.stamp.to_nsec())
+        #print("----------------------")
+        if self.option_debug:
+            self.isNavigationStarted=True
+            self.app_robotview.isPaintStarted=True
+
         if self.isNavigationStarted==True:
-            # self.app_robotview.isPaintStarted=True
             if self.app_robotview.isPaintStarted == True:
                 print("\n-----------------sync real-----------------")
                 _time = time.time()
@@ -185,6 +195,11 @@ class VisualCompensation():
                 img2 = self.undistort2(_img1)
                 img3 = self.undistort3(_img3)
                 img4 = self.undistort4(_img4)
+                #ONLY FOR DEBUGGING!!!!!!!
+                if self.option_debug:
+                    bridge=CvBridge()
+                    summed_msg=bridge.cv2_to_compressed_imgmsg(img1+img2+img3+img4)
+                    self.pub_sum.publish(summed_msg)
 
 
                 im_mask13=cv2.bitwise_and(np.array(self.im_mask1).astype('uint8'), np.array(self.im_mask3).astype('uint8'))
@@ -193,6 +208,11 @@ class VisualCompensation():
                 img4_masked=np.multiply(np.multiply(img4, im_mask13), self.im_mask2).astype('uint8')
 
                 summed_image_not=img1+img2_masked+img3+img4_masked
+                #ONLY FOR DEBUGGING!!!!!!!
+                #if self.option_debug:
+                #    bridge=CvBridge()
+                #    summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image_not)
+                #    self.pub_sum.publish(summed_msg)
 
                 #Cover robot area
                 x1=[589, 831, 831, 831, 831, 729, 555, 583]
@@ -207,7 +227,13 @@ class VisualCompensation():
 
                 for i in xrange(len(y1)):
                     summed_image_not[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=0
-                    
+
+                #ONLY FOR DEBUGGING!!!!!!!
+                #if self.option_debug:
+                #    bridge=CvBridge()
+                #    summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image_not)
+                #    self.pub_sum.publish(summed_msg)
+
                 # print("summed_image time: "+str(time.time()-_time))
 
                 # for i in range(len(summed_image)):
@@ -296,16 +322,16 @@ class VisualCompensation():
             #################
 
                 #ONLY FOR DEBUGGING!!!!!!!
-                bridge=CvBridge()
-                summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
-                self.pub_sum.publish(summed_msg)
-                #ONLY FOR DEBUGGING!!!!!!!
+                #if self.option_debug:
+                #    bridge=CvBridge()
+                #    summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
+                #    self.pub_sum.publish(summed_msg)
 
                 # self.summed_image_prev = self.summed_image
             else:
                 print("Painting not started yet")
 
-            
+
 
         else:
             print("Navigation not started yet")
@@ -473,6 +499,8 @@ class VisualCompensation():
     def undistort1(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        if self.option_debug:
+            cv2.imwrite(self.folder_path+"/img1_"+time.strftime("%y%m%d_%H%M%S")+".png",img)
         mtx=np.array([[393.8666817683925, 0.0, 399.6813895086665], [0.0, 394.55108358870405, 259.84676565717876], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0032079005049939543, -0.020856072501002923, 0.000252242294186179, -0.0021042704510431365])
 
@@ -493,6 +521,8 @@ class VisualCompensation():
     def undistort2(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        if self.option_debug:
+            cv2.imwrite(self.folder_path+"/img2_"+time.strftime("%y%m%d_%H%M%S")+".png",img)
         mtx=np.array([[382.750581, 0, 422.843185], [0, 385.64829129, 290.20197850], [0.0, 0.0, 1.0]])
         dst=np.array([-0.018077383, -0.0130221045547, 0.0003464289655, 0.00581105231096])
 
@@ -510,6 +540,8 @@ class VisualCompensation():
     def undistort3(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        if self.option_debug:
+            cv2.imwrite(self.folder_path+"/img3_"+time.strftime("%y%m%d_%H%M%S")+".png",img)
         mtx=np.array([[387.8191999285985, 0.0, 392.3078288789019],[ 0.0, 382.1093651210362, 317.43368009853674], [0.0, 0.0, 1.0]])
         dst=np.array([-0.008671221810333559, -0.013546386893040543, -0.00016537575030651431, 0.002659594999360673])
 
@@ -528,6 +560,8 @@ class VisualCompensation():
     def undistort4(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        if self.option_debug:
+            cv2.imwrite(self.folder_path+"/img4_"+time.strftime("%y%m%d_%H%M%S")+".png",img)
         mtx=np.array([[384.2121883964654, 0.0, 423.16727407803353], [0.0, 386.8188468139677, 359.5190506678551], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0056866549555025896, -0.019460881544303938, 0.0012937686026747307, -0.0031999317338443087])
 
@@ -659,4 +693,9 @@ class VisualCompensation():
 if __name__=='__main__':
     # num_pts_delete = 150 #num_of_waypoints_to_delete_in_virtualmap_after_compensation
     # VisualCompensation(num_pts_delete)
-    VisualCompensation()
+    if len(sys.argv)==1:
+        VisualCompensation('run')
+    elif len(sys.argv)==2 and sys.argv[1]=='debug':
+        VisualCompensation('debug')
+    else:
+        print("Wrong Argument")

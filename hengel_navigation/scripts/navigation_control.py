@@ -104,29 +104,37 @@ class NavigationControl():
 
             while True:
                 word = raw_input(
-                        "There are 2 options for cam_image save.\n[1] Do NOT stop & save \n[2] DO stop & save periodically \nType :"
+                        "D(k) (pen distance) optimization.\n[1] On \n[2] Off \nType :"
                         )
-                self.option_cam_save = int(word)
-                if self.option_cam_save==1 or self.option_cam_save==2:
+                self.d_k_optimization_option = int(word)
+                if self.d_k_optimization_option==1 or self.d_k_optimization_option==2:
                     break
 
-            if self.option_cam_save==2:
-                word = raw_input(
-                        "CAM SAVE Period (No. Waypoints) \nType :"
-                        )
-                self.cam_save_period_waypoints = int(word)
-                word = raw_input(
-                        "CAM SAVE Point (x,y, theta) \nType x: "
-                        )
-                self.cam_save_x = float(word)
-                word = raw_input(
-                        "CAM SAVE Point (x,y, theta) \nType y: "
-                        )
-                self.cam_save_y = float(word)
-                word = raw_input(
-                        "CAM SAVE Point (x,y, theta) \nType theta(deg): "
-                        )
-                self.cam_save_theta_deg = float(word)
+            #while True:
+            #    word = raw_input(
+            #            "There are 2 options for cam_image save.\n[1] Do NOT stop & save \n[2] DO stop & save periodically \nType :"
+            #            )
+            #    self.option_cam_save = int(word)
+            #    if self.option_cam_save==1 or self.option_cam_save==2:
+            #        break
+
+            #if self.option_cam_save==2:
+            #    word = raw_input(
+            #            "CAM SAVE Period (No. Waypoints) \nType :"
+            #            )
+            #    self.cam_save_period_waypoints = int(word)
+            #    word = raw_input(
+            #            "CAM SAVE Point (x,y, theta) \nType x: "
+            #            )
+            #    self.cam_save_x = float(word)
+            #    word = raw_input(
+            #            "CAM SAVE Point (x,y, theta) \nType y: "
+            #            )
+            #    self.cam_save_y = float(word)
+            #    word = raw_input(
+            #            "CAM SAVE Point (x,y, theta) \nType theta(deg): "
+            #            )
+            #    self.cam_save_theta_deg = float(word)
 
             if self.simulation_option==1:
                 self.runOffset()
@@ -427,11 +435,11 @@ class NavigationControl():
                         else:
                             pass
 
-                    if self.option_cam_save == 2:
-                        print("FUCK YOU:)")
-                        sys.exit(1)
-                        #if self.cnt_waypoints!=0 and self.cnt_waypoints%self.cam_save_period_waypoints==0:
-                        #    self.go_to_point_and_come_back(self.cam_save_x, self.cam_save_y, self.cam_save_theta_deg)
+                    #if self.option_cam_save == 2:
+                    #    print("FUCK YOU:)")
+                    #    sys.exit(1)
+                    #    #if self.cnt_waypoints!=0 and self.cnt_waypoints%self.cam_save_period_waypoints==0:
+                    #    #    self.go_to_point_and_come_back(self.cam_save_x, self.cam_save_y, self.cam_save_theta_deg)
 
                     # Motion Control
 
@@ -826,22 +834,24 @@ class NavigationControl():
             b = delX*cos(th) + delY*sin(th)
             c = b - self.D
             if self.arr_delOmega:
-                # D(k) optimization
-                calculated_D = self.calculate_optimal_D(delX, delY, th, self.D, self.arr_delOmega[-1][0], self.arr_delOmega[-1][1])
-                if abs(self.D-calculated_D)>0.0023:
-                    if self.D>calculated_D:
-                        self.D = self.D - 0.0023
+                if self.d_k_optimization_option==1:
+                    # D(k) optimization
+                    calculated_D = self.calculate_optimal_D(delX, delY, th, self.D, self.arr_delOmega[-1][0], self.arr_delOmega[-1][1])
+                    if abs(self.D-calculated_D)>0.0023:
+                        if self.D>calculated_D:
+                            self.D = self.D - 0.0023
+                        else:
+                            self.D = self.D + 0.0023
                     else:
-                        self.D = self.D + 0.0023
-                else:
-                    self.D = calculated_D
+                        self.D = calculated_D
 
-                print(str(self.D))
-                msg_distance = Float32()
-                msg_distance.data = self.D
-                self.distance_publisher.publish(msg_distance)
-                # D(k) constant
-                # self.D = 0.1995
+                    print(str(self.D))
+                    msg_distance = Float32()
+                    msg_distance.data = self.D
+                    self.distance_publisher.publish(msg_distance)
+                else:
+                    # D(k) constant
+                    self.D = 0.1995
 
             delOmega = asin(a/self.D)
             delS = self.D*cos(delOmega) + c
