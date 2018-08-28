@@ -1102,8 +1102,8 @@ class NavigationControl():
         delX = 0.0
         delY = 0.0
         if del1 != del2:
-            delY=-self.L*(del1+del2)/(del1-del2)*(1-cos(self.R*(del2-del1)/(2*self.L)))
-            delX=-self.L*(del1+del2)/(del1-del2)*sin(self.R*(del2-del1)/(2*self.L))
+            delY=-self.L*(del1*self.R_left+del2*self.R_right)/(del1*self.R_left-del2*self.R_right)*(1-cos((del2*self.R_right-del1*self.R_left)/(2*self.L)))
+            delX=-self.L*(del1*self.R_left+del2*self.R_right)/(del1*self.R_left-del2*self.R_right)*sin((del2*self.R_right-del1*self.R_left)/(2*self.L))
         else:
             delX=self.R*del1
             delY=0
