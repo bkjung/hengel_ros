@@ -837,7 +837,7 @@ class NavigationControl():
             b = delX*cos(th) + delY*sin(th)
             c = b - self.D
             if self.arr_delOmega:
-                if self.d_k_optimization_option==1:
+                if self.d_k_optimization_option==1 and self.cnt_waypoints>=200:
                     # D(k) optimization
                     # calculated_D = self.calculate_optimal_D(delX, delY, th, self.D, self.arr_delOmega[-1][0], self.arr_delOmega[-1][1])
                     # if abs(self.D-calculated_D)>0.0023:
