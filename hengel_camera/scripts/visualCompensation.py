@@ -61,7 +61,10 @@ class VisualCompensation():
         self.isNavigationStarted = False
         self.bridge=CvBridge()
         self.pixMetRatio=300
-        self.line_thickness= 0.022
+
+        # self.line_thickness= 0.022
+        self.line_thickness=0.1
+
         self.canvas_padding = self.line_thickness * self.pixMetRatio * 2        #2 means each side
         self.real_canvas_crop_padding = 0.3 * self.pixMetRatio
 

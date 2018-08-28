@@ -7,7 +7,7 @@ from time import sleep
 from geometry_msgs.msg import Point
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Image, CompressedImage
-from math import cos, sin, pi, sqrt
+from math import cos, sin, pi, sqrt, ceil
 import numpy as np
 import copy
 import collections
@@ -23,6 +23,7 @@ class RobotView():
         # self.lineThickness=0.01   #original
         self.lineThickness= thickness
         self.canvas_padding= canvas_padding
+        self.interval= 0.0001
 
         self.img=_img
 
@@ -31,6 +32,9 @@ class RobotView():
         self.pub3=rospy.Publisher('/time', Float32, queue_size=5)
 
         self.isPaintStarted = False
+
+        self.prev_end_point= None
+        self.isDrawing= False
 
     def cvtCanvasToImgCoord(self, _canvasPnt):
         imgPnt=Point()
@@ -61,34 +65,51 @@ class RobotView():
             # print("add run")
             self.add_endpoint()
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
+        
+    def draw_endpoint(self, end_x, end_y, intensity):
+        self.img[int(end_y)][int(end_x)]=intensity
+        dist=self.lineThickness*self.pixMetRatio
+        x1=int(end_x-dist/2)
+        x2=int(end_x+dist/2)
+
+        for i in range(x1, x2+1):
+            x=end_x-i
+            if i>=0 and i<self.img.shape[1]:
+                if abs(x)>dist/2:
+                    self.img[int(end_y)][i]=min(intensity, self.img[int(end_y)][i])
+                else:
+                    if i>end_x:
+                        y=sqrt(dist*dist/4-(end_x-i)*(end_x-i))
+                    else:
+                        y=sqrt(dist*dist/4-(end_x-i-1)*(end_x-i-1))
+                    y1=int(end_y-y)
+                    y2=int(end_y+y)
+                    for j in range(y1, y2+1):
+                        if j>0 and j<self.img.shape[0]:
+                            self.img[j][i]=min(intensity, self.img[j][i])
+            else:
+                print("canvas size: %d, %d" %(self.img.shape[1], self.img.shape[0]))
+                print("point: %d, %d" %(point_x, point_y))
 
     def add_endpoint(self):
         _time=time.time()
         if self.spray_intensity!=255:
             self.isPaintStarted=True
-            self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
-            dist=self.lineThickness*self.pixMetRatio
-            x1=int(self.end_x-dist/2)
-            x2=int(self.end_x+dist/2)
-
-            for i in range(x1, x2+1):
-                x=self.end_x-i
-                if i>=0 and i<self.img.shape[1]:
-                    if abs(x)>dist/2:
-                        self.img[int(self.end_y)][i]=min(self.spray_intensity, self.img[int(self.end_y)][i])
-                    else:
-                        if i>self.end_x:
-                            y=sqrt(dist*dist/4-(self.end_x-i)*(self.end_x-i))
-                        else:
-                            y=sqrt(dist*dist/4-(self.end_x-i-1)*(self.end_x-i-1))
-                        y1=int(self.end_y-y)
-                        y2=int(self.end_y+y)
-                        for j in range(y1, y2+1):
-                            if j>0 and j<self.img.shape[0]:
-                                self.img[j][i]=min(self.spray_intensity, self.img[j][i])   
-                else:
-                    print("canvas size: %d, %d" %(self.img.shape[1], self.img.shape[0]))
-                    print("point: %d, %d" %(point_x, point_y))
+            if (self.prev_end_point is not None) and self.isDrawing:
+                #Add points between prev & current endpoint
+                queue=[]
+                dist=sqrt(pow(self.prev_end_point[0]-self.end_x,2)+pow(self.prev_end_point[1]-self.end_y,2))
+                div=int(ceil(dist/self.interval))   
+                for k in range(div+1):
+                    x=self.prev_end_point[0]+(k+1)/float(div)*(self.end_x-self.prev_end_point[0])
+                    y=self.prev_end_point[1]+(k+1)/float(div)*(self.end_y-self.prev_end_point[1])
+                    self.draw_endpoint(x,y, self.spray_intensity)
+            else:
+                self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity)
+            self.isDrawing=True
+            self.prev_end_point= [self.end_x, self.end_y]
+        else:
+            self.isDrawing=False
 
         # ttime=Float32()
         # ttime.data=float(time.time()-_time)
