@@ -646,7 +646,7 @@ class VisualCompensation():
             [74.8, 457.2], [148, 344]]
             )
 
-        objPts = [[[(-point_r[1]+9.33)*(_ratio/float(100))+640.0, -point_r[0]*(_ratio/float(100))+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
+        objPts = [[[-(point_r[1]+9.33)*(_ratio/float(100))+640.0, -point_r[0]*(_ratio/float(100))+640.0]  for point_r in robotPts]  for robotPts in robotPtsArr]
 
         self.homography=[]
 
