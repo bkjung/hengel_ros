@@ -155,7 +155,7 @@ class NavigationControl():
         #self.R = 0.1249/2 #radius of wheel     #flag_bot
         self.R_right = 0.124246/2 #radius of wheel_right      #red_pipe
         self.R_left = 0.1245106/2 #radius of wheel_left      #red_pipe
-        self.R_average = (self.R_right + self.R_left)/2.0
+        # self.R_average = (self.R_right + self.R_left)/2.0
         #self.R = 0.12475/2 #radius of wheel    #CORRECT ONE
         #self.R = 0.1237/2 #radius of wheel
         #self.L = 0.3544/2 #half of distance btw two wheels     #flag_bot
@@ -839,15 +839,15 @@ class NavigationControl():
             if self.arr_delOmega:
                 if self.d_k_optimization_option==1:
                     # D(k) optimization
-                    calculated_D = self.calculate_optimal_D(delX, delY, th, self.D, self.arr_delOmega[-1][0], self.arr_delOmega[-1][1])
-                    if abs(self.D-calculated_D)>0.0023:
-                        if self.D>calculated_D:
-                            self.D = self.D - 0.0023
-                        else:
-                            self.D = self.D + 0.0023
-                    else:
-                        self.D = calculated_D
-
+                    # calculated_D = self.calculate_optimal_D(delX, delY, th, self.D, self.arr_delOmega[-1][0], self.arr_delOmega[-1][1])
+                    # if abs(self.D-calculated_D)>0.0023:
+                    #     if self.D>calculated_D:
+                    #         self.D = self.D - 0.0023
+                    #     else:
+                    #         self.D = self.D + 0.0023
+                    # else:
+                    #     self.D = calculated_D
+                    self.D = self.calculate_optimal_D(delX, delY, th, self.D, self.arr_delOmega[-1][0], self.arr_delOmega[-1][1])
                     print(str(self.D))
                     msg_distance = Float32()
                     #msg_distance.data = self.D
@@ -974,18 +974,27 @@ class NavigationControl():
     #         arr_error.append(_error)
     #     return 0.2 + arr_error.index(min(arr_error))*0.1/MOTOR_RESOLUTION
     #     # return 0.2 + arr_error.index(min(arr_error))*0.5/MOTOR_RESOLUTION
+    def bound_function(self, limit, curr, prev):
+        if abs(curr - prev) > limit:
+            if prev > curr:
+                prev = prev - limit
+            else:
+                prev = prev + limit
+        else:
+            prev = curr
+        return prev
 
     def derivative_cost_function(self, x, _a, _b, _c, _e, _f):
-        value1 = ((1/self.R_average)*(sqrt(pow(x,2) - pow(_a,2)) + _c + self.L*asin(_a/x)) - _e)*(1/self.R_average)*(pow(x,2)-self.L*_a)/(x*sqrt(pow(x,2) - pow(_a,2)))
-        value2 = ((1/self.R_average)*(sqrt(pow(x,2) - pow(_a,2)) + _c - self.L*asin(_a/x)) - _f)*(1/self.R_average)*(pow(x,2)+self.L*_a)/(x*sqrt(pow(x,2) - pow(_a,2)))
+        value1 = ((1/self.R_left)*(sqrt(pow(x,2) - pow(_a,2)) + _c + self.L*asin(_a/x)) - _e)*(1/self.R_left)*(pow(x,2)-self.L*_a)/(x*sqrt(pow(x,2) - pow(_a,2)))
+        value2 = ((1/self.R_right)*(sqrt(pow(x,2) - pow(_a,2)) + _c - self.L*asin(_a/x)) - _f)*(1/self.R_right)*(pow(x,2)+self.L*_a)/(x*sqrt(pow(x,2) - pow(_a,2)))
         value = value1 + value2
         return value
 
     def cost_function(self, x, _a, _b, _c, _e, _f):
         _delOmega = asin(_a/x)
         _delS = sqrt(x*x-_a*_a) + _c
-        _delOmega1 = (1/self.R_average)*(_delS + self.L*_delOmega)
-        _delOmega2 = (1/self.R_average)*(_delS - self.L*_delOmega)
+        _delOmega1 = (1/self.R_left)*(_delS + self.L*_delOmega)
+        _delOmega2 = (1/self.R_right)*(_delS - self.L*_delOmega)
         value = pow(_delOmega1 - _e, 2) + pow(_delOmega2 - _f, 2)
         return value
 
@@ -993,8 +1002,8 @@ class NavigationControl():
         arr_error = []
         _a = _delX*sin(_th) - _delY*cos(_th)
         _b = _delX*cos(_th) + _delY*sin(_th)
-        x1 = 0.2
-        x2 = 0.3
+        x1 = 0.205
+        x2 = 0.295
         x3 = 0
         error = 0
         y1 = self.derivative_cost_function(x1, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
@@ -1009,21 +1018,21 @@ class NavigationControl():
             y1 = self.derivative_cost_function(x1, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
             y2 = self.derivative_cost_function(x2, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
         f_x3 = self.cost_function(x3, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
-        f_low = self.cost_function(0.2, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
-        f_high = self.cost_function(0.3, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
+        f_low = self.cost_function(0.205, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
+        f_high = self.cost_function(0.295, _a, _b, _b-_prev_D, _prev_delOmega1, _prev_delOmega2)
         if f_x3 <= f_low and f_x3 <= f_high:
-            if x3 >= 0.2 and x3 <= 0.3:
-                return x3
+            if x3 >= 0.205 and x3 <= 0.295:
+                return self.bound_function(0.0023, x3, _prev_D)
             else:
                 if f_low <= f_high:
-                    return 0.2
+                    return self.bound_function(0.0023, 0.205, _prev_D)
                 else:
-                    return 0.3
+                    return self.bound_function(0.0023, 0.295, _prev_D)
         else:
             if f_low <= f_high:
-                return 0.2
+                return self.bound_function(0.0023, 0.205, _prev_D)
             else:
-                return 0.3
+                return self.bound_function(0.0023, 0.295, _prev_D)
 
     #def control_motors(self, _loop_cnt, delta1, delta2):
 
