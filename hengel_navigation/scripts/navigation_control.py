@@ -401,39 +401,33 @@ class NavigationControl():
 
                     # if self.offset_accepted == True and self.cnt_waypoints>5000:      #when slow
                     if self.offset_accepted == True and self.cnt_waypoints>1500:        #when fast
-                        new_point_x=self.point.x + self.offset_x
-                        new_point_y=self.point.y + self.offset_y
-                        new_point_theta = self.heading.data + self.offset_theta
+                        self.point.x=self.point.x - self.offset_x
+                        self.point.y=self.point.y - self.offset_y
+                        self.heading.data = self.heading.data - self.offset_theta
 
-                        new_endpoint_x=new_point_x-self.D*cos(self.heading.data)
-                        new_endpoint_y=new_point_y-self.D*sin(self.heading.data)
-                        new_endpoint_z=0.0
+                        #new_endpoint_x=new_point_x-self.D*cos(self.heading.data)
+                        #new_endpoint_y=new_point_y-self.D*sin(self.heading.data)
+                        #new_endpoint_z=0.0
 
-                        dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
+                        #dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
+                        dist=sqrt(pow(self.offset_x,2)+pow(self.offset_y,2))
 
                         # if the acquired offset is too large, dismiss it.
                         if dist>0.5:
                             print("VISUAL OFFSET is too LARGE!!! (Dismissing the calculated offset)")
                             pass
 
-                        elif dist>self.interval*2.0:
+                        elif dist>self.interval:
                             div=int(ceil(dist/self.interval))
                             print("VISUAL OFFSET inserted %d waypoints" % (div))
 
-                            self.point.x=new_point_x
-                            self.point.y=new_point_y
-                            self.heading.data = new_point_theta
-
                             for k in range(div-1):
-                                x=new_point_x+(k+1)/float(div)*(self.current_waypoint[0]-new_point_x)
-                                y=new_point_y+(k+1)/float(div)*(self.current_waypoint[1]-new_point_y)
+                                x=self.point.x+(k+1)/float(div)*(self.current_waypoint[0]-self.point.x)
+                                y=self.point.y+(k+1)/float(div)*(self.current_waypoint[1]-self.point.y)
                                 self.robotNavigationLoop([x,y])
 
                         else:
                             print("VISUAL OFFSET inserted 1 waypoint")
-                            self.point.x=new_point_x
-                            self.point.y=new_point_y
-                            self.heading.data = new_point_theta
 
                         self.offset_accepted = False
 
