@@ -84,12 +84,12 @@ class VisualCompensation():
         self.pi_right_img=np.array([])
 
         self.isProcessingVirtualmapTime = False
-        self.mid_predict_canvas_x=collections.deque(500*[0.0],300)
-        self.mid_predict_canvas_y=collections.deque(500*[0.0],300)
-        self.mid_predict_canvas_th=collections.deque(500*[0.0],300)
-        self.mid_predict_canvas_time=collections.deque(500*[0.0],300)
-        self.end_predict_canvas_x= collections.deque(500*[0.0],300)
-        self.end_predict_canvas_y= collections.deque(500*[0.0],300)
+        self.mid_predict_canvas_x=collections.deque(1000*[0.0],300)
+        self.mid_predict_canvas_y=collections.deque(1000*[0.0],300)
+        self.mid_predict_canvas_th=collections.deque(1000*[0.0],300)
+        self.mid_predict_canvas_time=collections.deque(1000*[0.0],300)
+        self.end_predict_canvas_x= collections.deque(1000*[0.0],300)
+        self.end_predict_canvas_y= collections.deque(1000*[0.0],300)
 
         # self.mid_real_photo_x=640+55.77116996/2
         self.mid_real_photo_x=640
@@ -223,7 +223,7 @@ class VisualCompensation():
                 img4_masked=np.multiply(np.multiply(img4, im_mask13), self.im_mask2).astype('uint8')
 
                 summed_image_not=img1+img2_masked+img3+img4_masked
-                summed_image_not_copy=copy.deepcopy(summed_image_not)
+                summed_image_copy=copy.deepcopy(summed_image)
                 #ONLY FOR DEBUGGING!!!!!!!
                 #if self.option_debug:
                 #    bridge=CvBridge()
@@ -267,6 +267,7 @@ class VisualCompensation():
 
                 homography_virtual_map, homography =self.crop_image(self.virtual_map) #background is black
                 self.cropped_virtual_map=cv2.bitwise_not(homography_virtual_map)
+                virtual_map_copy=copy.deepcopy(self.cropped_virtual_map)
 
                 for i in xrange(len(y1)):
                     summed_image_not[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=0
@@ -326,7 +327,7 @@ class VisualCompensation():
 
                         # M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
                         #M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map, summed_image_copy)
-                        M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map, summed_image_copy)
+                        M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map,summed_image_copy, virtual_map_copy)
                         # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
                         # M = fm.IMAGE_ALIGNMENT_ecc(summed_image, self.cropped_virtual_map)
                         # M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map)
@@ -342,7 +343,7 @@ class VisualCompensation():
                             _pnt = self.relocalization(M)
                             # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                             self.vision_offset_publisher.publish(_pnt)
-                            self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y, 0), self.line_thickness*2)
+                            self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y, 0), self.line_thickness*3)
                             virtual_map_marked= self.app_robotview.img_copy
                             if not self.option_without_save:
                                 file_time = time.strftime("%y%m%d_%H%M%S")

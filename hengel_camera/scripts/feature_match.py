@@ -14,7 +14,7 @@ class FeatureMatch():
         self.folder_path  = _folder_path
         self.option_without_save = _option_without_save
 
-    def SIFT_BF_matching(self, img1, img2, img1_copy):
+    def SIFT_BF_matching(self, img1, img2,img1_copy, img2_copy):
         if not self.option_without_save:
             plt.figure(1, figsize=(10,20))
             plt.subplot(221)
@@ -82,7 +82,7 @@ class FeatureMatch():
                                 singlePointColor = (255,0,0),
                                 matchesMask = matchesMask,
                                 flags = 0)
-            img3 = cv2.drawMatchesKnn(img2,kp2,img1_copy,kp1,matches,None,**draw_params)
+            img3 = cv2.drawMatchesKnn(img2_copy,kp2,img1_copy,kp1,matches,None,**draw_params)
 
             if not self.option_without_save:
                 cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)

@@ -46,6 +46,9 @@ class RobotView():
         return imgPnt
 
     def run(self, _midpoint, _endpoint, change_thickness=-1):
+        #If change_thickness == -1(default), add endpoint in virtualMap
+        #If change_thickness == -2, add square at modified endpoint
+        #Else, add circle at the endpoint (to mark where relocalization executed)
         self.mid_x = self.cvtCanvasToImgCoord(_midpoint).x
         self.mid_y = self.cvtCanvasToImgCoord(_midpoint).y
         self.th = self.cvtCanvasToImgCoord(_midpoint).z
@@ -108,9 +111,8 @@ class RobotView():
     def add_endpoint(self, lineThickness, isVirtualMapChanging=True):
         _time=time.time()
         if self.spray_intensity!=255:
-            self.isPaintStarted=True
-            if (self.prev_end_point is not None) and self.isDrawing and isVirtualMapChanging:
-                #Add points between prev & current endpoint
+            self.isPaintStarted=True #Initiate sync_real
+            if (self.prev_end_point is not None) and self.isDrawing and isVirtualMapChanging:  #Add points between prev & current endpoint
                 queue=[]
                 dist=sqrt(pow(self.prev_end_point[0]-self.end_x,2)+pow(self.prev_end_point[1]-self.end_y,2))
                 div=int(ceil(dist/self.interval))
