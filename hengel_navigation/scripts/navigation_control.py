@@ -401,24 +401,34 @@ class NavigationControl():
 
                     # if self.offset_accepted == True and self.cnt_waypoints>5000:      #when slow
                     if self.offset_accepted == True and self.cnt_waypoints>1500:        #when fast
-                        self.point.x=self.point.x - self.offset_x
-                        self.point.y=self.point.y - self.offset_y
-                        self.heading.data = self.heading.data - self.offset_theta
+                        print("current waypoint x=%f, current waypoint y=%f" %(self.current_waypoint[0], self.current_waypoint[1]))
+                        print("current point x=%f, current point y=%f" %(self.point.x, self.point.y))
+                        print("accepted offset.x=%f, offset.y=%f" %(self.offset_x, self.offset_y))
+                        endpoint_x=self.point.x-self.D*cos(self.heading.data)
+                        endpoint_y=self.point.y-self.D*sin(self.heading.data)
+                        dist=sqrt(pow(endpoint_x-self.current_waypoint[0],2)+pow(endpoint_y-self.current_waypoint[1],2))
+                        print("ORIGINAL DISTANCE between current point and waypoint = %f" %(dist))
+                        self.point.x=self.point.x + self.offset_x
+                        self.point.y=self.point.y + self.offset_y
+                        self.heading.data = self.heading.data + self.offset_theta
 
-                        #new_endpoint_x=new_point_x-self.D*cos(self.heading.data)
-                        #new_endpoint_y=new_point_y-self.D*sin(self.heading.data)
+                        new_endpoint_x=self.point.x-self.D*cos(self.heading.data)
+                        new_endpoint_y=self.point.y-self.D*sin(self.heading.data)
+                        print("new endpoint x=%f, new endpoint y=%f" %(new_endpoint_x, new_endpoint_y))
                         #new_endpoint_z=0.0
 
-                        #dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
-                        dist=sqrt(pow(self.offset_x,2)+pow(self.offset_y,2))
+                        dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
+                        #dist=sqrt(pow(self.point.x-self.current_waypoint[0],2)+pow(self.point.y-self.current_waypoint[1],2))
+                        #dist=sqrt(pow(self.offset_x,2)+pow(self.offset_y,2))
 
                         # if the acquired offset is too large, dismiss it.
-                        if dist>0.5:
-                            print("VISUAL OFFSET is too LARGE!!! (Dismissing the calculated offset)")
+                        if dist>0.1:
+                            print("VISUAL OFFSET is LARGER than 0.1 (Dismissing the calculated offset)")
                             pass
 
                         elif dist>self.interval:
                             div=int(ceil(dist/self.interval))
+                            print("VISUAL OFFSET NEW distance = %f" % (dist))
                             print("VISUAL OFFSET inserted %d waypoints" % (div))
 
                             for k in range(div-1):
@@ -427,7 +437,7 @@ class NavigationControl():
                                 self.robotNavigationLoop([x,y])
 
                         else:
-                            print("VISUAL OFFSET inserted 1 waypoint")
+                            print("VISUAL OFFSET inserted 1 waypoint, because new distance is small enough")
 
                         self.offset_accepted = False
 
@@ -471,7 +481,7 @@ class NavigationControl():
             self.waypoint_index_in_current_segment = 0
 
 
-        self.shutdown_for_seconds(5.0)
+        self.shutdown_for_seconds(7.0)
         self.shutdown_for_seconds_2(5.0)
         rospy.loginfo("Stopping the robot at the final destination")
         print("Total Stiff Delta_Theta Change BUFFER = %d" % (self.cnt_delta_buffer))
@@ -826,7 +836,7 @@ class NavigationControl():
             self.pub_midpoint_time.publish(msg_time)
 
             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
-            print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.cnt_waypoints))
+            print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.heading.data*180.0/pi)+"  "+str(self.cnt_waypoints))
             # print(str(self.point.x)+"  "+str(self.point.y)+"  "+str(self.heading.data*180.0/pi))
 
             #print("distance: ", distance)
