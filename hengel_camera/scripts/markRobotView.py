@@ -130,8 +130,16 @@ class RobotView():
         # self.pub3.publish(ttime)
         # print("map making time: "+str(time.time()-_time))
 
-#    def add_square(self, _end_x, _end_y):
-#       for i in range(int(2*self.lineThickness)):
+   def add_square(self, _end_x, _end_y):
+      for i in range(int(2*self.lineThickness)):
+          for j in range(int(2*self.lineThickness)):
+              self.img_copy[_end_y-int(self.lineThickness)][_end_x-int(self.lineThickness)+i]=0
+              self.img_copy[_end_y+int(self.lineThickness)][_end_x-int(self.lineThickness)+i]=0
+              self.img_copy[_end_y-int(self.lineThickness)+i][_end_x-int(self.lineThickness)]=0
+              self.img_copy[_end_y-int(self.lineThickness)+i][_end_x+int(self.lineThickness)]=0
+              
+
+              
 
 
     def remove_points_during_vision_compensation(self, _recent_pts, _num_remove_pts):
