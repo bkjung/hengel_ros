@@ -120,6 +120,14 @@ class NavigationControl():
                 if self.black_intensity>=660 and self.black_intensity<=1000:
                     break
 
+            while True:
+                word = raw_input(
+                        "VISION Compensation option. \n[1] x, y, heading \n[2] heading only \nType :"
+                        )
+                self.vision_compensation_option = int(word)
+                if self.vision_compensation_option == 1 or self.vision_compensation_option == 2:
+                    break
+
             #while True:
             #    word = raw_input(
             #            "There are 2 options for cam_image save.\n[1] Do NOT stop & save \n[2] DO stop & save periodically \nType :"
@@ -408,9 +416,13 @@ class NavigationControl():
                         endpoint_y=self.point.y-self.D*sin(self.heading.data)
                         dist=sqrt(pow(endpoint_x-self.current_waypoint[0],2)+pow(endpoint_y-self.current_waypoint[1],2))
                         print("ORIGINAL DISTANCE between current point and waypoint = %f" %(dist))
-                        self.point.x=self.point.x + self.offset_x
-                        self.point.y=self.point.y + self.offset_y
-                        self.heading.data = self.heading.data + self.offset_theta
+
+                        if self.vision_compensation_option==1:
+                            self.point.x=self.point.x + self.offset_x
+                            self.point.y=self.point.y + self.offset_y
+                            self.heading.data = self.heading.data + self.offset_theta
+                        elif self.vision_compensation_option==2:
+                            self.heading.data = self.heading.data + self.offset_theta
 
                         new_endpoint_x=self.point.x-self.D*cos(self.heading.data)
                         new_endpoint_y=self.point.y-self.D*sin(self.heading.data)
