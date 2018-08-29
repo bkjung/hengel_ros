@@ -468,7 +468,8 @@ class NavigationControl():
             self.waypoint_index_in_current_segment = 0
 
 
-        self.shutdown_for_seconds(10.0)
+        self.shutdown_for_seconds(5.0)
+        self.shutdown_for_seconds_2(5.0)
         rospy.loginfo("Stopping the robot at the final destination")
         print("Total Stiff Delta_Theta Change BUFFER = %d" % (self.cnt_delta_buffer))
         #Wait for 1 second to close valve
@@ -871,8 +872,8 @@ class NavigationControl():
 
             # elif self.motor_buffer_option == 2:
             # #motor smoothing for initial 150 loops
-            flag_del1_large = abs(delOmega1 - self.pubDelta1) >= 0.01
-            flag_del2_large = abs(delOmega2 - self.pubDelta2) >= 0.01
+            flag_del1_large = abs(delOmega1 - self.pubDelta1) >= 0.2
+            flag_del2_large = abs(delOmega2 - self.pubDelta2) >= 0.2
             flag_stiff_change = flag_del1_large or flag_del2_large
 
             if self.cnt_waypoints < 150 and flag_stiff_change and self.next_letter_index != -1:
@@ -1131,6 +1132,19 @@ class NavigationControl():
         #self.valve_angle_publisher.publish(self.valve_angle_input)
         self.intensity_publisher.publish(int(1000))
         msg_distance = Float32()
+        msg_distance.data = 10000
+        self.distance_publisher.publish(msg_distance)
+        self.r.sleep()
+
+    def shutdown_everything_2(self):
+        # self.cmd_vel.publish(Twist())
+        self.pub_delta_theta_1.publish(0.0)
+        self.pub_delta_theta_2.publish(0.0)
+        # self.spray_intensity_publisher.publish(1000.0)
+        #self.valve_angle_input.goal_position = 1000
+        #self.valve_angle_publisher.publish(self.valve_angle_input)
+        self.intensity_publisher.publish(int(1000))
+        msg_distance = Float32()
         msg_distance.data = 0
         self.distance_publisher.publish(msg_distance)
         self.r.sleep()
@@ -1139,6 +1153,11 @@ class NavigationControl():
         cnt_loop = (int)(_input / self.dt)
         for i in range(cnt_loop):
             self.shutdown_everything()
+
+    def shutdown_for_seconds_2(self, _input):
+        cnt_loop = (int)(_input / self.dt)
+        for i in range(cnt_loop):
+            self.shutdown_everything_2()
 
     def callback_vision_offset(self, _data):
         print("Callback Vision OFFSET Received")

@@ -23,7 +23,7 @@ class RobotView():
         # self.lineThickness=0.01   #original
         self.lineThickness= thickness
         self.canvas_padding= canvas_padding
-        self.interval= 0.0001
+        self.interval= 100
 
         self.img=_img
 
@@ -65,7 +65,7 @@ class RobotView():
             # print("add run")
             self.add_endpoint()
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
-        
+
     def draw_endpoint(self, end_x, end_y, intensity):
         self.img[int(end_y)][int(end_x)]=intensity
         dist=self.lineThickness*self.pixMetRatio
@@ -99,7 +99,7 @@ class RobotView():
                 #Add points between prev & current endpoint
                 queue=[]
                 dist=sqrt(pow(self.prev_end_point[0]-self.end_x,2)+pow(self.prev_end_point[1]-self.end_y,2))
-                div=int(ceil(dist/self.interval))   
+                div=int(ceil(dist/self.interval))
                 for k in range(div+1):
                     x=self.prev_end_point[0]+(k+1)/float(div)*(self.end_x-self.prev_end_point[0])
                     y=self.prev_end_point[1]+(k+1)/float(div)*(self.end_y-self.prev_end_point[1])

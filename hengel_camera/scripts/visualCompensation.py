@@ -37,7 +37,7 @@ class VisualCompensation():
 
         if option_str=='run':
             pass
-        if option_str=='debug':
+        elif option_str=='debug':
             self.option_debug = True
         elif option_str=='without_save':
             self.option_without_save = True
