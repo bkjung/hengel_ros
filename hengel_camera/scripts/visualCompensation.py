@@ -223,7 +223,7 @@ class VisualCompensation():
                 img4_masked=np.multiply(np.multiply(img4, im_mask13), self.im_mask2).astype('uint8')
 
                 summed_image_not=img1+img2_masked+img3+img4_masked
-                summed_image_copy=copy.deepcopy(summed_image)
+                summed_image_not_copy=copy.deepcopy(summed_image_not)
                 #ONLY FOR DEBUGGING!!!!!!!
                 #if self.option_debug:
                 #    bridge=CvBridge()
@@ -347,7 +347,7 @@ class VisualCompensation():
                             virtual_map_marked= self.app_robotview.img_copy
                             if not self.option_without_save:
                                 file_time = time.strftime("%y%m%d_%H%M%S")
-                                cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", virtual_map_marked)
+                                cv2.imwrite(self.folder_path+"/MATCHED_POINTS_"+file_time+".png", virtual_map_marked)
                             # print("relocation time: "+str(time.time()-__time))
                             print("Total Time (visual feedback): "+str(time.time()-_time))
                 except Exception as e:

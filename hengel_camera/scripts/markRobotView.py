@@ -112,16 +112,17 @@ class RobotView():
         _time=time.time()
         if self.spray_intensity!=255:
             self.isPaintStarted=True #Initiate sync_real
-            if (self.prev_end_point is not None) and self.isDrawing and isVirtualMapChanging:  #Add points between prev & current endpoint
-                queue=[]
-                dist=sqrt(pow(self.prev_end_point[0]-self.end_x,2)+pow(self.prev_end_point[1]-self.end_y,2))
-                div=int(ceil(dist/self.interval))
-                for k in range(div+1):
-                    x=self.prev_end_point[0]+(k+1)/float(div)*(self.end_x-self.prev_end_point[0])
-                    y=self.prev_end_point[1]+(k+1)/float(div)*(self.end_y-self.prev_end_point[1])
-                    self.draw_endpoint(x,y, self.spray_intensity, lineThickness, isVirtualMapChanging)
-            else:
-                self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, isVirtualMapChanging)
+            #if (self.prev_end_point is not None) and self.isDrawing and isVirtualMapChanging:  #Add points between prev & current endpoint
+            #    queue=[]
+            #    dist=sqrt(pow(self.prev_end_point[0]-self.end_x,2)+pow(self.prev_end_point[1]-self.end_y,2))
+            #    div=int(ceil(dist/self.interval))
+            #    for k in range(div+1):
+            #        x=self.prev_end_point[0]+(k+1)/float(div)*(self.end_x-self.prev_end_point[0])
+            #        y=self.prev_end_point[1]+(k+1)/float(div)*(self.end_y-self.prev_end_point[1])
+            #        self.draw_endpoint(x,y, self.spray_intensity, lineThickness, isVirtualMapChanging)
+            #else:
+            #    self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, isVirtualMapChanging)
+            self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, isVirtualMapChanging)
             self.isDrawing=True
             self.prev_end_point= [self.end_x, self.end_y]
         else:
