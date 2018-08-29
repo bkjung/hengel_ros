@@ -399,7 +399,8 @@ class NavigationControl():
                         ]
                     self.cnt_waypoints += 1
 
-                    if self.offset_accepted == True and self.cnt_waypoints>5000:
+                    # if self.offset_accepted == True and self.cnt_waypoints>5000:      #when slow
+                    if self.offset_accepted == True and self.cnt_waypoints>1500:        #when fast
                         new_point_x=self.point.x + self.offset_x
                         new_point_y=self.point.y + self.offset_y
                         new_point_theta = self.heading.data + self.offset_theta
