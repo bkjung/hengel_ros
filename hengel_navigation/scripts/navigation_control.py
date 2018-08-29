@@ -118,7 +118,7 @@ class NavigationControl():
                         )
                 self.black_intensity = int(word)
                 if self.black_intensity>=660 and self.black_intensity<=1000:
-                    brea
+                    break
 
             #while True:
             #    word = raw_input(
