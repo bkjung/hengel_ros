@@ -117,6 +117,8 @@ class NavigationControl():
                         "Black Color Spray Intensity? (default:700).\nType :"
                         )
                 self.black_intensity = int(word)
+                if self.black_intensity>=660 and self.black_intensity<=1000:
+                    brea
 
             #while True:
             #    word = raw_input(
