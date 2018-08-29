@@ -32,10 +32,15 @@ sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
 class VisualCompensation():
     def __init__(self, option_str):
+        self.option_debug = False
+        self.option_without_save = False
+
+        if option_str=='run':
+            pass
         if option_str=='debug':
             self.option_debug = True
-        elif option_str=='run':
-            self.option_debug = False
+        elif option_str=='without_save':
+            self.option_without_save = True
         else:
             print("Wrong Argument")
             sys.exit(1)
@@ -300,7 +305,7 @@ class VisualCompensation():
 
 ##################################################################################
                 try:
-                    fm = FeatureMatch(self.folder_path)
+                    fm = FeatureMatch(self.folder_path, self.option_without_save)
                     # print("img1: "+str(self.virtual_map.shape)+", img2: "+str(summed_image.shape))
                     # if self.cropped_virtual_map is None or summed_image is None:
                     if self.cropped_virtual_map is None or summed_image is None:
@@ -708,7 +713,10 @@ if __name__=='__main__':
     # VisualCompensation(num_pts_delete)
     if len(sys.argv)==1:
         VisualCompensation('run')
-    elif len(sys.argv)==2 and sys.argv[1]=='debug':
-        VisualCompensation('debug')
+    elif len(sys.argv)==2:
+        if sys.argv[1]=='debug':
+            VisualCompensation('debug')
+        elif sys.argv[1]=='without_save':
+            VisualCompensation('without_save')
     else:
         print("Wrong Argument")

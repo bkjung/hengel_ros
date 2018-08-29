@@ -9,9 +9,10 @@ import time
 
 
 class FeatureMatch():
-    def __init__(self, _folder_path):
+    def __init__(self, _folder_path, _option_without_save):
         self.status = False
         self.folder_path  = _folder_path
+        self.option_without_save = _option_without_save
 
     def SIFT_BF_matching(self, img1, img2):
         plt.figure(1, figsize=(10,20))
@@ -81,7 +82,8 @@ class FeatureMatch():
                                 flags = 0)
             img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
 
-            cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)
+            if not self.option_without_save:
+                cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)
             plt.subplot(223)
             plt.imshow(img3, cmap='gray')
 
@@ -89,8 +91,12 @@ class FeatureMatch():
             print("FAILED (Empty Descriptor)")
 
         plt.savefig(self.folder_path+"/SIFT_BF_"+file_time+".png")
-        # cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
-        cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
+        
+        if not self.option_without_save:
+            # cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
+            # cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
+            pass
+
         cv2.destroyAllWindows()
         print("FeatureMatch Saved to "+file_time)
 
@@ -156,8 +162,10 @@ class FeatureMatch():
         file_time = time.strftime("%y%m%d_%H%M%S")
         plt.savefig(self.folder_path+"/ORB_BF_"+file_time+".png")
         plt.close("all")
-        cv2.imwrite(self.folder_path+"/SUMMED_"+file_time+".png", img1)
-        cv2.imwrite(self.folder_path+"/VIRTUAL_"+file_time+".png", img2)
+        
+        if not self.option_without_save:
+            cv2.imwrite(self.folder_path+"/SUMMED_"+file_time+".png", img1)
+            cv2.imwrite(self.folder_path+"/VIRTUAL_"+file_time+".png", img2)
         cv2.destroyAllWindows()
         print("FeatureMatch Saved to "+file_time)
 
@@ -422,8 +430,9 @@ class FeatureMatch():
 
         file_time = time.strftime("%y%m%d_%H%M%S")
         plt.savefig(self.folder_path+"/SURF_BF_"+file_time+".png")
-        cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
-        cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
+        if not self.option_without_save:
+            cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
+            cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
         cv2.destroyAllWindows()
         print("FeatureMatch Saved to "+file_time)
 
