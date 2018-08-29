@@ -343,7 +343,7 @@ class VisualCompensation():
                             _pnt = self.relocalization(M)
                             # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                             self.vision_offset_publisher.publish(_pnt)
-                            self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y, 0), self.line_thickness*2)
+                            self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y, 0), self.line_thickness*3)
 
                             self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x+_pnt[0], self.current_end_predict_canvas_y+_pnt[1],0), -2)
                             virtual_map_marked= self.app_robotview.img_copy
