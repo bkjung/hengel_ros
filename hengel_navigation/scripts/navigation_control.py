@@ -434,7 +434,7 @@ class NavigationControl():
                             for k in range(div-1):
                                 x=self.point.x+(k+1)/float(div)*(self.current_waypoint[0]-self.point.x)
                                 y=self.point.y+(k+1)/float(div)*(self.current_waypoint[1]-self.point.y)
-                                self.robotNavigationLoop([x,y])
+                                self.robotNavigationLoop([x,y], not_drawing=True)
 
                         else:
                             print("VISUAL OFFSET inserted 1 waypoint, because new distance is small enough")
@@ -460,7 +460,7 @@ class NavigationControl():
 
                     # Motion Control
 
-                    self.robotNavigationLoop(self.current_waypoint)
+                    self.robotNavigationLoop(self.current_waypoint, not_drawing=False)
 
 
                     #Arrived at the waypoint
@@ -783,7 +783,7 @@ class NavigationControl():
         #Wait for 1 second to close valve
         # self.quit_valve()
 
-    def robotNavigationLoop(self, current_destination):
+    def robotNavigationLoop(self, current_destination, not_drawing):
         if rospy.is_shutdown():
             print("rospy.is_shutdown()")
             self.shutdown_for_seconds(2.0)
@@ -802,7 +802,11 @@ class NavigationControl():
                         # self.spray_intensity_publisher.publish(spray_input)
                         #self.valve_angle_input.goal_position = int(spray_input)
                         #self.valve_angle_publisher.publish(self.valve_angle_input)
-                        self.intensity_publisher.publish(int(spray_input))
+                        if not_drawing:
+                            self.intensity_publisher.publish(int(1000))
+                        else:
+                            self.intensity_publisher.publish(int(spray_input))
+
                 else:
                     if self.is_moving_between_segments==True:
                         # self.spray_intensity_publisher.publish(1000.0)
@@ -816,14 +820,20 @@ class NavigationControl():
                         input_pixel_value_graphic = 0
                         #self.valve_angle_input.goal_position = self.black_intensity
                         #self.valve_angle_publisher.publish(self.valve_angle_input)
-                        self.intensity_publisher.publish(int(self.black_intensity))
+                        if not_drawing:
+                            self.intensity_publisher.publish(int(1000))
+                        else:
+                            self.intensity_publisher.publish(int(self.black_intensity))
 
 
             elif self.intensity_option==2:
                 input_pixel_value_graphic=0
                 #self.valve_angle_input.goal_position = self.black_intensity
                 #self.valve_angle_publisher.publish(self.valve_angle_input)
-                self.intensity_publisher.publish(int(self.black_intensity))
+                if not_drawing:
+                    self.intensity_publisher.publish(int(1000))
+                else:
+                    self.intensity_publisher.publish(int(self.black_intensity))
 
             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
