@@ -146,10 +146,10 @@ class VisualCompensation():
 
         self.sum_compensation_distance = 0.0
 
-        self.x_img_max=0
-        self.x_img_min=0
-        self.y_img_max=0
-        self.y_img_min=0
+        self.x_img_max=None
+        self.x_img_min=None
+        self.y_img_max=None
+        self.y_img_min=None
 
 
         rospy.spin()
@@ -291,6 +291,8 @@ class VisualCompensation():
                 #Make mask of the vertices
                 mask=np.zeros((summed_image_not.shape[0], summed_image_not.shape[1]),dtype=np.uint8 )
                 cv2.fillPoly(mask, real_map_crop_pts, (255))
+
+                # summed_image_not=cv2.fill((1280,1280), (255)).astype('uint8')
                 res=cv2.bitwise_and(summed_image_not, summed_image_not, mask=mask)
                 # img_white=np.full((1280,1280),(255)).astype('uint8')
                 # res=cv2.bitwise_and(img_white, img_white, mask=mask)
@@ -373,10 +375,16 @@ class VisualCompensation():
             self.end_predict_img_y=(self.height-_midPoint.y)*self.pixMetRatio
             self.end_predict_img_x=-_midPoint.x * self.pixMetRatio
 
-            self.x_img_max=max(self.x_img_max, self.end_predict_img_x)
-            self.x_img_min=min(self.x_img_min, self.end_predict_img_x)
-            self.y_img_max=max(self.y_img_max, self.end_predict_img_y)
-            self.y_img_min=min(self.y_img_min, self.end_predict_img_y)
+            if self.x_img_min is None:
+                self.x_img_min = self.end_predict_img_x
+                self.x_img_max = self.end_predict_img_x
+                self.y_img_min = self.end_predict_img_y
+                self.y_img_max = self.end_predict_img_y
+            else:
+                self.x_img_max=max(self.x_img_max, self.end_predict_img_x)
+                self.x_img_min=min(self.x_img_min, self.end_predict_img_x)
+                self.y_img_max=max(self.y_img_max, self.end_predict_img_y)
+                self.y_img_min=min(self.y_img_min, self.end_predict_img_y)
 
             self.recent_pts.appendleft((_midPoint.x, _midPoint.y))
 
