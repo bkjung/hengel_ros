@@ -1138,11 +1138,11 @@ class NavigationControl():
     def calculate_robot_local_delta_from_omega(self, del1, del2):
         delX = 0.0
         delY = 0.0
-        if del1 != del2:
+        if del1*self.R_left != del2*self.R_right:
             delY=-self.L*(del1*self.R_left+del2*self.R_right)/(del1*self.R_left-del2*self.R_right)*(1-cos((del2*self.R_right-del1*self.R_left)/(2*self.L)))
             delX=-self.L*(del1*self.R_left+del2*self.R_right)/(del1*self.R_left-del2*self.R_right)*sin((del2*self.R_right-del1*self.R_left)/(2*self.L))
         else:
-            delX=self.R*del1
+            delX=self.R_left*del1
             delY=0
         return delX, delY
 
