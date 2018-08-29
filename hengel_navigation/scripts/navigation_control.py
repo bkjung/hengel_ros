@@ -112,6 +112,12 @@ class NavigationControl():
                 if self.d_k_optimization_option==1 or self.d_k_optimization_option==2:
                     break
 
+            while True:
+                word = raw_input(
+                        "Black Color Spray Intensity? (default:700).\nType :"
+                        )
+                self.black_intensity = int(word)
+
             #while True:
             #    word = raw_input(
             #            "There are 2 options for cam_image save.\n[1] Do NOT stop & save \n[2] DO stop & save periodically \nType :"
@@ -568,7 +574,7 @@ class NavigationControl():
 
                                         #cut off value larger than 230 to 230.
                                         input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
-                                        spray_input = 740.0+(1000.0-740.0)*(float(input_pixel_value)/230.0)
+                                        spray_input = self.black_intensity+(1000.0-self.black_intensity)*(float(input_pixel_value)/230.0)
                                         # self.spray_intensity_publisher.publish(spray_input)
                                         self.valve_angle_input.goal_position = int(spray_input)
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
@@ -579,16 +585,16 @@ class NavigationControl():
                                         self.valve_angle_input.goal_position = 1000
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
                                     else:
-                                        #self.spray_intensity_publisher.publish(740.0)
-                                        # self.spray_intensity_publisher.publish(740.0)
+                                        #self.spray_intensity_publisher.publish(self.black_intensity)
+                                        # self.spray_intensity_publisher.publish(self.black_intensity)
                                         input_pixel_value_graphic = 0
-                                        self.valve_angle_input.goal_position = 740
+                                        self.valve_angle_input.goal_position = self.black_intensity
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
 
 
                             elif self.intensity_option==2:
                                 input_pixel_value_graphic=0
-                                self.valve_angle_input.goal_position = 740
+                                self.valve_angle_input.goal_position = self.black_intensity
                                 self.valve_angle_publisher.publish(self.valve_angle_input)
 
                             # start
@@ -785,7 +791,7 @@ class NavigationControl():
 
                         #cut off value larger than 230 to 230.
                         input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
-                        spray_input = 740.0+(1000.0-740.0)*(float(input_pixel_value)/230.0)
+                        spray_input = self.black_intensity+(1000.0-self.black_intensity)*(float(input_pixel_value)/230.0)
                         # self.spray_intensity_publisher.publish(spray_input)
                         #self.valve_angle_input.goal_position = int(spray_input)
                         #self.valve_angle_publisher.publish(self.valve_angle_input)
@@ -798,19 +804,19 @@ class NavigationControl():
                         #self.valve_angle_publisher.publish(self.valve_angle_input)
                         self.intensity_publisher.publish(int(1000))
                     else:
-                        #self.spray_intensity_publisher.publish(740.0)
-                        # self.spray_intensity_publisher.publish(740.0)
+                        #self.spray_intensity_publisher.publish(self.black_intensity)
+                        # self.spray_intensity_publisher.publish(self.black_intensity)
                         input_pixel_value_graphic = 0
-                        #self.valve_angle_input.goal_position = 740
+                        #self.valve_angle_input.goal_position = self.black_intensity
                         #self.valve_angle_publisher.publish(self.valve_angle_input)
-                        self.intensity_publisher.publish(int(740))
+                        self.intensity_publisher.publish(int(self.black_intensity))
 
 
             elif self.intensity_option==2:
                 input_pixel_value_graphic=0
-                #self.valve_angle_input.goal_position = 740
+                #self.valve_angle_input.goal_position = self.black_intensity
                 #self.valve_angle_publisher.publish(self.valve_angle_input)
-                self.intensity_publisher.publish(int(740))
+                self.intensity_publisher.publish(int(self.black_intensity))
 
             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
