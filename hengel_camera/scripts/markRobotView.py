@@ -49,7 +49,6 @@ class RobotView():
         #If change_thickness == -1(default), add endpoint in virtualMap
         #If change_thickness == -2, add square at modified endpoint
         #Else, add circle at the endpoint (to mark where relocalization executed)
-        print("CHANGE_THICKNESS: %d" &(change_thickness))
         self.mid_x = self.cvtCanvasToImgCoord(_midpoint).x
         self.mid_y = self.cvtCanvasToImgCoord(_midpoint).y
         self.th = self.cvtCanvasToImgCoord(_midpoint).z
@@ -71,6 +70,7 @@ class RobotView():
             if change_thickness==-1:
                 self.add_endpoint(self.lineThickness)
             elif change_thickness==-2:
+                print("CHANGE_THICKNESS: %d" %(change_thickness))
                 self.add_square(self.end_x, self.end_y)
             else:
                 self.add_endpoint(change_thickness, False)

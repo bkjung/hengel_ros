@@ -224,6 +224,7 @@ class VisualCompensation():
 
                 summed_image_not=img1+img2_masked+img3+img4_masked
                 summed_image_not_copy=copy.deepcopy(summed_image_not)
+                cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_summed_1.png",img1+img2+img3+img4)
                 #ONLY FOR DEBUGGING!!!!!!!
                 #if self.option_debug:
                 #    bridge=CvBridge()
@@ -326,11 +327,11 @@ class VisualCompensation():
                         # M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
 
                         # M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
-                        #M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map, summed_image_copy)
+                        M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map, summed_image_copy)
                         # M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map,summed_image_copy, virtual_map_copy)
                         # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
                         # M = fm.IMAGE_ALIGNMENT_ecc(summed_image, self.cropped_virtual_map)
-                        M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map, summed_image_copy, virtual_map_copy)
+                        # M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map, summed_image_copy, virtual_map_copy)
 
                         if fm.status == True:
                             #self.app_robotview.remove_points_during_vision_compensation(self.recent_pts, int((time.time()-_time)/0.02))
