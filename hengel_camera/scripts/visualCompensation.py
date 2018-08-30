@@ -84,12 +84,12 @@ class VisualCompensation():
         self.pi_right_img=np.array([])
 
         self.isProcessingVirtualmapTime = False
-        self.mid_predict_canvas_x=collections.deque(1000*[0.0],300)
-        self.mid_predict_canvas_y=collections.deque(1000*[0.0],300)
-        self.mid_predict_canvas_th=collections.deque(1000*[0.0],300)
-        self.mid_predict_canvas_time=collections.deque(1000*[0.0],300)
-        self.end_predict_canvas_x= collections.deque(1000*[0.0],300)
-        self.end_predict_canvas_y= collections.deque(1000*[0.0],300)
+        self.mid_predict_canvas_x=collections.deque(1000*[0.0],500)
+        self.mid_predict_canvas_y=collections.deque(1000*[0.0],500)
+        self.mid_predict_canvas_th=collections.deque(1000*[0.0],500)
+        self.mid_predict_canvas_time=collections.deque(1000*[0.0],500)
+        self.end_predict_canvas_x= collections.deque(1000*[0.0],500)
+        self.end_predict_canvas_y= collections.deque(1000*[0.0],500)
 
         # self.mid_real_photo_x=640+55.77116996/2
         self.mid_real_photo_x=640
@@ -327,10 +327,10 @@ class VisualCompensation():
 
                         # M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
                         #M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map, summed_image_copy)
-                        M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map,summed_image_copy, virtual_map_copy)
+                        # M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map,summed_image_copy, virtual_map_copy)
                         # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
                         # M = fm.IMAGE_ALIGNMENT_ecc(summed_image, self.cropped_virtual_map)
-                        # M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map)
+                        M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map, summed_image_copy, virtual_map_copy)
 
                         if fm.status == True:
                             #self.app_robotview.remove_points_during_vision_compensation(self.recent_pts, int((time.time()-_time)/0.02))
@@ -344,8 +344,8 @@ class VisualCompensation():
                             # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                             self.vision_offset_publisher.publish(_pnt)
                             self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y, 0), self.line_thickness*3)
-
                             self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x+_pnt.x, self.current_end_predict_canvas_y+_pnt.y,0), -2)
+
                             virtual_map_marked= self.app_robotview.img_copy
                             if not self.option_without_save:
                                 file_time = time.strftime("%y%m%d_%H%M%S")

@@ -53,8 +53,7 @@ class FeatureMatch():
                     matchesMask[i]=[1,0]
             if len(good)>MIN_MATCH_COUNT:
                 src_pts=np.float32([kp2[m.queryIdx].pt for m in good]).reshape(-1,1,2)
-                dst_pts=np.float32([kp1[m.trainIdx]
-                .pt for m in good]).reshape(-1,1,2)
+                dst_pts=np.float32([kp1[m.trainIdx].pt for m in good]).reshape(-1,1,2)
 
                 H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
 
@@ -407,7 +406,6 @@ class FeatureMatch():
 
                 M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
 
-                self.relocalization(M)
                 # H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
                 # print(H)
                 # M = np.eye(3)
@@ -417,7 +415,8 @@ class FeatureMatch():
                     print("FAILED (Homography mtx M is None")
                 else:
                     self.status=True
-                    print("sift_flann match finished")
+                    print("surf_bf match finished")
+                    print(M)
                     img4 = cv2.warpPerspective(img1_marked, M,(1280, 1280))
                     if not self.option_without_save:
                         img5= cv2.warpPerspective(img2_marked, inv(M), (1280,1280))
@@ -520,7 +519,7 @@ if __name__=="__main__":
     img_photo= cv2.imread("/home/mjlee/tools/OFFSET_TEST/real_photo_invert.png", cv2.IMREAD_GRAYSCALE)
 
 
-    app = FeatureMatch('/home/mjlee/tools/OFFSET_TEST/TEST', option)
+    # app = FeatureMatch('/home/mjlee/tools/OFFSET_TEST/TEST', option)
 
     # app = FeatureMatch('/home/bkjung/Pictures')
 
