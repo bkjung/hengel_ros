@@ -81,6 +81,8 @@ class NavigationControl():
         self.interval = _interval
         self.img=np.full((2000,2000), 255)
 
+        self.msg_distance = Float32()
+
         self.offset_accepted = False
 
         self.initial_setting()
@@ -891,9 +893,9 @@ class NavigationControl():
                     #     self.D = calculated_D
                     self.D = self.calculate_optimal_D(delX, delY, th, self.D, self.arr_delOmega[-1][0], self.arr_delOmega[-1][1])
                     print(str(self.D))
-                    msg_distance = Float32()
+                    
                     #msg_distance.data = self.D
-                    msg_distance.data = self.D - self.D_prev
+                    self.msg_distance.data = self.D - self.D_prev
                     self.D_prev = self.D
                 else:
                     # D(k) constant
@@ -969,8 +971,8 @@ class NavigationControl():
                     self.pub_midpoint.publish(self.point)
                     self.pub_endpoint.publish(self.endPoint)
                     self.pub_midpoint_time.publish(msg_time)
-                    if self.d_k_optimization_option==1:
-                        self.distance_publisher.publish(msg_distance)
+                    if self.d_k_optimization_option==1 and self.cnt_waypoints>=200:
+                        self.distance_publisher.publish(self.msg_distance)
                     self.r.sleep()
 
 
@@ -1003,8 +1005,8 @@ class NavigationControl():
                 self.pub_midpoint.publish(self.point)
                 self.pub_endpoint.publish(self.endPoint)
                 self.pub_midpoint_time.publish(msg_time)
-                if self.d_k_optimization_option==1:
-                    self.distance_publisher.publish(msg_distance)
+                if self.d_k_optimization_option==1 and self.cnt_waypoints>=200:
+                    self.distance_publisher.publish(self.msg_distance)
                 self.r.sleep()
 
         except KeyboardInterrupt:
