@@ -859,11 +859,9 @@ class NavigationControl():
             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
             self.endPoint.z=float(input_pixel_value_graphic)
             self.point.z=self.heading.data
-            self.pub_midpoint.publish(self.point)
-            self.pub_endpoint.publish(self.endPoint)
             msg_time = Time()
             msg_time.data = rospy.Time.now()
-            self.pub_midpoint_time.publish(msg_time)
+
 
             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
             # print(str(self.point.x)+"  "+str(self.point.y)+"  "+str(self.heading.data*180.0/pi))
@@ -896,7 +894,6 @@ class NavigationControl():
                     msg_distance = Float32()
                     #msg_distance.data = self.D
                     msg_distance.data = self.D - self.D_prev
-                    self.distance_publisher.publish(msg_distance)
                     self.D_prev = self.D
                 else:
                     # D(k) constant
@@ -950,9 +947,6 @@ class NavigationControl():
                     delOmega1= (1/self.R_left)*(delS+2*self.L*delOmega)
                     delOmega2= (1/self.R_right)*(delS-2*self.L*delOmega)
 
-                    self.pub_delta_theta_1.publish(delOmega1)
-                    self.pub_delta_theta_2.publish(delOmega2)
-
                     # if pubIter != 1:
                     #     print("THIS SHOULD NOT HAPPEN :) IF THIS SHOWS UP, YOU'RE FUCKED UP")
 
@@ -970,6 +964,13 @@ class NavigationControl():
                     print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.heading.data*180.0/pi)+"  "+str(self.cnt_waypoints))
                     self.pubDelta1 = delOmega1
                     self.pubDelta2 = delOmega2
+                    self.pub_delta_theta_1.publish(self.pubDelta1)
+                    self.pub_delta_theta_2.publish(self.pubDelta2)
+                    self.pub_midpoint.publish(self.point)
+                    self.pub_endpoint.publish(self.endPoint)
+                    self.pub_midpoint_time.publish(msg_time)
+                    if self.d_k_optimization_option==1:
+                        self.distance_publisher.publish(msg_distance)
                     self.r.sleep()
 
 
@@ -981,8 +982,6 @@ class NavigationControl():
             else:
                 self.pubDelta1 = delOmega1
                 self.pubDelta2 = delOmega2
-                self.pub_delta_theta_1.publish(self.pubDelta1)
-                self.pub_delta_theta_2.publish(self.pubDelta2)
                 delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(self.pubDelta1, self.pubDelta2)
                 delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
                 self.point.x=self.point.x+delXrobotGlobal
@@ -999,6 +998,13 @@ class NavigationControl():
                     )
                 #print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
                 print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.heading.data*180.0/pi)+"  "+str(self.pen_distance_per_loop)+"  "+str(self.cnt_waypoints))
+                self.pub_delta_theta_1.publish(self.pubDelta1)
+                self.pub_delta_theta_2.publish(self.pubDelta2)
+                self.pub_midpoint.publish(self.point)
+                self.pub_endpoint.publish(self.endPoint)
+                self.pub_midpoint_time.publish(msg_time)
+                if self.d_k_optimization_option==1:
+                    self.distance_publisher.publish(msg_distance)
                 self.r.sleep()
 
         except KeyboardInterrupt:
