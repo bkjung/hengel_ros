@@ -198,6 +198,8 @@ class VisualCompensation():
                 self.current_mid_predict_canvas_th = self.mid_predict_canvas_th[min_index]
                 self.current_end_predict_canvas_x = self.end_predict_canvas_x[min_index]
                 self.current_end_predict_canvas_y = self.end_predict_canvas_y[min_index]
+
+                print("current end predict canvas x: %f y: %f" %(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y))
                 self.isProcessingVirtualmapTime = False
 
                 self.mid_predict_img_x=-self.current_mid_predict_canvas_x *self.pixMetRatio + self.canvas_padding
@@ -343,8 +345,11 @@ class VisualCompensation():
                             _pnt = self.relocalization(M)
                             # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                             self.vision_offset_publisher.publish(_pnt)
-                            print("ADD BIG CIRCLE: %d %d" %(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y))
-                            self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y, 0), self.line_thickness*2.5)
+                            print("ADD BIG CIRCLE: %f %f" %(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y))
+
+                            #circle (original endpoint)
+                            self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y, 0), self.line_thickness*1.5)
+                            #square (compensated endpoint)
                             self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x+_pnt.x, self.current_end_predict_canvas_y+_pnt.y,0), -2)
 
                             virtual_map_marked= self.app_robotview.img_copy
