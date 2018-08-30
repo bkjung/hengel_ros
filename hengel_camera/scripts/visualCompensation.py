@@ -224,7 +224,7 @@ class VisualCompensation():
 
                 summed_image_not=img1+img2_masked+img3+img4_masked
                 summed_image_not_copy=copy.deepcopy(summed_image_not)
-                cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_summed_1.png",img1+img2+img3+img4)
+                # cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_summed_1.png",img1+img2+img3+img4)
                 #ONLY FOR DEBUGGING!!!!!!!
                 #if self.option_debug:
                 #    bridge=CvBridge()
@@ -348,9 +348,9 @@ class VisualCompensation():
                             self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x+_pnt.x, self.current_end_predict_canvas_y+_pnt.y,0), -2)
 
                             virtual_map_marked= self.app_robotview.img_copy
-                            if not self.option_without_save:
-                                file_time = time.strftime("%y%m%d_%H%M%S")
-                                cv2.imwrite(self.folder_path+"/MATCHED_POINTS_"+file_time+".png", virtual_map_marked)
+                            # if not self.option_without_save:
+                            file_time = time.strftime("%y%m%d_%H%M%S")
+                            cv2.imwrite(self.folder_path+"/MATCHED_POINTS_"+file_time+".png", virtual_map_marked)
                             # print("relocation time: "+str(time.time()-__time))
                             print("Total Time (visual feedback): "+str(time.time()-_time))
                 except Exception as e:
@@ -451,12 +451,12 @@ class VisualCompensation():
         dist= sqrt(pow(offset.x,2)+pow(offset.y,2))
 
         #if dist>=0.02:
-        if dist>=0.1:
-            offset=Point()
-        else:
-            #print("OFFSET less than limit (= 0.02)")
-            print("OFFSET less than limit (= 0.1)")
-            self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)
+        # if dist>=0.1:     #dist larger than 0.1 would be handled in navigation_control anyway 
+            # offset=Point()
+        # else:
+        #print("OFFSET less than limit (= 0.02)")
+        # print("OFFSET less than limit (= 0.1)")
+        self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)
         return offset
 
         # self.pub_offset.publish(offset)
