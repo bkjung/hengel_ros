@@ -418,9 +418,12 @@ class NavigationControl():
                         print("ORIGINAL DISTANCE between current point and waypoint = %f" %(dist))
 
                         if self.vision_compensation_option==1:
-                            self.point.x=self.point.x + self.offset_x
-                            self.point.y=self.point.y + self.offset_y
-                            self.heading.data = self.heading.data + self.offset_theta
+                            #self.point.x=self.point.x + self.offset_x
+                            #self.point.y=self.point.y + self.offset_y
+                            #self.heading.data = self.heading.data + self.offset_theta
+                            self.point.x=self.point.x - self.offset_x
+                            self.point.y=self.point.y - self.offset_y
+                            self.heading.data = self.heading.data - self.offset_theta
                         elif self.vision_compensation_option==2:
                             self.heading.data = self.heading.data + self.offset_theta
 

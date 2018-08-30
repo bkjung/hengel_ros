@@ -345,7 +345,7 @@ class VisualCompensation():
                             self.vision_offset_publisher.publish(_pnt)
                             self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y, 0), self.line_thickness*3)
 
-                            self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x+_pnt[0], self.current_end_predict_canvas_y+_pnt[1],0), -2)
+                            self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x+_pnt.x, self.current_end_predict_canvas_y+_pnt.y,0), -2)
                             virtual_map_marked= self.app_robotview.img_copy
                             if not self.option_without_save:
                                 file_time = time.strftime("%y%m%d_%H%M%S")
