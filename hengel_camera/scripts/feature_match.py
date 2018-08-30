@@ -2,9 +2,11 @@
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
-from math import sqrt, pow, atan2
+from math import sqrt, pow, atan2, cos, sin
 import numpy as np
 import cv2
+from numpy.linalg import inv
+import sys
 import time
 
 
@@ -46,12 +48,13 @@ class FeatureMatch():
             ratio= 0.7
             matchesMask=[[0,0] for i in range(len(matches))]
             for i, (m,n) in enumerate(matches):
-                if m.distance < 0.7* n.distance:
+                if m.distance < ratio* n.distance:
                     good.append(m)
                     matchesMask[i]=[1,0]
             if len(good)>MIN_MATCH_COUNT:
                 src_pts=np.float32([kp2[m.queryIdx].pt for m in good]).reshape(-1,1,2)
-                dst_pts=np.float32([kp1[m.trainIdx].pt for m in good]).reshape(-1,1,2)
+                dst_pts=np.float32([kp1[m.trainIdx]
+                .pt for m in good]).reshape(-1,1,2)
 
                 H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
 
@@ -362,7 +365,7 @@ class FeatureMatch():
 
         return M
 
-    def SURF_BF_matching(self, img1, img2):
+    def SURF_BF_matching(self, img1, img2, img1_marked, img2_marked):
         #img1: summed image
         #img2: virtual map
         plt.figure(1, figsize=(10, 20))
@@ -386,34 +389,40 @@ class FeatureMatch():
 
         # create BFMatcher object
         bf = cv2.BFMatcher(cv2.NORM_L2)
+        file_time = time.strftime("%y%m%d_%H%M%S")
 
         if des1 is not None and des2 is not None:
             matches=bf.knnMatch(des2, des1, k=2)
 
             good=[]
-            ratio= 0.7
 
             matchesMask=[[0,0] for i in range(len(matches))]
             for i, (m,n) in enumerate(matches):
-                if m.distance < 0.7* n.distance:
+                if m.distance < 0.5* n.distance:
                     good.append(m)
                     matchesMask[i]=[1,0]
             if len(good)>MIN_MATCH_COUNT:
                 src_pts=np.float32([kp2[m.queryIdx].pt for m in good]).reshape(-1,1,2)
                 dst_pts=np.float32([kp1[m.trainIdx].pt for m in good]).reshape(-1,1,2)
 
-                # M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
-                H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
-                print(H)
-                M = np.eye(3)
-                M[:2]=H
+                M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
 
-                if H is None:
+                self.relocalization(M)
+                # H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
+                # print(H)
+                # M = np.eye(3)
+                # M[:2]=H
+                if M is None:
+                # if H is None:
                     print("FAILED (Homography mtx M is None")
                 else:
                     self.status=True
                     print("sift_flann match finished")
-                    img4 = cv2.warpPerspective(img1, M, (1280,1280))
+                    img4 = cv2.warpPerspective(img1_marked, M,(1280, 1280))
+                    if not self.option_without_save:
+                        img5= cv2.warpPerspective(img2_marked, inv(M), (1280,1280))
+                        cv2.imwrite(self.folder_path+"/WARPED_IMAGE_"+file_time+".png", img4)
+                        cv2.imwrite(self.folder_path+"/WARPED_IMAGE_2_"+file_time+".png", img5)
 
                     plt.subplot(224)
                     plt.imshow(img4, cmap='gray')
@@ -425,18 +434,20 @@ class FeatureMatch():
                                 singlePointColor = (255,0,0),
                                 matchesMask = matchesMask,
                                 flags = 0)
-            img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
+            img3 = cv2.drawMatchesKnn(img2_marked,kp2,img1_marked,kp1,matches,None,**draw_params)
+            if not self.option_without_save:
+                cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)
+
             plt.subplot(223)
             plt.imshow(img3, cmap='gray')
 
         else:
             print("FAILED (Empty Descriptor)")
 
-        file_time = time.strftime("%y%m%d_%H%M%S")
         plt.savefig(self.folder_path+"/SURF_BF_"+file_time+".png")
-        if not self.option_without_save:
-            cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
-            cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
+        # if not self.option_without_save:
+            # cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
+            # cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
         cv2.destroyAllWindows()
         print("FeatureMatch Saved to "+file_time)
 
@@ -444,18 +455,78 @@ class FeatureMatch():
 
         return M
 
+    def relocalization(self, homography):
+        self.pixMetRatio=250
+        self.mid_real_photo_x=640
+        self.mid_real_photo_y=640
+        # self.mid_real_photo_x=0
+        # self.mid_real_photo_y=0
+        self.current_mid_predict_canvas_th= 0
+        # homography_inv=inv(homography)
+        # homography=homography_inv
+        print(homography)
+        mid_real_virtual_x, mid_real_virtual_y,a_= np.dot(homography, [self.mid_real_photo_x, self.mid_real_photo_y, 1])
+        print("real virtual: %f, %f, %f " %(mid_real_virtual_x, mid_real_virtual_y, a_))
+        print("real virtual divided: %d, %d" %(mid_real_virtual_x/a_, mid_real_virtual_y/a_))
+
+        del_x_virtual=mid_real_virtual_x/a_-self.mid_real_photo_x
+
+        del_y_virtual=mid_real_virtual_y/a_-self.mid_real_photo_y
+        del_th_virtual=-atan2(homography[0][1],homography[0][0])
+
+        rotation=np.array([[cos(self.current_mid_predict_canvas_th), -sin(self.current_mid_predict_canvas_th)],
+                            [sin(self.current_mid_predict_canvas_th), cos(self.current_mid_predict_canvas_th)]])
+
+        del_x_canvas, del_y_canvas = np.matmul(rotation, [-del_x_virtual, -del_y_virtual])
+        # *(-1) in del_x_virtual for calibration of x waypoint coordinate
+        # *(-1) in del_y_virtual for calibration of image coordiate to canvas coordinate
+
+        # print("virtual photo mid: %d, %d / real photo midpnt: %d, %d" %(mid_real_virtual_x, mid_real_virtual_y, self.mid_real_photo_x, self.mid_real_photo_y))
+
+        # offset=Point()
+        # offset.x=del_x_canvas/self.pixMetRatio
+        # offset.y=del_y_canvas/self.pixMetRatio
+        # offset.z=del_th_virtual
+
+        print(del_x_canvas/self.pixMetRatio)
+        print(del_y_canvas/self.pixMetRatio)
+        print(del_th_virtual)
+        # print(homography)
+
+        # self.success_try += 1
+
+        # dist= sqrt(pow(offset.x,2)+pow(offset.y,2))
+
+        #if dist>=0.02:
+        # if dist>=0.1:
+        #     offset=Point()
+        # else:
+        #     #print("OFFSET less than limit (= 0.02)")
+        #     print("OFFSET less than limit (= 0.1)")
+        #     self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)
+        # return offset
+
+        # self.pub_offset.publish(offset)
+
 
 if __name__=="__main__":
-    img_virtual= cv2.imread("/home/bkjung/Pictures/virtual_B_thin.png", cv2.IMREAD_GRAYSCALE)
-    img_photo= cv2.imread("/home/bkjung/Pictures/SUMMED_B.png", cv2.IMREAD_GRAYSCALE)
+    option=True
+    if len(sys.argv)==2:
+        if sys.argc[1]=='debug':
+            option=False
+    img_virtual_marked= cv2.imread("/home/mjlee/tools/OFFSET_TEST/virtual_map_invert_marked.png", cv2.IMREAD_GRAYSCALE)
+    img_photo_marked= cv2.imread("/home/mjlee/tools/OFFSET_TEST/real_photo_invert_marked.png", cv2.IMREAD_GRAYSCALE)
+    img_virtual= cv2.imread("/home/mjlee/tools/OFFSET_TEST/virtual_map_invert.png", cv2.IMREAD_GRAYSCALE)
+    img_photo= cv2.imread("/home/mjlee/tools/OFFSET_TEST/real_photo_invert.png", cv2.IMREAD_GRAYSCALE)
 
 
-    app = FeatureMatch('/home/bkjung/Pictures')
+    app = FeatureMatch('/home/mjlee/tools/OFFSET_TEST/TEST', option)
 
     # app = FeatureMatch('/home/bkjung/Pictures')
 
     # app.SIFT_FLANN_matching(img_photo, img_virtual)
-    app.SURF_BF_matching(img_photo, img_virtual)
+    # app.SIFT_BF_matching(img_photo, img_virtual, img_photo, img_virtual)
     # SIFT_KNN_matching(img1, img2)
     # app.ORB_BF_matching(img_virtual, img_photo)
+    app.SURF_BF_matching(img_photo, img_virtual, img_photo_marked, img_virtual_marked)
     # surf = cv2.xfeatures2d.SURF_create()

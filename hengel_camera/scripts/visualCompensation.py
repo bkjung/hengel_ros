@@ -421,11 +421,11 @@ class VisualCompensation():
 
     def relocalization(self, homography):
 
-        mid_real_virtual_x, mid_real_virtual_y, _= np.matmul(homography, [self.mid_real_photo_x, self.mid_real_photo_y, 1])
+        mid_real_virtual_x, mid_real_virtual_y, scale= np.matmul(homography, [self.mid_real_photo_x, self.mid_real_photo_y, 1])
 
-        del_x_virtual=mid_real_virtual_x-self.mid_real_photo_x
+        del_x_virtual=mid_real_virtual_x/scale-self.mid_real_photo_x
 
-        del_y_virtual=mid_real_virtual_y-self.mid_real_photo_y
+        del_y_virtual=mid_real_virtual_y/scale-self.mid_real_photo_y
         del_th_virtual=-atan2(homography[0][1],homography[0][0])
 
         rotation=np.array([[cos(self.current_mid_predict_canvas_th), -sin(self.current_mid_predict_canvas_th)],
