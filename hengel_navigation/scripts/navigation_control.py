@@ -407,7 +407,7 @@ class NavigationControl():
                         ]
                     self.cnt_waypoints += 1
 
-                    # if self.offset_accepted == True and self.cnt_waypoints>5000:      #when slow
+                    # if self.offset_accepted == True and self.cnt_waypoints>5000:      #when slow, more waypoints are assigned for same drawing
                     if self.offset_accepted == True and self.cnt_waypoints>1500:        #when fast
                         print("current waypoint x=%f, current waypoint y=%f" %(self.current_waypoint[0], self.current_waypoint[1]))
                         print("current point x=%f, current point y=%f" %(self.point.x, self.point.y))
@@ -444,6 +444,7 @@ class NavigationControl():
                         elif dist>self.interval:
                             div=int(ceil(dist/self.interval))
                             print("VISUAL OFFSET NEW distance = %f" % (dist))
+                            print("Waypoint Interval inserted by visual offset = %f" % (self.interval))
                             print("VISUAL OFFSET inserted %d waypoints" % (div))
 
                             for k in range(div-1):
@@ -861,7 +862,6 @@ class NavigationControl():
             self.pub_midpoint_time.publish(msg_time)
 
             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
-            print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.heading.data*180.0/pi)+"  "+str(self.cnt_waypoints))
             # print(str(self.point.x)+"  "+str(self.point.y)+"  "+str(self.heading.data*180.0/pi))
 
             #print("distance: ", distance)
@@ -963,6 +963,7 @@ class NavigationControl():
                         pow(delYrobotGlobal, 2)
                         )
                     # print(str(delOmega1)+"  "+str(delOmega1)+"  "+str(self.pen_distance_per_loop))
+                    print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.heading.data*180.0/pi)+"  "+str(self.cnt_waypoints))
                     self.pubDelta1 = delOmega1
                     self.pubDelta2 = delOmega2
                     self.r.sleep()
@@ -972,6 +973,7 @@ class NavigationControl():
             #elif self.motor_buffer_option == 3:
 
             #if waypoint loop count is over initial 150
+            #VISUAL FEEDBACK should be done here
             else:
                 self.pubDelta1 = delOmega1
                 self.pubDelta2 = delOmega2
@@ -988,7 +990,7 @@ class NavigationControl():
                     pow(delYrobotGlobal, 2)
                     )
                 #print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
-
+                print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.heading.data*180.0/pi)+"  "+self.pen_distance_per_loop+"  "+str(self.cnt_waypoints))
                 self.r.sleep()
 
         except KeyboardInterrupt:
