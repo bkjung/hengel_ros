@@ -407,49 +407,57 @@ class NavigationControl():
                         ]
                     self.cnt_waypoints += 1
 
-                    # if self.offset_accepted == True and self.cnt_waypoints>5000:      #when slow
-                    if self.offset_accepted == True and self.cnt_waypoints>1500:        #when fast
-                        print("current waypoint x=%f, current waypoint y=%f" %(self.current_waypoint[0], self.current_waypoint[1]))
-                        print("current point x=%f, current point y=%f" %(self.point.x, self.point.y))
-                        print("accepted offset.x=%f, offset.y=%f" %(self.offset_x, self.offset_y))
-                        endpoint_x=self.point.x-self.D*cos(self.heading.data)
-                        endpoint_y=self.point.y-self.D*sin(self.heading.data)
-                        dist=sqrt(pow(endpoint_x-self.current_waypoint[0],2)+pow(endpoint_y-self.current_waypoint[1],2))
-                        print("ORIGINAL DISTANCE between current point and waypoint = %f" %(dist))
+                    # if self.offset_accepted == True and self.cnt_waypoints>5000:      #when slow, more waypoints are assigned for same drawing
+                    if self.offset_accepted == True:        
+                        if self.cnt_waypoints>1500: #when fast
+                            print("current waypoint x=%f, current waypoint y=%f" %(self.current_waypoint[0], self.current_waypoint[1]))
+                            # print("current point x=%f, current point y=%f" %(self.point.x, self.point.y))
+                            print("accepted offset.x=%f, offset.y=%f" %(self.offset_x, self.offset_y))
+                            endpoint_x=self.point.x-self.D*cos(self.heading.data)
+                            endpoint_y=self.point.y-self.D*sin(self.heading.data)
+                            dist=sqrt(pow(endpoint_x-self.current_waypoint[0],2)+pow(endpoint_y-self.current_waypoint[1],2))
+                            print("ORIGINAL DISTANCE between current point and waypoint = %f" %(dist))
 
-                        if self.vision_compensation_option==1:
-                            self.point.x=self.point.x + self.offset_x
-                            self.point.y=self.point.y + self.offset_y
-                            self.heading.data = self.heading.data + self.offset_theta
-                        elif self.vision_compensation_option==2:
-                            self.heading.data = self.heading.data + self.offset_theta
 
-                        new_endpoint_x=self.point.x-self.D*cos(self.heading.data)
-                        new_endpoint_y=self.point.y-self.D*sin(self.heading.data)
-                        print("new endpoint x=%f, new endpoint y=%f" %(new_endpoint_x, new_endpoint_y))
-                        #new_endpoint_z=0.0
+                            if self.vision_compensation_option==1:
+                                new_endpoint_x=(self.point.x + self.offset_x) - self.D*cos(self.heading.data + self.offset_theta)
+                                new_endpoint_y=(self.point.y + self.offset_y) - self.D*sin(self.heading.data + self.offset_theta)
 
-                        dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
-                        #dist=sqrt(pow(self.point.x-self.current_waypoint[0],2)+pow(self.point.y-self.current_waypoint[1],2))
-                        #dist=sqrt(pow(self.offset_x,2)+pow(self.offset_y,2))
+                                dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
 
-                        # if the acquired offset is too large, dismiss it.
-                        if dist>0.1:
-                            print("VISUAL OFFSET is LARGER than 0.1 (Dismissing the calculated offset)")
+                                # if the acquired offset is too large, dismiss it.
+                                if dist>0.1:
+                                    print("VISUAL OFFSET is LARGER than 0.1 (Dismissing the calculated offset)")
+                                    pass
+
+                                else:
+                                    print("new endpoint x=%f, new endpoint y=%f" %(new_endpoint_x, new_endpoint_y))
+                                    self.point.x=self.point.x + self.offset_x
+                                    self.point.y=self.point.y + self.offset_y
+                                    self.heading.data = self.heading.data + self.offset_theta
+                                    #self.point.x=self.point.x - self.offset_x
+                                    #self.point.y=self.point.y - self.offset_y
+                                    #self.heading.data = self.heading.data - self.offset_theta
+
+                                    if dist>self.interval:
+                                        div=int(ceil(dist/self.interval))
+                                        print("VISUAL OFFSET NEW distance = %f" % (dist))
+                                        print("Waypoint Interval inserted by visual offset = %f" % (self.interval))
+                                        print("VISUAL OFFSET inserted %d waypoints" % (div))
+
+                                        for k in range(div-1):
+                                            x=new_endpoint_x+(k+1)/float(div)*(self.current_waypoint[0]-new_endpoint_x)
+                                            y=new_endpoint_y+(k+1)/float(div)*(self.current_waypoint[1]-new_endpoint_y)
+                                            self.robotNavigationLoop([x,y], not_drawing=True)
+
+                                    else:
+                                        print("VISUAL OFFSET inserted 1 waypoint, because new distance is small enough")
+
+                            elif self.vision_compensation_option==2:
+                                self.heading.data = self.heading.data + self.offset_theta
+
+                        else:   #vision not ready yet
                             pass
-
-                        elif dist>self.interval:
-                            div=int(ceil(dist/self.interval))
-                            print("VISUAL OFFSET NEW distance = %f" % (dist))
-                            print("VISUAL OFFSET inserted %d waypoints" % (div))
-
-                            for k in range(div-1):
-                                x=self.point.x+(k+1)/float(div)*(self.current_waypoint[0]-self.point.x)
-                                y=self.point.y+(k+1)/float(div)*(self.current_waypoint[1]-self.point.y)
-                                self.robotNavigationLoop([x,y], not_drawing=True)
-
-                        else:
-                            print("VISUAL OFFSET inserted 1 waypoint, because new distance is small enough")
 
                         self.offset_accepted = False
 
@@ -858,7 +866,6 @@ class NavigationControl():
             self.pub_midpoint_time.publish(msg_time)
 
             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
-            print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.heading.data*180.0/pi)+"  "+str(self.cnt_waypoints))
             # print(str(self.point.x)+"  "+str(self.point.y)+"  "+str(self.heading.data*180.0/pi))
 
             #print("distance: ", distance)
@@ -955,11 +962,12 @@ class NavigationControl():
                     self.point.y=self.point.y+delYrobotGlobal
                     #self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
                     self.heading.data=self.heading.data+(self.R_left*delOmega1-self.R_right*delOmega2)/(2*self.L)
-                    self.pen_distance_per_loop=sqrt(
-                        pow(delXrobotGlobal, 2) +
-                        pow(delYrobotGlobal, 2)
-                        )
+                    # self.pen_distance_per_loop=sqrt(
+                    #     pow(delXrobotGlobal, 2) +
+                    #     pow(delYrobotGlobal, 2)
+                    #     )
                     # print(str(delOmega1)+"  "+str(delOmega1)+"  "+str(self.pen_distance_per_loop))
+                    print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.heading.data*180.0/pi)+"  "+str(self.cnt_waypoints))
                     self.pubDelta1 = delOmega1
                     self.pubDelta2 = delOmega2
                     self.r.sleep()
@@ -969,6 +977,7 @@ class NavigationControl():
             #elif self.motor_buffer_option == 3:
 
             #if waypoint loop count is over initial 150
+            #VISUAL FEEDBACK should be done here
             else:
                 self.pubDelta1 = delOmega1
                 self.pubDelta2 = delOmega2
@@ -980,12 +989,16 @@ class NavigationControl():
                 self.point.y=self.point.y+delYrobotGlobal
                 #self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
                 self.heading.data=self.heading.data+(self.R_left*delOmega1-self.R_right*delOmega2)/(2*self.L)
+                # self.pen_distance_per_loop=sqrt(
+                #     pow(delXrobotGlobal, 2) +
+                #     pow(delYrobotGlobal, 2)
+                #     )
                 self.pen_distance_per_loop=sqrt(
-                    pow(delXrobotGlobal, 2) +
-                    pow(delYrobotGlobal, 2)
+                    pow(delX, 2) +
+                    pow(delY, 2)
                     )
                 #print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
-
+                print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.heading.data*180.0/pi)+"  "+str(self.pen_distance_per_loop)+"  "+str(self.cnt_waypoints))
                 self.r.sleep()
 
         except KeyboardInterrupt:

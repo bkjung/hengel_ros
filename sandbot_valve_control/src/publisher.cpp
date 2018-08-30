@@ -67,7 +67,7 @@ int main(int argc, char **argv)
   while(ros::ok()){
     if(cnt < 50){
       intensity_input = 780;
-      height_input = 3050;
+      height_input = 650;
       msg_intensity.data = intensity_input;
       msg_height.data = height_input;
       cnt++;
