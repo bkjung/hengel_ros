@@ -410,7 +410,7 @@ class NavigationControl():
                     self.cnt_waypoints += 1
 
                     # if self.offset_accepted == True and self.cnt_waypoints>5000:      #when slow, more waypoints are assigned for same drawing
-                    if self.offset_accepted == True:        
+                    if self.offset_accepted == True:
                         if self.cnt_waypoints>1500: #when fast
                             print("current waypoint x=%f, current waypoint y=%f" %(self.current_waypoint[0], self.current_waypoint[1]))
                             # print("current point x=%f, current point y=%f" %(self.point.x, self.point.y))
@@ -428,8 +428,9 @@ class NavigationControl():
                                 dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
 
                                 # if the acquired offset is too large, dismiss it.
-                                if dist>0.1:
-                                    print("VISUAL OFFSET is LARGER than 0.1 (Dismissing the calculated offset)")
+                                offset_upper_limit = 1.0
+                                if dist>offset_upper_limit:
+                                    print("VISUAL OFFSET is LARGER than %f (Dismissing the calculated offset)" %(offset_upper_limit))
                                     pass
 
                                 else:
@@ -893,7 +894,7 @@ class NavigationControl():
                     #     self.D = calculated_D
                     self.D = self.calculate_optimal_D(delX, delY, th, self.D, self.arr_delOmega[-1][0], self.arr_delOmega[-1][1])
                     print(str(self.D))
-                    
+
                     #msg_distance.data = self.D
                     self.msg_distance.data = self.D - self.D_prev
                     self.D_prev = self.D
