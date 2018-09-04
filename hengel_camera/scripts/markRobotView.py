@@ -76,10 +76,9 @@ class RobotView():
                 self.add_endpoint(change_thickness, False)
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
 
-    def draw_endpoint(self, end_x, end_y, intensity, lineThickness, isSmallCircle):
+    def draw_endpoint(self, end_x, end_y, intensity, lineThickness, img):
         #if isVirtualMapChanging is False, add big circle to mark current endpoint
-        self.img[int(end_y)][int(end_x)]=intensity
-        self.img_copy[int(end_y)][int(end_x)]=intensity
+        img[int(end_y)][int(end_x)]=intensity
         dist=lineThickness*self.pixMetRatio
         x1=int(end_x-dist/2)
         x2=int(end_x+dist/2)
@@ -88,11 +87,7 @@ class RobotView():
             x=end_x-i
             if i>=0 and i<self.img.shape[1]:
                 if abs(x)>dist/2:
-                    if isSmallCircle: #add endpoint
-                        self.img[int(end_y)][i]=min(intensity, self.img[int(end_y)][i])
-                        self.img_copy[int(end_y)][i]=min(intensity, self.img[int(end_y)][i])
-                    else: #add big circle
-                        self.img_copy[int(end_y)][i]=min(intensity, self.img[int(end_y)][i])
+                    img[int(end_y)][i]=min(intensity, img[int(end_y)][i])    
 
                 else:
                     if i>end_x:
@@ -102,15 +97,11 @@ class RobotView():
                     y1=int(end_y-y)
                     y2=int(end_y+y)
                     for j in range(y1, y2+1):
-                        if j>0 and j<self.img.shape[0]:
-                            if isSmallCircle:
-                                self.img[j][i]=min(intensity, self.img[j][i])
-                                self.img_copy[j][j]=min(intensity, self.img[j][i])
-                            else:
-                                self.img_copy[j][i]=min(intensity, self.img[j][i])
+                        if j>0 and j<img.shape[0]:
+                            img[j][i]=min(intensity, img[j][i])
 
             else:
-                print("canvas size: %d, %d" %(self.img.shape[1], self.img.shape[0]))
+                print("canvas size: %d, %d" %(img.shape[1], img.shape[0]))
                 print("point: %d, %d" %(point_x, point_y))
 
     def add_endpoint(self, lineThickness, isVirtualMapChanging=True):
@@ -128,7 +119,12 @@ class RobotView():
             #        self.draw_endpoint(x,y, self.spray_intensity, lineThickness, isVirtualMapChanging)
             #else:
             #    self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, isVirtualMapChanging)
-            self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, isVirtualMapChanging)
+            if isVirtualMapChanging:
+                self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, self.img)
+                self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, self.img_copy)
+            else:
+                self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, self.img_copy)
+                
             self.isDrawing=True
             self.prev_end_point= [self.end_x, self.end_y]
         else:
