@@ -330,7 +330,7 @@ class VisualCompensation():
 
                         # M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
                         # M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map,summed_image_copy, virtual_map_copy)
-                        M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map,summed_image, self.cropped_virtual_map)
+                        M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map,summed_image_copy, virtual_map_copy)
                         # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
                         # M = fm.IMAGE_ALIGNMENT_ecc(summed_image, self.cropped_virtual_map)
                         # M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map, summed_image_copy, virtual_map_copy)
