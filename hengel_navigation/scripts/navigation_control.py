@@ -324,8 +324,8 @@ class NavigationControl():
         self.map_img = []
         self.map_img = np.ndarray(self.map_img)
 
-        self.file= open(package_base_path +
-        "/hengel_navigation/position_log/position_"+time.strftime("%y%m%d_%H%M%S")+".txt", "w")
+        self.file= open(home_path+
+        "/Dropbox/optitrack_log/"+time.strftime("%y%m%d_%H%M%S")+"_navigation.txt", "w")
         #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown_everything)
 
