@@ -36,6 +36,8 @@ home_path = os.path.abspath(
 )
 os.system("mkdir -p " + package_base_path +
         "/hengel_path_manager/output_pathmap")
+os.system("mkdir -p " + package_base_path +
+        "/hengel_navigation/position_log")
 
 Kp = 5.0  # speed proportional gain
 
@@ -60,7 +62,7 @@ def angle_difference(angle1, angle2):
 
 
 class NavigationControl():
-    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _isStartEndIndexed, _D, _interval):
+    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _isStartEndIndexed, _D, _interval, _vision_off_start_index):
         # while True:
         #     word = raw_input(
         #             "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType :"
@@ -79,6 +81,8 @@ class NavigationControl():
         self.D=_D
         self.D_prev = _D
         self.interval = _interval
+        print("Vision Off Start Index = %d" %(_vision_off_start_index))
+        self.vision_off_start_index = _vision_off_start_index
         self.img=np.full((2000,2000), 255)
 
         self.msg_distance = Float32()
@@ -320,6 +324,8 @@ class NavigationControl():
         self.map_img = []
         self.map_img = np.ndarray(self.map_img)
 
+        self.file= open(home_path+
+        "/Dropbox/optitrack_log/"+time.strftime("%y%m%d_%H%M%S")+"_navigation.txt", "w")
         #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown_everything)
 
@@ -428,9 +434,13 @@ class NavigationControl():
                                 dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
 
                                 # if the acquired offset is too large, dismiss it.
-                                offset_upper_limit = 1.0
+                                offset_upper_limit = 0.1
                                 if dist>offset_upper_limit:
                                     print("VISUAL OFFSET is LARGER than %f (Dismissing the calculated offset)" %(offset_upper_limit))
+                                    pass
+
+                                elif self.offset_theta>20.0*3.141592/180.0:
+                                    print("VISUAL OFFSET theta is LARGER than 30(deg) (Dismissing the calculated offset)")
                                     pass
 
                                 else:
@@ -974,6 +984,8 @@ class NavigationControl():
                     self.pub_midpoint_time.publish(msg_time)
                     if self.d_k_optimization_option==1 and self.cnt_waypoints>=200:
                         self.distance_publisher.publish(self.msg_distance)
+                    now=rospy.get_rostime()
+                    self.file.write(str(self.endPoint.x)+"\t"+str(self.endPoint.y)+"\t"+str(now.secs)+str(now.nsecs)+'\n')
                     self.r.sleep()
 
 
@@ -1008,6 +1020,8 @@ class NavigationControl():
                 self.pub_midpoint_time.publish(msg_time)
                 if self.d_k_optimization_option==1 and self.cnt_waypoints>=200:
                     self.distance_publisher.publish(self.msg_distance)
+                now=rospy.get_rostime()
+                self.file.write(str(self.point.x)+"\t"+str(self.point.y)+"\t"+str(now.secs)+str(now.nsecs)+'\n')
                 self.r.sleep()
 
         except KeyboardInterrupt:
@@ -1220,11 +1234,18 @@ class NavigationControl():
         print("Callback Vision OFFSET Received")
 
         #offset_accpeted callback can be accepted, only when there is no accepted offset handling right now.
-        if self.offset_accepted == False:
-            self.offset_accepted = True
-            self.offset_x = _data.x
-            self.offset_y = _data.y
-            self.offset_theta = _data.z
+        if self.vision_off_start_index==-1:
+            if self.offset_accepted == False:
+                self.offset_accepted = True
+                self.offset_x = _data.x
+                self.offset_y = _data.y
+                self.offset_theta = _data.z
+        else:
+            if self.offset_accepted == False and self.cnt_waypoints<self.vision_off_start_index:
+                self.offset_accepted = True
+                self.offset_x = _data.x
+                self.offset_y = _data.y
+                self.offset_theta = _data.z
 
             # self.point.x=self.point.x + offset_x
             # self.point.y=self.point.y + offset_y
