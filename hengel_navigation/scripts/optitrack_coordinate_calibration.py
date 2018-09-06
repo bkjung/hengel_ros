@@ -43,8 +43,9 @@ class Optitrack():
             self.arr_opti=[]
             for idx, line in enumerate(file_opti):
                 _str=line.split()
-                # self.arr_opti.append([float(_str[5]), float(_str[7]), _str[0]])
-                self.arr_opti.append([float(_str[0]), float(_str[1]), _str[2]])
+                if len(_str)==9:
+                    self.arr_opti.append([float(_str[5]), float(_str[7]), _str[0]])
+                # self.arr_opti.append([float(_str[0]), float(_str[1]), _str[2]])
 
         self.run()
 
@@ -57,12 +58,12 @@ class Optitrack():
 
         self.pnt_opti_0_x=self.arr_opti[index_opti][0]
         self.pnt_opti_0_y=self.arr_opti[index_opti][1]
-        
+
         theta_navi= atan2(self.arr_navi[index_navi+1][1]-self.pnt_navi_0_y, self.arr_navi[index_navi+1][0]-self.pnt_navi_0_x)
         theta_opti= atan2(self.arr_opti[index_opti+1][1]-self.pnt_opti_0_y, self.arr_opti[index_opti+1][0]-self.pnt_opti_0_x)
 
         delta_theta=theta_navi - theta_opti
-        
+
         self.R=[[cos(delta_theta), -sin(delta_theta)],[sin(delta_theta), cos(delta_theta)]]
 
 
@@ -74,7 +75,7 @@ class Optitrack():
         y= np.matmul(self.R, [opti_pnt_x-self.pnt_opti_0_x, opti_pnt_y-self.pnt_opti_0_y])[1]+self.pnt_navi_0_y
 
         return [x,y]
-    
+
     def isT1Bigger(self, t1, t2):
         for i in range(min(len(t1), len(t2))):
             if int(t1[i])==int(t2[i]):
@@ -83,7 +84,7 @@ class Optitrack():
                 return True
             else:
                 return False
-        
+
         if len(t1)> len(t2):
             return True
         else:
@@ -92,45 +93,43 @@ class Optitrack():
     def diffT1T2(self,t1,t2):
         t1_int= int(t1)
         t2_int= int(t2)
-        if len(t1)<19:
-            num=19-len(t1)
+        if len(t1)<21:
+            num=21-len(t1)
             t1_int=t1_int*pow(10,num)
-        if len(t2)<19:
-            num=19-len(t2)
+        if len(t2)<21:
+            num=21-len(t2)
             t2_int=t2_int*pow(10,num)
         return t1_int - t2_int
 
-    
+
     def run(self):
         index_navi=0
         index_opti=0
 
         while index_opti+1<len(self.arr_opti) and index_navi+1<len(self.arr_navi):
-            print("DEBUG0")
-            while not self.isInitialized:
-                print("DEBUG1")
+            while not self.isInitialized and index_opti+1<len(self.arr_opti) and index_navi+1<len(self.arr_navi):
                 t_navi_0=self.arr_navi[index_navi][2]
                 t_navi_1=self.arr_navi[index_navi+1][2]
                 t_opti=self.arr_opti[index_opti][2]
-        
+
                 if self.diffT1T2(t_navi_0, t_opti)>0:
+                    print(self.diffT1T2(t_navi_0, t_opti))
                     index_opti+=1
-                elif self.diffT1T2(t_opti, t_navi_1)<0:
+                elif self.diffT1T2(t_opti, t_navi_1)>0:
                     index_navi+=1
                 else:
                     self.coordinate_calibration(index_navi, index_opti)
                     index_opti+=1
                     index_navi+=1
 
-            print("DEBUG2")
-            
+
             t_navi_0=self.arr_navi[index_navi][2]
             t_navi_1=self.arr_navi[index_navi+1][2]
             t_opti=self.arr_opti[index_opti][2]
 
             if self.diffT1T2(t_navi_0, t_opti)>0:
                 index_opti+=1
-            elif self.diffT1T2(t_opti, t_navi_1)<0:
+            elif self.diffT1T2(t_opti, t_navi_1)>0:
                 index_navi+=1
             else:
                 x_opti, y_opti = self.opti_to_navi(index_opti)
@@ -147,10 +146,10 @@ class Optitrack():
                 x_navi= x0+(x1-x0)/float(t)*tt
                 y_navi= y0+(y1-y0)/float(t)*tt
 
-                self.newFile.write(str(x_navi-x_opti)+"\t"+str(y_navi-y_opti)+"\t"+str(t_opti)+"\n")
+                self.newFile.write(str(x_navi-x_opti)+"\t"+str(y_navi-y_opti)+"\t"+str(t_opti)+"\t"+str(t_navi_0)+"\t"+str(t_navi_1)+"\n")
                 index_opti+=1
                 index_navi+=1
-        
+
 
 if __name__=="__main__":
     if len(sys.argv)!=3:
