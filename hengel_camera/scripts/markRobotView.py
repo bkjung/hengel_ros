@@ -87,7 +87,7 @@ class RobotView():
             x=end_x-i
             if i>=0 and i<self.img.shape[1]:
                 if abs(x)>dist/2:
-                    img[int(end_y)][i]=min(intensity, img[int(end_y)][i])    
+                    img[int(end_y)][i]=min(intensity, img[int(end_y)][i])
 
                 else:
                     if i>end_x:
@@ -124,7 +124,7 @@ class RobotView():
                 self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, self.img_copy)
             else:
                 self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, self.img_copy)
-                
+
             self.isDrawing=True
             self.prev_end_point= [self.end_x, self.end_y]
         else:
