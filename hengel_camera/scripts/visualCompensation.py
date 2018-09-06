@@ -149,6 +149,7 @@ class VisualCompensation():
 
         self.sum_compensation_distance = 0.0
 
+        self.isMinInitialized=False
         self.x_img_max=None
         self.x_img_min=None
         self.y_img_max=None
@@ -400,11 +401,12 @@ class VisualCompensation():
             self.end_predict_img_y=(self.height-_midPoint.y)*self.pixMetRatio
             self.end_predict_img_x=-_midPoint.x * self.pixMetRatio
 
-            if self.x_img_min is None:
+            if not self.isMinInitialized:
                 self.x_img_min = self.end_predict_img_x
                 self.x_img_max = self.end_predict_img_x
                 self.y_img_min = self.end_predict_img_y
                 self.y_img_max = self.end_predict_img_y
+                self.isMinInitialized=True
             else:
                 self.x_img_max=max(self.x_img_max, self.end_predict_img_x)
                 self.x_img_min=min(self.x_img_min, self.end_predict_img_x)
