@@ -200,7 +200,7 @@ class VisualCompensation():
             if self.app_robotview.isPaintStarted == True:
                 print("\n-----------------sync real-----------------")
                 _time = time.time()
-                image_time = (_img1.header.stamp.to_nsec()+_img2.header.stamp.to_nsec()+_img3.header.stamp.to_nsec()+_img4.header.stamp.to_nsec())/4.0
+                image_time = (_img1.header.stamp.to_nsec()+_img2.header.stamp.to_nsec()+self._img3.header.stamp.to_nsec()+self._img4.header.stamp.to_nsec())/4.0
 
                 min_diff = 999999999999999.9
                 min_index = -1
