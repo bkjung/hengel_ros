@@ -123,37 +123,38 @@ class Optitrack():
                     index_navi+=1
 
 
-            # t_navi_0=self.arr_navi[index_navi][2]
-            # t_navi_1=self.arr_navi[index_navi+1][2]
-            # t_opti=self.arr_opti[index_opti][2]
+            t_navi_0=self.arr_navi[index_navi][2]
+            t_navi_1=self.arr_navi[index_navi+1][2]
+            t_opti=self.arr_opti[index_opti][2]
 
-            # if self.diffT1T2(t_navi_0, t_opti)>0:
-            #     index_opti+=1
-            # elif self.diffT1T2(t_opti, t_navi_1)>0:
-            #     index_navi+=1
-            # else:
-            #     x_opti, y_opti = self.opti_to_navi(index_opti)
+            if self.diffT1T2(t_navi_0, t_opti)>0:
+                index_opti+=1
+            elif self.diffT1T2(t_opti, t_navi_1)>0:
+                index_navi+=1
+            else:
+                x_opti, y_opti = self.opti_to_navi(index_opti)
 
-            #     x0=self.arr_navi[index_navi][0]
-            #     y0=self.arr_navi[index_navi][1]
+                x0=self.arr_navi[index_navi][0]
+                y0=self.arr_navi[index_navi][1]
 
-            #     x1=self.arr_navi[index_navi+1][0]
-            #     y1=self.arr_navi[index_navi+1][1]
+                x1=self.arr_navi[index_navi+1][0]
+                y1=self.arr_navi[index_navi+1][1]
 
-            #     t=self.diffT1T2(t_navi_1, t_navi_0)
-            #     tt=self.diffT1T2(t_opti, t_navi_0)
+                t=self.diffT1T2(t_navi_1, t_navi_0)
+                tt=self.diffT1T2(t_opti, t_navi_0)
 
-            #     x_navi= x0+(x1-x0)/float(t)*tt
-            #     y_navi= y0+(y1-y0)/float(t)*tt
+                x_navi= x0+(x1-x0)/float(t)*tt
+                y_navi= y0+(y1-y0)/float(t)*tt
 
-            #     self.newFile.write(str(x_navi-x_opti)+"\t"+str(y_navi-y_opti)+"\t"+str(t_opti)+"\t"+str(t_navi_0)+"\t"+str(t_navi_1)+"\n")
-            #     index_opti+=1
-            #     index_navi+=1
+                # self.newFile.write(str(x_navi-x_opti)+"\t"+str(y_navi-y_opti)+"\t"+str(t_opti)+"\t"+str(t_navi_0)+"\t"+str(t_navi_1)+"\n")
+                self.newFile.write(str(x_opti)+"\t"+str(y_opti)+"\n")
+                index_opti+=1
+                index_navi+=1
 
-            x,y=self.opti_to_navi(index_opti)
-            index_opti+=1
-            index_navi+=1
-            self.newFile.write(str(x)+"\t"+str(y)+"\n")
+            # x,y=self.opti_to_navi(index_opti)
+            # index_opti+=1
+            # index_navi+=1
+            # self.newFile.write(str(x)+"\t"+str(y)+"\n")
 
 
 if __name__=="__main__":
