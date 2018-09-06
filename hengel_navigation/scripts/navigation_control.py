@@ -985,7 +985,7 @@ class NavigationControl():
                     if self.d_k_optimization_option==1 and self.cnt_waypoints>=200:
                         self.distance_publisher.publish(self.msg_distance)
                     now=rospy.get_rostime()
-                    self.file.write(str(self.point.x)+"\t"+str(self.point.y)+"\t"+str(now.secs)+str(now.nsecs)+'\n')
+                    self.file.write(str(self.endPoint.x)+"\t"+str(self.endPoint.y)+"\t"+str(now.secs)+str(now.nsecs)+'\n')
                     self.r.sleep()
 
 
