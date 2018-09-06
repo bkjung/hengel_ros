@@ -36,6 +36,8 @@ home_path = os.path.abspath(
 )
 os.system("mkdir -p " + package_base_path +
         "/hengel_path_manager/output_pathmap")
+os.system("mkdir -p " + package_base_path +
+        "/hengel_navigation/position_log")
 
 Kp = 5.0  # speed proportional gain
 
@@ -320,6 +322,8 @@ class NavigationControl():
         self.map_img = []
         self.map_img = np.ndarray(self.map_img)
 
+        self.file= open(package_base_path +
+        "/hengel_navigation/position_log/position_"+time.strftime("%y%m%d_%H%M%S")+".txt", "w")
         #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown_everything)
 
@@ -974,6 +978,8 @@ class NavigationControl():
                     self.pub_midpoint_time.publish(msg_time)
                     if self.d_k_optimization_option==1 and self.cnt_waypoints>=200:
                         self.distance_publisher.publish(self.msg_distance)
+                    now=rospy.get_rostime()
+                    self.file.write(str(self.point.x)+"\t"+str(self.point.y)+"\t"+str(now.secs)+str(now.nsecs)+'\n')
                     self.r.sleep()
 
 
@@ -1008,6 +1014,8 @@ class NavigationControl():
                 self.pub_midpoint_time.publish(msg_time)
                 if self.d_k_optimization_option==1 and self.cnt_waypoints>=200:
                     self.distance_publisher.publish(self.msg_distance)
+                now=rospy.get_rostime()
+                self.file.write(str(self.point.x)+"\t"+str(self.point.y)+"\t"+str(now.secs)+str(now.nsecs)+'\n')
                 self.r.sleep()
 
         except KeyboardInterrupt:
