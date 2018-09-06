@@ -20,6 +20,9 @@ import matplotlib.pyplot as plt
 
 package_base_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "../.."))
+home_path = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../../../..")
+)
 
 class Optitrack():
     def __init__(self, path_navi, path_opti):
@@ -28,7 +31,7 @@ class Optitrack():
         self.pnt_opti_0=None
         self.isInitialized= False
 
-        self.newFile=open(package_base_path+"/hengel_navigation/optitrack_"+time.strftime("%y%m%d_%H%M%S")+".txt", "w")
+        self.newFile=open(home_path+"/Dropbox/optitrack_log/"+path_opti+"_calibrated.txt", "w")
 
         with open(path_navi, "r") as file_navi:
             self.arr_navi=[]
@@ -43,7 +46,7 @@ class Optitrack():
             self.arr_opti=[]
             for idx, line in enumerate(file_opti):
                 _str=line.split()
-                if len(_str)==9:    
+                if len(_str)==9:
                     self.arr_opti.append([float(_str[5]), float(_str[7]), _str[0]])
                 # self.arr_opti.append([float(_str[0]), float(_str[1]), _str[2]])
 
@@ -146,15 +149,14 @@ class Optitrack():
                 x_navi= x0+(x1-x0)/float(t)*tt
                 y_navi= y0+(y1-y0)/float(t)*tt
 
-                # self.newFile.write(str(x_navi-x_opti)+"\t"+str(y_navi-y_opti)+"\t"+str(t_opti)+"\t"+str(t_navi_0)+"\t"+str(t_navi_1)+"\n")
-                self.newFile.write(str(x_opti)+"\t"+str(y_opti)+"\n")
+                self.newFile.write(str(x_navi-x_opti)+"\t"+str(y_navi-y_opti)+"\t"+str(t_opti)+"\t"+str(t_navi_0)+"\t"+str(t_navi_1)+"\n")
                 index_opti+=1
                 index_navi+=1
 
-            # x,y=self.opti_to_navi(index_opti)
-            # index_opti+=1
-            # index_navi+=1
-            # self.newFile.write(str(x)+"\t"+str(y)+"\n")
+            #x,y=self.opti_to_navi(index_opti)
+            #index_opti+=1
+            #index_navi+=1
+            #self.newFile.write(str(x)+"\t"+str(y)+"\n")
 
 
 if __name__=="__main__":
