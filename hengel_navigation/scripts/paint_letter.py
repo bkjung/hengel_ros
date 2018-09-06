@@ -169,7 +169,7 @@ class PaintLetter():
             letter_index = letter_index + 1
 
     def run(self):
-        NavigationControl(self.arr_path, [], self.start_point_list, self.end_point_list, self.isPositionControl, False, True, self.D, INTERVAL)
+        NavigationControl(self.arr_path, [], self.start_point_list, self.end_point_list, self.isPositionControl, False, True, self.D, INTERVAL, -1)
 
 
 if __name__ == '__main__':

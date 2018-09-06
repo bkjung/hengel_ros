@@ -60,7 +60,7 @@ def angle_difference(angle1, angle2):
 
 
 class NavigationControl():
-    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _isStartEndIndexed, _D, _interval):
+    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _isStartEndIndexed, _D, _interval, _vision_off_start_index):
         # while True:
         #     word = raw_input(
         #             "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType :"
@@ -79,6 +79,8 @@ class NavigationControl():
         self.D=_D
         self.D_prev = _D
         self.interval = _interval
+        print("Vision Off Start Index = %d" %(_vision_off_start_index))
+        self.vision_off_start_index = _vision_off_start_index
         self.img=np.full((2000,2000), 255)
 
         self.msg_distance = Float32()
@@ -428,9 +430,13 @@ class NavigationControl():
                                 dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
 
                                 # if the acquired offset is too large, dismiss it.
-                                offset_upper_limit = 1.0
+                                offset_upper_limit = 0.1
                                 if dist>offset_upper_limit:
                                     print("VISUAL OFFSET is LARGER than %f (Dismissing the calculated offset)" %(offset_upper_limit))
+                                    pass
+
+                                elif self.offset_theta>20.0*3.141592/180.0:
+                                    print("VISUAL OFFSET theta is LARGER than 30(deg) (Dismissing the calculated offset)")
                                     pass
 
                                 else:
@@ -1220,11 +1226,18 @@ class NavigationControl():
         print("Callback Vision OFFSET Received")
 
         #offset_accpeted callback can be accepted, only when there is no accepted offset handling right now.
-        if self.offset_accepted == False:
-            self.offset_accepted = True
-            self.offset_x = _data.x
-            self.offset_y = _data.y
-            self.offset_theta = _data.z
+        if self.vision_off_start_index==-1:
+            if self.offset_accepted == False:
+                self.offset_accepted = True
+                self.offset_x = _data.x
+                self.offset_y = _data.y
+                self.offset_theta = _data.z
+        else:
+            if self.offset_accepted == False and self.cnt_waypoints<self.vision_off_start_index:
+                self.offset_accepted = True
+                self.offset_x = _data.x
+                self.offset_y = _data.y
+                self.offset_theta = _data.z
 
             # self.point.x=self.point.x + offset_x
             # self.point.y=self.point.y + offset_y

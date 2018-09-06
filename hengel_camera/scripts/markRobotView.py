@@ -111,7 +111,7 @@ class RobotView():
 
             else:
                 print("canvas size: %d, %d" %(self.img.shape[1], self.img.shape[0]))
-                print("point: %d, %d" %(point_x, point_y))
+                #print("point: %d, %d" %(point_x, point_y))
 
     def add_endpoint(self, lineThickness, isVirtualMapChanging=True):
         #if isVirtualMapChanging is False, add big circle to mark current endpoint
