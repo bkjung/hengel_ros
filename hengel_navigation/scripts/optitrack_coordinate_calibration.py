@@ -43,8 +43,8 @@ class Optitrack():
             self.arr_opti=[]
             for idx, line in enumerate(file_opti):
                 _str=line.split()
-                # self.arr_opti.append([float(_str[5]), float(_str[7]), _str[0]])
-                self.arr_opti.append([float(_str[0]), float(_str[1]), _str[2]])
+                self.arr_opti.append([float(_str[5]), float(_str[7]), _str[0]])
+                # self.arr_opti.append([float(_str[0]), float(_str[1]), _str[2]])
 
         self.run()
 
