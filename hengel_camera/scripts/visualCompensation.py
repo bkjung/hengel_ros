@@ -95,6 +95,9 @@ class VisualCompensation():
         self.mid_real_photo_x=640
         self.mid_real_photo_y=640
 
+
+
+
         self.endPoint_callback=message_filters.Subscriber('/endpoint', Point)
         self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
         self.midPoint_time_callback=message_filters.Subscriber('/midpoint_time', Time)
@@ -114,7 +117,12 @@ class VisualCompensation():
         # self.summed_image = None
         # self.summed_image_prev = None
 
-        self.ts_2=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=False)
+        # self.ts_2=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=False)
+        self.ts_2=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2], 10,0.1, allow_headerless=False)
+        ################# STOPGAP ###########################
+        self.ts_3=message_filters.ApproximateTimeSynchronizer([self.callback3, self.callback4], 10,0.1, allow_headerless=False)
+        self.ts_3.registerCallback(self.sync_real_callabck2)
+        self.realcallback2=False
 
         rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.callback_left)
         rospy.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage, self.callback_right)
@@ -167,7 +175,14 @@ class VisualCompensation():
         # print("right")
         self.pi_right_img=self.undistort_right(_img)
 
-    def sync_real_callback(self, _img1, _img2, _img3, _img4):
+    def sync_real_callabck2(self, _img3, _img4):
+        self._img3=_img3
+        self._img4=_img4
+        self.realcallback2=True
+
+
+    def sync_real_callback(self, _img1, _img2):
+    # def sync_real_callback(self, _img1, _img2, _img3, _img4):
         if self.option_debug:
             print("------image time------")
             print(_img1.header.stamp.to_nsec())
@@ -178,7 +193,9 @@ class VisualCompensation():
             self.isNavigationStarted=True
             self.app_robotview.isPaintStarted=True
 
-        if self.isNavigationStarted==True:
+        ########### STOPGAP ######################
+        # if self.isNavigationStarted==True:
+        if self.isNavigationStarted==True and self.realcallback2:
             if self.app_robotview.isPaintStarted == True:
                 print("\n-----------------sync real-----------------")
                 _time = time.time()
@@ -210,8 +227,13 @@ class VisualCompensation():
 
                 img1 = self.undistort1(_img1)
                 img2 = self.undistort2(_img2)
-                img3 = self.undistort3(_img4)
-                img4 = self.undistort4(_img3)
+                # img3 = self.undistort3(_img4)
+                # img4 = self.undistort4(_img3)
+                ###################### STOPGAP ##############3
+                img3 = self.undistort3(self._img3)
+                img4 = self.undistort4(self._img4)
+
+
                 #ONLY FOR DEBUGGING!!!!!!!
                 if self.option_debug:
                     bridge=CvBridge()
