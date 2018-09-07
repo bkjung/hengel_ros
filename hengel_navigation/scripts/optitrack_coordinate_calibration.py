@@ -149,7 +149,7 @@ class Optitrack():
                 x_navi= x0+(x1-x0)/float(t)*tt
                 y_navi= y0+(y1-y0)/float(t)*tt
 
-                self.newFile.write(str(x_navi-x_opti)+"\t"+str(y_navi-y_opti)+"\t"+str(t_opti)+"\t"+str(t_navi_0)+"\t"+str(t_navi_1)+"\n")
+                self.newFile.write(str(x_navi-x_opti)+"\t"+str(y_navi-y_opti)+"\t"+str(x_opti)+"\t"+str(y_opti)+"\t"+str(t_opti)+"\t"+str(t_navi_0)+"\t"+str(t_navi_1)+"\n")
                 index_opti+=1
                 index_navi+=1
 
