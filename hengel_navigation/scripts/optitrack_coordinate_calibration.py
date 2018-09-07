@@ -33,7 +33,7 @@ class Optitrack():
 
         self.newFile=open(home_path+"/Dropbox/optitrack_log/"+path_opti+"_calibrated.txt", "w")
 
-        with open(path_navi, "r") as file_navi:
+        with open(home_path+"/Dropbox/optitrack_log/"+path_navi, "r") as file_navi:
             self.arr_navi=[]
             for idx, line in enumerate(file_navi):
                 try:
@@ -42,7 +42,7 @@ class Optitrack():
                 except Exception as e:
                     print(e)
                     print(idx, line)
-        with open(path_opti) as file_opti:
+        with open(home_path+"/Dropbox/optitrack_log/"+path_opti) as file_opti:
             self.arr_opti=[]
             for idx, line in enumerate(file_opti):
                 _str=line.split()
@@ -162,7 +162,6 @@ class Optitrack():
 if __name__=="__main__":
     if len(sys.argv)!=3:
         print("Wrong Argument")
-    elif os.path.isfile(sys.argv[1]) and os.path.isfile(sys.argv[2]):
-        Optitrack(sys.argv[1], sys.argv[2])
     else:
-        print("Wrong Argument")
+        Optitrack(sys.argv[1], sys.argv[2])
+        #print("Wrong Argument")
