@@ -46,7 +46,7 @@ class Optitrack():
             for idx, line in enumerate(file_opti):
                 _str=line.split()
                 if len(_str[0])==19:
-                    self.arr_opti.append([float(_str[5])/10, float(_str[7])/10, float(_str[0][:10])*pow(10,9)+float(_str[0][10:])])
+                    self.arr_opti.append([float(_str[5]), float(_str[7]), float(_str[0][:10])*pow(10,9)+float(_str[0][10:])])
                 # self.arr_opti.append([float(_str[0]), float(_str[1]), _str[2]])
 
         self.run()
@@ -59,7 +59,7 @@ class Optitrack():
         x= np.matmul(self.R, [opti_pnt_x-self.opti_0_x, opti_pnt_y-self.opti_0_y])[0]+self.navi_0_x
         y= np.matmul(self.R, [opti_pnt_x-self.opti_0_x, opti_pnt_y-self.opti_0_y])[1]+self.navi_0_y
 
-        return [x,y]
+        return [y,-x]
 
     def isT1Bigger(self, t1, t2):
         for i in range(min(len(t1), len(t2))):
@@ -125,13 +125,16 @@ class Optitrack():
             if not self.isInitialized:
                 index_navi, index_opti = self.coordinate_calibration(index_navi, index_opti)
 
-            self.findTimeStamp(index_navi, index_opti)
+            index_navi, index_opti = self.findTimeStamp(index_navi, index_opti)
+            if index_navi==-1:
+                break
             x_opti, y_opti = self.opti_to_navi(index_opti)
             x_navi, y_navi = self.interpolation(index_navi)
 
 
 
             # #######33 DEBUG ############
+            # print(index_navi, index_opti)
             # x_opti=self.arr_opti[index_opti][0]
             # y_opti=self.arr_opti[index_opti][1]
 
@@ -150,20 +153,28 @@ class Optitrack():
             self.t_navi_0=self.arr_navi[index_navi][2]
             self.t_navi_1=self.arr_navi[index_navi+1][2]
             self.t_opti=self.arr_opti[index_opti][2]
+            # print(index_navi, index_opti)
 
+            # print(self.t_navi_0, self.t_opti)
+            # print(self.t_opti-self.t_navi_0)
+            # print(self.t_navi_1-self.t_opti)
+            # print("---------")
             if self.diffT1T2(self.t_navi_0, self.t_opti)>0:
                 index_opti+=1
             elif self.diffT1T2(self.t_opti, self.t_navi_1)>0:
                 index_navi+=1
             else:
                 return index_navi, index_opti
+        return -1, -1
     
     def interpolation(self, index_navi):
+        print(index_navi)
         x0=self.arr_navi[index_navi][0]
         y0=self.arr_navi[index_navi][1]
 
         x1=self.arr_navi[index_navi+1][0]
         y1=self.arr_navi[index_navi+1][1]
+        print(index_navi)
 
         # print(self.t_navi_0, self.t_navi_1)
 
