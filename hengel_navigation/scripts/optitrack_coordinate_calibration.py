@@ -59,7 +59,7 @@ class Optitrack():
         x= np.matmul(self.R, [opti_pnt_x-self.opti_0_x, opti_pnt_y-self.opti_0_y])[0]+self.navi_0_x
         y= np.matmul(self.R, [opti_pnt_x-self.opti_0_x, opti_pnt_y-self.opti_0_y])[1]+self.navi_0_y
 
-        return [y,-x]
+        return [x,y]
 
     def isT1Bigger(self, t1, t2):
         for i in range(min(len(t1), len(t2))):
