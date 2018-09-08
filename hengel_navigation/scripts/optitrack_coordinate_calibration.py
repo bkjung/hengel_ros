@@ -37,7 +37,7 @@ class Optitrack():
             for idx, line in enumerate(file_navi):
                 try:
                     _str=line.split()
-                    self.arr_navi.append([float(_str[0]), float(_str[1]), _str[2]])
+                    self.arr_navi.append([float(_str[0]), float(_str[1]), float(_str[2][:10])*pow(10,9)+float(_str[2][10:])])
                 except Exception as e:
                     print(e)
                     print(idx, line)
@@ -45,8 +45,8 @@ class Optitrack():
             self.arr_opti=[]
             for idx, line in enumerate(file_opti):
                 _str=line.split()
-                if len(_str)==9:
-                    self.arr_opti.append([float(_str[5])/10, float(_str[7])/10, _str[0]])
+                if len(_str[0])==19:
+                    self.arr_opti.append([float(_str[5])/10, float(_str[7])/10, float(_str[0][:10])*pow(10,9)+float(_str[0][10:])])
                 # self.arr_opti.append([float(_str[0]), float(_str[1]), _str[2]])
 
         self.run()
@@ -76,9 +76,15 @@ class Optitrack():
             return False
 
     def diffT1T2(self,t1,t2):
-        t1_int = int(t1[:10])*pow(10,9)+int(t1[10:])
-        t2_int = int(t2[:10])*pow(10,9)+int(t2[10:])
-        return t1_int - t2_int
+        # t1_int = int(t1[:10])*pow(10,9)+int(t1[10:])
+        # t2_int = int(t2[:10])*pow(10,9)+int(t2[10:])
+        # return t1_int - t2_int
+
+        # print(t1)
+        # print(t2)
+        # print(t1-t2)
+
+        return t1-t2
 
     # def coordinate_calibration(self, pnt_navi_0, pnt_navi_1, pnt_opti_0, pnt_opti_1):
     def coordinate_calibration(self, index_navi, index_opti):
@@ -159,13 +165,14 @@ class Optitrack():
         x1=self.arr_navi[index_navi+1][0]
         y1=self.arr_navi[index_navi+1][1]
 
+        # print(self.t_navi_0, self.t_navi_1)
+
         t=self.diffT1T2(self.t_navi_1, self.t_navi_0)
         tt=self.diffT1T2(self.t_opti, self.t_navi_0)
         
-        if t==0:
-            print (self.t_navi_1, self.t_navi_0)
         x_navi= x0+(x1-x0)/float(t)*tt
         y_navi= y0+(y1-y0)/float(t)*tt
+        # print(x0, x1, x_navi)
         return x_navi, y_navi
 
 
