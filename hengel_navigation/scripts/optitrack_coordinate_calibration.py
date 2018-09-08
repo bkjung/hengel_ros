@@ -138,7 +138,7 @@ class Optitrack():
 
 
             # self.newFile.write(str(x_navi-x_opti)+"\t"+str(y_navi-y_opti)+"\t"+str(x_opti)+"\t"+str(y_opti)+"\t"+str(self.t_opti)+"\t"+str(self.t_navi_0)+"\t"+str(self.t_navi_1)+"\n")
-            dist= math.sqrt(math.pow(x_navi-x_opti,2)+math.pow(y_navi-y_opti,2))
+            dist= sqrt(pow(x_navi-x_opti,2)+pow(y_navi-y_opti,2))
             self.newFile.write(str(x_navi)+"\t"+str(y_navi)+"\t"+ str(x_opti)+"\t"+str(y_opti)+"\t"+str(self.t_opti)+"\t"+str(self.t_navi_0)+"\t"+str(self.t_navi_1)+"\t"+str(dist)+"\n")
             index_opti+=1
 
