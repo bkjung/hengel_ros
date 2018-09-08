@@ -120,14 +120,14 @@ class Optitrack():
                 index_navi, index_opti = self.coordinate_calibration(index_navi, index_opti)
 
             self.findTimeStamp(index_navi, index_opti)
-            # x_opti, y_opti = self.opti_to_navi(index_opti)
+            x_opti, y_opti = self.opti_to_navi(index_opti)
             x_navi, y_navi = self.interpolation(index_navi)
 
 
 
-            #######33 DEBUG ############
-            x_opti=self.arr_opti[index_opti][0]
-            y_opti=self.arr_opti[index_opti][1]
+            # #######33 DEBUG ############
+            # x_opti=self.arr_opti[index_opti][0]
+            # y_opti=self.arr_opti[index_opti][1]
 
 
             # self.newFile.write(str(x_navi-x_opti)+"\t"+str(y_navi-y_opti)+"\t"+str(x_opti)+"\t"+str(y_opti)+"\t"+str(self.t_opti)+"\t"+str(self.t_navi_0)+"\t"+str(self.t_navi_1)+"\n")
