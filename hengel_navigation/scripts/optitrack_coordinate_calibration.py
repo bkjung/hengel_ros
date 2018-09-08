@@ -77,7 +77,7 @@ class Optitrack():
 
     def diffT1T2(self,t1,t2):
         t1_int = int(t1[:10])*pow(10,9)+int(t1[10:])
-        t2_int = int(t1[:10])*pow(10,9)+int(t1[10:])
+        t2_int = int(t2[:10])*pow(10,9)+int(t2[10:])
         return t1_int - t2_int
 
     # def coordinate_calibration(self, pnt_navi_0, pnt_navi_1, pnt_opti_0, pnt_opti_1):
@@ -161,7 +161,9 @@ class Optitrack():
 
         t=self.diffT1T2(self.t_navi_1, self.t_navi_0)
         tt=self.diffT1T2(self.t_opti, self.t_navi_0)
-
+        
+        if t==0:
+            print (self.t_navi_1, self.t_navi_0)
         x_navi= x0+(x1-x0)/float(t)*tt
         y_navi= y0+(y1-y0)/float(t)*tt
         return x_navi, y_navi
