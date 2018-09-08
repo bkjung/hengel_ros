@@ -95,7 +95,7 @@ class Optitrack():
         self.navi_0_x , self.navi_0_y = self.interpolation(index_navi)
         self.opti_0_x=self.arr_opti[index_opti][0]
         self.opti_0_y=self.arr_opti[index_opti][1]
-        index_opti +=20
+        index_opti +=100
 
         index_navi, index_opti = self.findTimeStamp(index_navi, index_opti)
         self.navi_1_x , self.navi_1_y = self.interpolation(index_navi)
@@ -110,12 +110,10 @@ class Optitrack():
         self.R=[[cos(delta_theta), - sin(delta_theta)],[sin(delta_theta), cos(delta_theta)]]
         index_opti+=1
 
-        opti_0_x, opti_0_y = self.opti_to_navi(index_opti-21)
+        opti_0_x, opti_0_y = self.opti_to_navi(index_opti-101)
         self.newFile.write(str(self.navi_0_x)+"\t"+str(self.navi_0_y)+"\t"+ str(opti_0_x)+"\t"+str(opti_0_y)+"\n")
         opti_1_x, opti_1_y=self.opti_to_navi(index_opti-1)
         self.newFile.write(str(self.navi_1_x)+"\t"+str(self.navi_1_y)+"\t"+ str(opti_1_x)+"\t"+str(opti_1_y)+"\n")
-        
-        return index_navi, index_opti
 
     def run(self):
         index_navi=0
@@ -123,7 +121,7 @@ class Optitrack():
 
         while index_opti+1<len(self.arr_opti) and index_navi+1<len(self.arr_navi):
             if not self.isInitialized:
-                index_navi, index_opti = self.coordinate_calibration(index_navi, index_opti)
+                self.coordinate_calibration(index_navi, index_opti)
 
             index_navi, index_opti = self.findTimeStamp(index_navi, index_opti)
             if index_navi==-1:
@@ -140,7 +138,8 @@ class Optitrack():
 
 
             # self.newFile.write(str(x_navi-x_opti)+"\t"+str(y_navi-y_opti)+"\t"+str(x_opti)+"\t"+str(y_opti)+"\t"+str(self.t_opti)+"\t"+str(self.t_navi_0)+"\t"+str(self.t_navi_1)+"\n")
-            self.newFile.write(str(x_navi)+"\t"+str(y_navi)+"\t"+ str(x_opti)+"\t"+str(y_opti)+"\t"+str(self.t_opti)+"\t"+str(self.t_navi_0)+"\t"+str(self.t_navi_1)+"\n")
+            dist= math.sqrt(math.pow(x_navi-x_opti,2)+math.pow(y_navi-y_opti,2))
+            self.newFile.write(str(x_navi)+"\t"+str(y_navi)+"\t"+ str(x_opti)+"\t"+str(y_opti)+"\t"+str(self.t_opti)+"\t"+str(self.t_navi_0)+"\t"+str(self.t_navi_1)+"\t"+str(dist)+"\n")
             index_opti+=1
 
             #x,y=self.opti_to_navi(index_opti)
