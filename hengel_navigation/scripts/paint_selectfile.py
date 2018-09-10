@@ -70,6 +70,7 @@ class PaintSelectfile():
         self.end_point_list = []
         self.isIntensityControl = False
         self.isStartEndIndexed = False
+        self.vision_off_start_index = -1
 
 
         while True:
@@ -170,14 +171,16 @@ class PaintSelectfile():
                         if dist>self.interval*2.0:
                             div=int(ceil(dist/self.interval))
                             ############## MJLEE EDITED ####################
-                            count_init=0
+                            #count_init=0
                             for k in range(div):
                                 x=x_last+(k+1)/float(div)*(x_curr-x_last)
                                 y=y_last+(k+1)/float(div)*(y_curr-y_last)
                                 subletter_path.append([x,y])
-                                if count_init < 3:
-                                    print(x, y)
-                                    count_init += 1
+                                if len(_str)>3 and int(_str[3])==-1:
+                                    self.vision_off_start_index = self.cnt_points
+                                #if count_init < 3:
+                                print(x, y)
+                                    #count_init += 1
                                 if self.isIntensityControl:
                                     if flag_start==True:
                                         self.arr_intensity.append(255.0)
@@ -192,9 +195,11 @@ class PaintSelectfile():
                             y_last=y
                         else:
                             subletter_path.append([x_curr, y_curr])
-                            if count_init < 3:
-                                print(x_curr, y_curr)
-                                count_init += 1
+                            if len(_str)>3 and int(_str[3])==-1:
+                                self.vision_off_start_index = self.cnt_points
+                            #if count_init < 3:
+                            print(x_curr, y_curr)
+                                #count_init += 1
 
                             if self.isIntensityControl:
                                 if flag_start==True:
@@ -238,7 +243,7 @@ class PaintSelectfile():
 
 
     def run(self):
-        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.isStartEndIndexed, self.D)
+        NavigationControl(self.arr_path, self.arr_intensity, self.start_point_list, self.end_point_list, self.isPositionControl, self.isIntensityControl, self.isStartEndIndexed, self.D, self.interval, self.vision_off_start_index)
 
 
 if __name__ == '__main__':

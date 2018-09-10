@@ -36,6 +36,8 @@ home_path = os.path.abspath(
 )
 os.system("mkdir -p " + package_base_path +
         "/hengel_path_manager/output_pathmap")
+os.system("mkdir -p " + package_base_path +
+        "/hengel_navigation/position_log")
 
 Kp = 5.0  # speed proportional gain
 
@@ -60,7 +62,7 @@ def angle_difference(angle1, angle2):
 
 
 class NavigationControl():
-    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _isStartEndIndexed, _D):
+    def __init__(self, _arr_path, _arr_intensity, _start_point_list, _end_point_list, _isPositionControl, _isIntensityControl, _isStartEndIndexed, _D, _interval, _vision_off_start_index):
         # while True:
         #     word = raw_input(
         #             "There are options for motor profile change smoothing buffer.\n[1] Enable by delta_theta \n[2] Enable by waypoint  \n[3] Disable \nType :"
@@ -78,7 +80,12 @@ class NavigationControl():
         self.isStartEndIndexed = _isStartEndIndexed
         self.D=_D
         self.D_prev = _D
+        self.interval = _interval
+        print("Vision Off Start Index = %d" %(_vision_off_start_index))
+        self.vision_off_start_index = _vision_off_start_index
         self.img=np.full((2000,2000), 255)
+
+        self.msg_distance = Float32()
 
         self.offset_accepted = False
 
@@ -109,6 +116,22 @@ class NavigationControl():
                         )
                 self.d_k_optimization_option = int(word)
                 if self.d_k_optimization_option==1 or self.d_k_optimization_option==2:
+                    break
+
+            while True:
+                word = raw_input(
+                        "Black Color Spray Intensity? (default:700).\nType :"
+                        )
+                self.black_intensity = int(word)
+                if self.black_intensity>=660 and self.black_intensity<=1000:
+                    break
+
+            while True:
+                word = raw_input(
+                        "VISION Compensation option. \n[1] x, y, heading \n[2] heading only \nType :"
+                        )
+                self.vision_compensation_option = int(word)
+                if self.vision_compensation_option == 1 or self.vision_compensation_option == 2:
                     break
 
             #while True:
@@ -301,6 +324,8 @@ class NavigationControl():
         self.map_img = []
         self.map_img = np.ndarray(self.map_img)
 
+        self.file= open(home_path+
+        "/Dropbox/optitrack_log/"+time.strftime("%y%m%d_%H%M%S")+"_navigation.txt", "w")
         #rospy.init_node('hengel_navigation_control', anonymous=False, disable_signals=True)
         rospy.on_shutdown(self.shutdown_everything)
 
@@ -390,40 +415,62 @@ class NavigationControl():
                         ]
                     self.cnt_waypoints += 1
 
-                    if self.offset_accepted == True and self.cnt_waypoints>5000:
-                        new_point_x=self.point.x + self.offset_x
-                        new_point_y=self.point.y + self.offset_y
-                        new_point_theta = self.heading.data + self.offset_theta
+                    # if self.offset_accepted == True and self.cnt_waypoints>5000:      #when slow, more waypoints are assigned for same drawing
+                    if self.offset_accepted == True:
+                        if self.cnt_waypoints>1500: #when fast
+                            print("current waypoint x=%f, current waypoint y=%f" %(self.current_waypoint[0], self.current_waypoint[1]))
+                            # print("current point x=%f, current point y=%f" %(self.point.x, self.point.y))
+                            print("accepted offset.x=%f, offset.y=%f" %(self.offset_x, self.offset_y))
+                            endpoint_x=self.point.x-self.D*cos(self.heading.data)
+                            endpoint_y=self.point.y-self.D*sin(self.heading.data)
+                            dist=sqrt(pow(endpoint_x-self.current_waypoint[0],2)+pow(endpoint_y-self.current_waypoint[1],2))
+                            print("ORIGINAL DISTANCE between current point and waypoint = %f" %(dist))
 
-                        new_endpoint_x=new_point_x-self.D*cos(self.heading.data)
-                        new_endpoint_y=new_point_y-self.D*sin(self.heading.data)
-                        new_endpoint_z=0.0
 
-                        dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
+                            if self.vision_compensation_option==1:
+                                new_endpoint_x=(self.point.x + self.offset_x) - self.D*cos(self.heading.data + self.offset_theta)
+                                new_endpoint_y=(self.point.y + self.offset_y) - self.D*sin(self.heading.data + self.offset_theta)
 
-                        # if the acquired offset is too large, dismiss it.
-                        if dist>0.5:
-                            print("VISUAL OFFSET is too LARGE!!! (Dismissing the calculated offset)")
+                                dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
+
+                                # if the acquired offset is too large, dismiss it.
+                                offset_upper_limit = 0.1
+                                if dist>offset_upper_limit:
+                                    print("VISUAL OFFSET is LARGER than %f (Dismissing the calculated offset)" %(offset_upper_limit))
+                                    pass
+
+                                elif self.offset_theta>20.0*3.141592/180.0:
+                                    print("VISUAL OFFSET theta is LARGER than 30(deg) (Dismissing the calculated offset)")
+                                    pass
+
+                                else:
+                                    print("new endpoint x=%f, new endpoint y=%f" %(new_endpoint_x, new_endpoint_y))
+                                    self.point.x=self.point.x + self.offset_x
+                                    self.point.y=self.point.y + self.offset_y
+                                    self.heading.data = self.heading.data + self.offset_theta
+                                    #self.point.x=self.point.x - self.offset_x
+                                    #self.point.y=self.point.y - self.offset_y
+                                    #self.heading.data = self.heading.data - self.offset_theta
+
+                                    if dist>self.interval:
+                                        div=int(ceil(dist/self.interval))
+                                        print("VISUAL OFFSET NEW distance = %f" % (dist))
+                                        print("Waypoint Interval inserted by visual offset = %f" % (self.interval))
+                                        print("VISUAL OFFSET inserted %d waypoints" % (div))
+
+                                        for k in range(div-1):
+                                            x=new_endpoint_x+(k+1)/float(div)*(self.current_waypoint[0]-new_endpoint_x)
+                                            y=new_endpoint_y+(k+1)/float(div)*(self.current_waypoint[1]-new_endpoint_y)
+                                            self.robotNavigationLoop([x,y], not_drawing=True)
+
+                                    else:
+                                        print("VISUAL OFFSET inserted 1 waypoint, because new distance is small enough")
+
+                            elif self.vision_compensation_option==2:
+                                self.heading.data = self.heading.data + self.offset_theta
+
+                        else:   #vision not ready yet
                             pass
-
-                        elif dist>0.0007*2.0:
-                            div=int(ceil(dist/0.0007))
-                            print("VISUAL OFFSET inserted %d waypoints" % (div))
-
-                            self.point.x=new_point_x
-                            self.point.y=new_point_y
-                            self.heading.data = new_point_theta
-
-                            for k in range(div-1):
-                                x=new_point_x+(k+1)/float(div)*(self.current_waypoint[0]-new_point_x)
-                                y=new_point_y+(k+1)/float(div)*(self.current_waypoint[1]-new_point_y)
-                                self.robotNavigationLoop([x,y])
-
-                        else:
-                            print("VISUAL OFFSET inserted 1 waypoint")
-                            self.point.x=new_point_x
-                            self.point.y=new_point_y
-                            self.heading.data = new_point_theta
 
                         self.offset_accepted = False
 
@@ -446,7 +493,7 @@ class NavigationControl():
 
                     # Motion Control
 
-                    self.robotNavigationLoop(self.current_waypoint)
+                    self.robotNavigationLoop(self.current_waypoint, not_drawing=False)
 
 
                     #Arrived at the waypoint
@@ -467,7 +514,8 @@ class NavigationControl():
             self.waypoint_index_in_current_segment = 0
 
 
-        self.shutdown_for_seconds(10.0)
+        self.shutdown_for_seconds(7.0)
+        self.shutdown_for_seconds_2(5.0)
         rospy.loginfo("Stopping the robot at the final destination")
         print("Total Stiff Delta_Theta Change BUFFER = %d" % (self.cnt_delta_buffer))
         #Wait for 1 second to close valve
@@ -566,7 +614,7 @@ class NavigationControl():
 
                                         #cut off value larger than 230 to 230.
                                         input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
-                                        spray_input = 660.0+(1000.0-660.0)*(float(input_pixel_value)/230.0)
+                                        spray_input = self.black_intensity+(1000.0-self.black_intensity)*(float(input_pixel_value)/230.0)
                                         # self.spray_intensity_publisher.publish(spray_input)
                                         self.valve_angle_input.goal_position = int(spray_input)
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
@@ -577,16 +625,16 @@ class NavigationControl():
                                         self.valve_angle_input.goal_position = 1000
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
                                     else:
-                                        #self.spray_intensity_publisher.publish(660.0)
-                                        # self.spray_intensity_publisher.publish(740.0)
+                                        #self.spray_intensity_publisher.publish(self.black_intensity)
+                                        # self.spray_intensity_publisher.publish(self.black_intensity)
                                         input_pixel_value_graphic = 0
-                                        self.valve_angle_input.goal_position = 660
+                                        self.valve_angle_input.goal_position = self.black_intensity
                                         self.valve_angle_publisher.publish(self.valve_angle_input)
 
 
                             elif self.intensity_option==2:
                                 input_pixel_value_graphic=0
-                                self.valve_angle_input.goal_position = 740
+                                self.valve_angle_input.goal_position = self.black_intensity
                                 self.valve_angle_publisher.publish(self.valve_angle_input)
 
                             # start
@@ -768,7 +816,7 @@ class NavigationControl():
         #Wait for 1 second to close valve
         # self.quit_valve()
 
-    def robotNavigationLoop(self, current_destination):
+    def robotNavigationLoop(self, current_destination, not_drawing):
         if rospy.is_shutdown():
             print("rospy.is_shutdown()")
             self.shutdown_for_seconds(2.0)
@@ -783,11 +831,15 @@ class NavigationControl():
 
                         #cut off value larger than 230 to 230.
                         input_pixel_value = 230 if input_pixel_value>230 else input_pixel_value
-                        spray_input = 660.0+(1000.0-660.0)*(float(input_pixel_value)/230.0)
+                        spray_input = self.black_intensity+(1000.0-self.black_intensity)*(float(input_pixel_value)/230.0)
                         # self.spray_intensity_publisher.publish(spray_input)
                         #self.valve_angle_input.goal_position = int(spray_input)
                         #self.valve_angle_publisher.publish(self.valve_angle_input)
-                        self.intensity_publisher.publish(int(spray_input))
+                        if not_drawing:
+                            self.intensity_publisher.publish(int(1000))
+                        else:
+                            self.intensity_publisher.publish(int(spray_input))
+
                 else:
                     if self.is_moving_between_segments==True:
                         # self.spray_intensity_publisher.publish(1000.0)
@@ -796,32 +848,35 @@ class NavigationControl():
                         #self.valve_angle_publisher.publish(self.valve_angle_input)
                         self.intensity_publisher.publish(int(1000))
                     else:
-                        #self.spray_intensity_publisher.publish(660.0)
-                        # self.spray_intensity_publisher.publish(740.0)
+                        #self.spray_intensity_publisher.publish(self.black_intensity)
+                        # self.spray_intensity_publisher.publish(self.black_intensity)
                         input_pixel_value_graphic = 0
-                        #self.valve_angle_input.goal_position = 660
+                        #self.valve_angle_input.goal_position = self.black_intensity
                         #self.valve_angle_publisher.publish(self.valve_angle_input)
-                        self.intensity_publisher.publish(int(660))
+                        if not_drawing:
+                            self.intensity_publisher.publish(int(1000))
+                        else:
+                            self.intensity_publisher.publish(int(self.black_intensity))
 
 
             elif self.intensity_option==2:
                 input_pixel_value_graphic=0
-                #self.valve_angle_input.goal_position = 740
+                #self.valve_angle_input.goal_position = self.black_intensity
                 #self.valve_angle_publisher.publish(self.valve_angle_input)
-                self.intensity_publisher.publish(int(740))
+                if not_drawing:
+                    self.intensity_publisher.publish(int(1000))
+                else:
+                    self.intensity_publisher.publish(int(self.black_intensity))
 
             self.endPoint.x=self.point.x-self.D*cos(self.heading.data)
             self.endPoint.y=self.point.y-self.D*sin(self.heading.data)
             self.endPoint.z=float(input_pixel_value_graphic)
             self.point.z=self.heading.data
-            self.pub_midpoint.publish(self.point)
-            self.pub_endpoint.publish(self.endPoint)
             msg_time = Time()
             msg_time.data = rospy.Time.now()
-            self.pub_midpoint_time.publish(msg_time)
+
 
             #print(str(self.cnt_waypoints)+"  "+str(self.endPoint.x)+"  "+str(self.endPoint.y))
-            print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.cnt_waypoints))
             # print(str(self.point.x)+"  "+str(self.point.y)+"  "+str(self.heading.data*180.0/pi))
 
             #print("distance: ", distance)
@@ -837,7 +892,7 @@ class NavigationControl():
             b = delX*cos(th) + delY*sin(th)
             c = b - self.D
             if self.arr_delOmega:
-                if self.d_k_optimization_option==1:
+                if self.d_k_optimization_option==1 and self.cnt_waypoints>=200:
                     # D(k) optimization
                     # calculated_D = self.calculate_optimal_D(delX, delY, th, self.D, self.arr_delOmega[-1][0], self.arr_delOmega[-1][1])
                     # if abs(self.D-calculated_D)>0.0023:
@@ -849,10 +904,9 @@ class NavigationControl():
                     #     self.D = calculated_D
                     self.D = self.calculate_optimal_D(delX, delY, th, self.D, self.arr_delOmega[-1][0], self.arr_delOmega[-1][1])
                     print(str(self.D))
-                    msg_distance = Float32()
+
                     #msg_distance.data = self.D
-                    msg_distance.data = self.D - self.D_prev
-                    self.distance_publisher.publish(msg_distance)
+                    self.msg_distance.data = self.D - self.D_prev
                     self.D_prev = self.D
                 else:
                     # D(k) constant
@@ -870,8 +924,8 @@ class NavigationControl():
 
             # elif self.motor_buffer_option == 2:
             # #motor smoothing for initial 150 loops
-            flag_del1_large = abs(delOmega1 - self.pubDelta1) >= 0.01
-            flag_del2_large = abs(delOmega2 - self.pubDelta2) >= 0.01
+            flag_del1_large = abs(delOmega1 - self.pubDelta1) >= 0.2
+            flag_del2_large = abs(delOmega2 - self.pubDelta2) >= 0.2
             flag_stiff_change = flag_del1_large or flag_del2_large
 
             if self.cnt_waypoints < 150 and flag_stiff_change and self.next_letter_index != -1:
@@ -906,9 +960,6 @@ class NavigationControl():
                     delOmega1= (1/self.R_left)*(delS+2*self.L*delOmega)
                     delOmega2= (1/self.R_right)*(delS-2*self.L*delOmega)
 
-                    self.pub_delta_theta_1.publish(delOmega1)
-                    self.pub_delta_theta_2.publish(delOmega2)
-
                     # if pubIter != 1:
                     #     print("THIS SHOULD NOT HAPPEN :) IF THIS SHOWS UP, YOU'RE FUCKED UP")
 
@@ -918,13 +969,23 @@ class NavigationControl():
                     self.point.y=self.point.y+delYrobotGlobal
                     #self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
                     self.heading.data=self.heading.data+(self.R_left*delOmega1-self.R_right*delOmega2)/(2*self.L)
-                    self.pen_distance_per_loop=sqrt(
-                        pow(delXrobotGlobal, 2) +
-                        pow(delYrobotGlobal, 2)
-                        )
+                    # self.pen_distance_per_loop=sqrt(
+                    #     pow(delXrobotGlobal, 2) +
+                    #     pow(delYrobotGlobal, 2)
+                    #     )
                     # print(str(delOmega1)+"  "+str(delOmega1)+"  "+str(self.pen_distance_per_loop))
+                    print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.heading.data*180.0/pi)+"  "+str(self.cnt_waypoints))
                     self.pubDelta1 = delOmega1
                     self.pubDelta2 = delOmega2
+                    self.pub_delta_theta_1.publish(self.pubDelta1)
+                    self.pub_delta_theta_2.publish(self.pubDelta2)
+                    self.pub_midpoint.publish(self.point)
+                    self.pub_endpoint.publish(self.endPoint)
+                    self.pub_midpoint_time.publish(msg_time)
+                    if self.d_k_optimization_option==1 and self.cnt_waypoints>=200:
+                        self.distance_publisher.publish(self.msg_distance)
+                    now=rospy.get_rostime()
+                    self.file.write(str(self.endPoint.x)+"\t"+str(self.endPoint.y)+"\t"+str(now.secs)+str(now.nsecs)+'\n')
                     self.r.sleep()
 
 
@@ -932,23 +993,35 @@ class NavigationControl():
             #elif self.motor_buffer_option == 3:
 
             #if waypoint loop count is over initial 150
+            #VISUAL FEEDBACK should be done here
             else:
                 self.pubDelta1 = delOmega1
                 self.pubDelta2 = delOmega2
-                self.pub_delta_theta_1.publish(self.pubDelta1)
-                self.pub_delta_theta_2.publish(self.pubDelta2)
                 delXrobotLocal, delYrobotLocal = self.calculate_robot_local_delta_from_omega(self.pubDelta1, self.pubDelta2)
                 delXrobotGlobal, delYrobotGlobal=np.matmul([[cos(self.heading.data), -sin(self.heading.data)],[sin(self.heading.data), cos(self.heading.data)]], [delXrobotLocal, delYrobotLocal])
                 self.point.x=self.point.x+delXrobotGlobal
                 self.point.y=self.point.y+delYrobotGlobal
                 #self.heading.data=self.heading.data+self.R*(delOmega1-delOmega2)/(2*self.L)
                 self.heading.data=self.heading.data+(self.R_left*delOmega1-self.R_right*delOmega2)/(2*self.L)
+                # self.pen_distance_per_loop=sqrt(
+                #     pow(delXrobotGlobal, 2) +
+                #     pow(delYrobotGlobal, 2)
+                #     )
                 self.pen_distance_per_loop=sqrt(
-                    pow(delXrobotGlobal, 2) +
-                    pow(delYrobotGlobal, 2)
+                    pow(delX, 2) +
+                    pow(delY, 2)
                     )
                 #print(str(delOmega1)+"  "+str(delOmega2)+"  "+str(self.pen_distance_per_loop))
-
+                print(str(self.endPoint.x)+"  "+str(self.endPoint.y)+"  "+str(self.heading.data*180.0/pi)+"  "+str(self.pen_distance_per_loop)+"  "+str(self.cnt_waypoints))
+                self.pub_delta_theta_1.publish(self.pubDelta1)
+                self.pub_delta_theta_2.publish(self.pubDelta2)
+                self.pub_midpoint.publish(self.point)
+                self.pub_endpoint.publish(self.endPoint)
+                self.pub_midpoint_time.publish(msg_time)
+                if self.d_k_optimization_option==1 and self.cnt_waypoints>=200:
+                    self.distance_publisher.publish(self.msg_distance)
+                now=rospy.get_rostime()
+                self.file.write(str(self.endPoint.x)+"\t"+str(self.endPoint.y)+"\t"+str(now.secs)+str(now.nsecs)+'\n')
                 self.r.sleep()
 
         except KeyboardInterrupt:
@@ -1113,15 +1186,28 @@ class NavigationControl():
     def calculate_robot_local_delta_from_omega(self, del1, del2):
         delX = 0.0
         delY = 0.0
-        if del1 != del2:
+        if del1*self.R_left != del2*self.R_right:
             delY=-self.L*(del1*self.R_left+del2*self.R_right)/(del1*self.R_left-del2*self.R_right)*(1-cos((del2*self.R_right-del1*self.R_left)/(2*self.L)))
             delX=-self.L*(del1*self.R_left+del2*self.R_right)/(del1*self.R_left-del2*self.R_right)*sin((del2*self.R_right-del1*self.R_left)/(2*self.L))
         else:
-            delX=self.R*del1
+            delX=self.R_left*del1
             delY=0
         return delX, delY
 
     def shutdown_everything(self):
+        # self.cmd_vel.publish(Twist())
+        self.pub_delta_theta_1.publish(0.0)
+        self.pub_delta_theta_2.publish(0.0)
+        # self.spray_intensity_publisher.publish(1000.0)
+        #self.valve_angle_input.goal_position = 1000
+        #self.valve_angle_publisher.publish(self.valve_angle_input)
+        self.intensity_publisher.publish(int(1000))
+        msg_distance = Float32()
+        msg_distance.data = 10000
+        self.distance_publisher.publish(msg_distance)
+        self.r.sleep()
+
+    def shutdown_everything_2(self):
         # self.cmd_vel.publish(Twist())
         self.pub_delta_theta_1.publish(0.0)
         self.pub_delta_theta_2.publish(0.0)
@@ -1139,15 +1225,27 @@ class NavigationControl():
         for i in range(cnt_loop):
             self.shutdown_everything()
 
+    def shutdown_for_seconds_2(self, _input):
+        cnt_loop = (int)(_input / self.dt)
+        for i in range(cnt_loop):
+            self.shutdown_everything_2()
+
     def callback_vision_offset(self, _data):
         print("Callback Vision OFFSET Received")
 
         #offset_accpeted callback can be accepted, only when there is no accepted offset handling right now.
-        if self.offset_accepted == False:
-            self.offset_accepted = True
-            self.offset_x = _data.x
-            self.offset_y = _data.y
-            self.offset_theta = _data.z
+        if self.vision_off_start_index==-1:
+            if self.offset_accepted == False:
+                self.offset_accepted = True
+                self.offset_x = _data.x
+                self.offset_y = _data.y
+                self.offset_theta = _data.z
+        else:
+            if self.offset_accepted == False and self.cnt_waypoints<self.vision_off_start_index:
+                self.offset_accepted = True
+                self.offset_x = _data.x
+                self.offset_y = _data.y
+                self.offset_theta = _data.z
 
             # self.point.x=self.point.x + offset_x
             # self.point.y=self.point.y + offset_y

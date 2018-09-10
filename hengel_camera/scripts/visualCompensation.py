@@ -32,10 +32,15 @@ sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
 class VisualCompensation():
     def __init__(self, option_str):
-        if option_str=='debug':
+        self.option_debug = False
+        self.option_without_save = False
+
+        if option_str=='run':
+            pass
+        elif option_str=='debug':
             self.option_debug = True
-        elif option_str=='run':
-            self.option_debug = False
+        elif option_str=='without_save':
+            self.option_without_save = True
         else:
             print("Wrong Argument")
             sys.exit(1)
@@ -46,7 +51,7 @@ class VisualCompensation():
             self.height=float(word.split()[1])
             break
         # self.num_pts_delete = _num_pts_delete
-        self.recent_pts = collections.deque(150*[(0.0,0.0)],150)
+        self.recent_pts = collections.deque(500*[(0.0,0.0)],500)
 
         self.home_path = expanduser("~")
         self.folder_path = self.home_path + "/FEATURE_MATCH/" + time.strftime("%y%m%d_%H%M%S")
@@ -60,10 +65,11 @@ class VisualCompensation():
 
         self.isNavigationStarted = False
         self.bridge=CvBridge()
-        self.pixMetRatio=300
+        #self.pixMetRatio=300
+        self.pixMetRatio=250
 
-        # self.line_thickness= 0.022
-        self.line_thickness=0.1
+        self.line_thickness= 0.022
+        # self.line_thickness=0.1
 
         self.canvas_padding = self.line_thickness * self.pixMetRatio * 2        #2 means each side
         self.real_canvas_crop_padding = 0.3 * self.pixMetRatio
@@ -78,14 +84,19 @@ class VisualCompensation():
         self.pi_right_img=np.array([])
 
         self.isProcessingVirtualmapTime = False
-        self.mid_predict_canvas_x=collections.deque(300*[0.0],300)
-        self.mid_predict_canvas_y=collections.deque(300*[0.0],300)
-        self.mid_predict_canvas_th=collections.deque(300*[0.0],300)
-        self.mid_predict_canvas_time=collections.deque(300*[0.0],300)
+        self.mid_predict_canvas_x=collections.deque(500*[0.0],500)
+        self.mid_predict_canvas_y=collections.deque(500*[0.0],500)
+        self.mid_predict_canvas_th=collections.deque(500*[0.0],500)
+        self.mid_predict_canvas_time=collections.deque(500*[0.0],500)
+        self.end_predict_canvas_x= collections.deque(500*[0.0],500)
+        self.end_predict_canvas_y= collections.deque(500*[0.0],500)
 
         # self.mid_real_photo_x=640+55.77116996/2
         self.mid_real_photo_x=640
         self.mid_real_photo_y=640
+
+
+
 
         self.endPoint_callback=message_filters.Subscriber('/endpoint', Point)
         self.midPoint_callback=message_filters.Subscriber('/midpoint', Point)
@@ -106,7 +117,12 @@ class VisualCompensation():
         # self.summed_image = None
         # self.summed_image_prev = None
 
-        self.ts_2=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=False)
+        # self.ts_2=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=False)
+        self.ts_2=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2], 10,0.1, allow_headerless=False)
+        ################# STOPGAP ###########################
+        self.ts_3=message_filters.ApproximateTimeSynchronizer([self.callback3, self.callback4], 10,0.1, allow_headerless=False)
+        self.ts_3.registerCallback(self.sync_real_callabck2)
+        self.realcallback2=False
 
         rospy.Subscriber('/usb_cam3/image_raw/compressed', CompressedImage, self.callback_left)
         rospy.Subscriber('/usb_cam4/image_raw/compressed', CompressedImage, self.callback_right)
@@ -141,10 +157,11 @@ class VisualCompensation():
 
         self.sum_compensation_distance = 0.0
 
-        self.x_img_max=0
-        self.x_img_min=0
-        self.y_img_max=0
-        self.y_img_min=0
+        self.isMinInitialized=False
+        self.x_img_max=None
+        self.x_img_min=None
+        self.y_img_max=None
+        self.y_img_min=None
 
 
         rospy.spin()
@@ -159,7 +176,14 @@ class VisualCompensation():
         # print("right")
         self.pi_right_img=self.undistort_right(_img)
 
-    def sync_real_callback(self, _img1, _img2, _img3, _img4):
+    def sync_real_callabck2(self, _img3, _img4):
+        self._img3=_img3
+        self._img4=_img4
+        self.realcallback2=True
+
+
+    def sync_real_callback(self, _img1, _img2):
+    # def sync_real_callback(self, _img1, _img2, _img3, _img4):
         if self.option_debug:
             print("------image time------")
             print(_img1.header.stamp.to_nsec())
@@ -170,11 +194,13 @@ class VisualCompensation():
             self.isNavigationStarted=True
             self.app_robotview.isPaintStarted=True
 
-        if self.isNavigationStarted==True:
+        ########### STOPGAP ######################
+        # if self.isNavigationStarted==True:
+        if self.isNavigationStarted==True and self.realcallback2:
             if self.app_robotview.isPaintStarted == True:
                 print("\n-----------------sync real-----------------")
                 _time = time.time()
-                image_time = (_img1.header.stamp.to_nsec()+_img2.header.stamp.to_nsec()+_img3.header.stamp.to_nsec()+_img4.header.stamp.to_nsec())/4.0
+                image_time = (_img1.header.stamp.to_nsec()+_img2.header.stamp.to_nsec()+self._img3.header.stamp.to_nsec()+self._img4.header.stamp.to_nsec())/4.0
 
                 min_diff = 999999999999999.9
                 min_index = -1
@@ -188,6 +214,10 @@ class VisualCompensation():
                 self.current_mid_predict_canvas_x = self.mid_predict_canvas_x[min_index]
                 self.current_mid_predict_canvas_y = self.mid_predict_canvas_y[min_index]
                 self.current_mid_predict_canvas_th = self.mid_predict_canvas_th[min_index]
+                self.current_end_predict_canvas_x = self.end_predict_canvas_x[min_index]
+                self.current_end_predict_canvas_y = self.end_predict_canvas_y[min_index]
+
+                print("current end predict canvas x: %f y: %f" %(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y))
                 self.isProcessingVirtualmapTime = False
 
                 self.mid_predict_img_x=-self.current_mid_predict_canvas_x *self.pixMetRatio + self.canvas_padding
@@ -198,8 +228,13 @@ class VisualCompensation():
 
                 img1 = self.undistort1(_img1)
                 img2 = self.undistort2(_img2)
-                img3 = self.undistort3(_img4)
-                img4 = self.undistort4(_img3)
+                # img3 = self.undistort3(_img4)
+                # img4 = self.undistort4(_img3)
+                ###################### STOPGAP ##############3
+                img3 = self.undistort3(self._img3)
+                img4 = self.undistort4(self._img4)
+
+
                 #ONLY FOR DEBUGGING!!!!!!!
                 if self.option_debug:
                     bridge=CvBridge()
@@ -213,6 +248,8 @@ class VisualCompensation():
                 img4_masked=np.multiply(np.multiply(img4, im_mask13), self.im_mask2).astype('uint8')
 
                 summed_image_not=img1+img2_masked+img3+img4_masked
+                summed_image_not_copy=copy.deepcopy(summed_image_not)
+                # cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_summed_1.png",img1+img2+img3+img4)
                 #ONLY FOR DEBUGGING!!!!!!!
                 #if self.option_debug:
                 #    bridge=CvBridge()
@@ -256,6 +293,7 @@ class VisualCompensation():
 
                 homography_virtual_map, homography =self.crop_image(self.virtual_map) #background is black
                 self.cropped_virtual_map=cv2.bitwise_not(homography_virtual_map)
+                virtual_map_copy=copy.deepcopy(self.cropped_virtual_map)
 
                 for i in xrange(len(y1)):
                     summed_image_not[y1_ratio[i]:y2_ratio[i], x1_ratio[i]:x2_ratio[i]]=0
@@ -286,10 +324,14 @@ class VisualCompensation():
                 #Make mask of the vertices
                 mask=np.zeros((summed_image_not.shape[0], summed_image_not.shape[1]),dtype=np.uint8 )
                 cv2.fillPoly(mask, real_map_crop_pts, (255))
+
+                # summed_image_not=cv2.fill((1280,1280), (255)).astype('uint8')
                 res=cv2.bitwise_and(summed_image_not, summed_image_not, mask=mask)
+                res_copy=cv2.bitwise_and(summed_image_not_copy, summed_image_not_copy, mask=mask)
                 # img_white=np.full((1280,1280),(255)).astype('uint8')
                 # res=cv2.bitwise_and(img_white, img_white, mask=mask)
                 summed_image= cv2.bitwise_not(res)
+                summed_image_copy=cv2.bitwise_not(res_copy)
 
                 print("sum & crop image time: "+str(time.time()-_time))
 
@@ -300,7 +342,7 @@ class VisualCompensation():
 
 ##################################################################################
                 try:
-                    fm = FeatureMatch(self.folder_path)
+                    fm = FeatureMatch(self.folder_path, self.option_without_save)
                     # print("img1: "+str(self.virtual_map.shape)+", img2: "+str(summed_image.shape))
                     # if self.cropped_virtual_map is None or summed_image is None:
                     if self.cropped_virtual_map is None or summed_image is None:
@@ -310,13 +352,14 @@ class VisualCompensation():
                         # M = fm.SIFT_FLANN_matching(self.cropped_virtual_map, summed_image)
 
                         # M = fm.ORB_BF_matching(summed_image, self.cropped_virtual_map)
-                        M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map)
+                        # M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map,summed_image_copy, virtual_map_copy)
+                        M=fm.SIFT_BF_matching(summed_image, self.cropped_virtual_map,summed_image_copy, virtual_map_copy)
                         # M = fm.SIFT_FLANN_matching(summed_image, self.cropped_virtual_map)
                         # M = fm.IMAGE_ALIGNMENT_ecc(summed_image, self.cropped_virtual_map)
-                        # M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map)
+                        # M=fm.SURF_BF_matching(summed_image, self.cropped_virtual_map, summed_image_copy, virtual_map_copy)
 
                         if fm.status == True:
-                            #self.app_robotview.remove_points_during_vision_compensation(self.recent_pts, int((time.time()-_time)/0.02))
+                            # self.app_robotview.remove_points_during_vision_compensation(self.recent_pts, int((time.time()-_time)/0.02))
                             self.virtual_map = self.app_robotview.img
 
                             #Initialize Queue
@@ -326,6 +369,17 @@ class VisualCompensation():
                             _pnt = self.relocalization(M)
                             # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                             self.vision_offset_publisher.publish(_pnt)
+                            print("ADD BIG CIRCLE: %f %f" %(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y))
+
+                            #circle (original endpoint)
+                            self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y, 0), self.line_thickness*1.5)
+                            #square (compensated endpoint)
+                            self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x+_pnt.x, self.current_end_predict_canvas_y+_pnt.y,0), -2)
+
+                            virtual_map_marked= self.app_robotview.img_copy
+                            # if not self.option_without_save:
+                            file_time = time.strftime("%y%m%d_%H%M%S")
+                            cv2.imwrite(self.folder_path+"/MATCHED_POINTS_"+file_time+".png", virtual_map_marked)
                             # print("relocation time: "+str(time.time()-__time))
                             print("Total Time (visual feedback): "+str(time.time()-_time))
                 except Exception as e:
@@ -363,15 +417,24 @@ class VisualCompensation():
             self.mid_predict_canvas_x.appendleft(_midPoint.x)
             self.mid_predict_canvas_y.appendleft(_midPoint.y)
             self.mid_predict_canvas_th.appendleft(_midPoint.z)
+            self.end_predict_canvas_x.appendleft(_endPoint.x)
+            self.end_predict_canvas_y.appendleft(_endPoint.y)
             self.mid_predict_canvas_time.appendleft(_midPointTime.data.to_nsec())
 
             self.end_predict_img_y=(self.height-_midPoint.y)*self.pixMetRatio
             self.end_predict_img_x=-_midPoint.x * self.pixMetRatio
 
-            self.x_img_max=max(self.x_img_max, self.end_predict_img_x)
-            self.x_img_min=min(self.x_img_min, self.end_predict_img_x)
-            self.y_img_max=max(self.y_img_max, self.end_predict_img_y)
-            self.y_img_min=min(self.y_img_min, self.end_predict_img_y)
+            if not self.isMinInitialized:
+                self.x_img_min = self.end_predict_img_x
+                self.x_img_max = self.end_predict_img_x
+                self.y_img_min = self.end_predict_img_y
+                self.y_img_max = self.end_predict_img_y
+                self.isMinInitialized=True
+            else:
+                self.x_img_max=max(self.x_img_max, self.end_predict_img_x)
+                self.x_img_min=min(self.x_img_min, self.end_predict_img_x)
+                self.y_img_max=max(self.y_img_max, self.end_predict_img_y)
+                self.y_img_min=min(self.y_img_min, self.end_predict_img_y)
 
             self.recent_pts.appendleft((_midPoint.x, _midPoint.y))
 
@@ -389,11 +452,11 @@ class VisualCompensation():
 
     def relocalization(self, homography):
 
-        mid_real_virtual_x, mid_real_virtual_y, _= np.matmul(homography, [self.mid_real_photo_x, self.mid_real_photo_y, 1])
+        mid_real_virtual_x, mid_real_virtual_y, scale= np.matmul(homography, [self.mid_real_photo_x, self.mid_real_photo_y, 1])
 
-        del_x_virtual=mid_real_virtual_x-self.mid_real_photo_x
+        del_x_virtual=mid_real_virtual_x/scale-self.mid_real_photo_x
 
-        del_y_virtual=mid_real_virtual_y-self.mid_real_photo_y
+        del_y_virtual=mid_real_virtual_y/scale-self.mid_real_photo_y
         del_th_virtual=-atan2(homography[0][1],homography[0][0])
 
         rotation=np.array([[cos(self.current_mid_predict_canvas_th), -sin(self.current_mid_predict_canvas_th)],
@@ -417,11 +480,13 @@ class VisualCompensation():
 
         dist= sqrt(pow(offset.x,2)+pow(offset.y,2))
 
-        if dist>=0.02:
-            offset=Point()
-        else:
-            print("OFFSET less than limit (= 0.02)")
-            self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)
+        #if dist>=0.02:
+        # if dist>=0.1:     #dist larger than 0.1 would be handled in navigation_control anyway 
+            # offset=Point()
+        # else:
+        #print("OFFSET less than limit (= 0.02)")
+        # print("OFFSET less than limit (= 0.1)")
+        self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)
         return offset
 
         # self.pub_offset.publish(offset)
@@ -708,7 +773,10 @@ if __name__=='__main__':
     # VisualCompensation(num_pts_delete)
     if len(sys.argv)==1:
         VisualCompensation('run')
-    elif len(sys.argv)==2 and sys.argv[1]=='debug':
-        VisualCompensation('debug')
+    elif len(sys.argv)==2:
+        if sys.argv[1]=='debug':
+            VisualCompensation('debug')
+        elif sys.argv[1]=='without_save':
+            VisualCompensation('without_save')
     else:
         print("Wrong Argument")

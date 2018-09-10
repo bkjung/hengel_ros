@@ -23,9 +23,10 @@ class RobotView():
         # self.lineThickness=0.01   #original
         self.lineThickness= thickness
         self.canvas_padding= canvas_padding
-        self.interval= 0.0001
+        self.interval= 100
 
-        self.img=_img
+        self.img=copy.deepcopy(_img)
+        self.img_copy=copy.deepcopy(_img)
 
         self.pub1=rospy.Publisher('/markedImg', CompressedImage, queue_size=3)
         self.pub2=rospy.Publisher('/notMarkedImg', CompressedImage, queue_size=3)
@@ -44,7 +45,10 @@ class RobotView():
 
         return imgPnt
 
-    def run(self, _midpoint, _endpoint):
+    def run(self, _midpoint, _endpoint, change_thickness=-1):
+        #If change_thickness == -1(default), add endpoint in virtualMap
+        #If change_thickness == -2, add square at modified endpoint
+        #Else, add circle at the endpoint (to mark where relocalization executed)
         self.mid_x = self.cvtCanvasToImgCoord(_midpoint).x
         self.mid_y = self.cvtCanvasToImgCoord(_midpoint).y
         self.th = self.cvtCanvasToImgCoord(_midpoint).z
@@ -63,12 +67,19 @@ class RobotView():
         if self.end_x>=0 and self.end_x<self.img.shape[1] and self.end_y>=0 and self.end_y<self.img.shape[0]:
 
             # print("add run")
-            self.add_endpoint()
+            if change_thickness==-1:
+                self.add_endpoint(self.lineThickness)
+            elif change_thickness==-2:
+                print("CHANGE_THICKNESS: %d" %(change_thickness))
+                self.add_square(self.end_x, self.end_y)
+            else:
+                self.add_endpoint(change_thickness, False)
             #self.img[int(self.end_y)][int(self.end_x)]=self.spray_intensity
-        
-    def draw_endpoint(self, end_x, end_y, intensity):
-        self.img[int(end_y)][int(end_x)]=intensity
-        dist=self.lineThickness*self.pixMetRatio
+
+    def draw_endpoint(self, end_x, end_y, intensity, lineThickness, img):
+        #if isVirtualMapChanging is False, add big circle to mark current endpoint
+        img[int(end_y)][int(end_x)]=intensity
+        dist=lineThickness*self.pixMetRatio
         x1=int(end_x-dist/2)
         x2=int(end_x+dist/2)
 
@@ -76,7 +87,8 @@ class RobotView():
             x=end_x-i
             if i>=0 and i<self.img.shape[1]:
                 if abs(x)>dist/2:
-                    self.img[int(end_y)][i]=min(intensity, self.img[int(end_y)][i])
+                    img[int(end_y)][i]=min(intensity, img[int(end_y)][i])
+
                 else:
                     if i>end_x:
                         y=sqrt(dist*dist/4-(end_x-i)*(end_x-i))
@@ -85,27 +97,34 @@ class RobotView():
                     y1=int(end_y-y)
                     y2=int(end_y+y)
                     for j in range(y1, y2+1):
-                        if j>0 and j<self.img.shape[0]:
-                            self.img[j][i]=min(intensity, self.img[j][i])
+                        if j>0 and j<img.shape[0]:
+                            img[j][i]=min(intensity, img[j][i])
+
             else:
-                print("canvas size: %d, %d" %(self.img.shape[1], self.img.shape[0]))
+                print("canvas size: %d, %d" %(img.shape[1], img.shape[0]))
                 print("point: %d, %d" %(point_x, point_y))
 
-    def add_endpoint(self):
+    def add_endpoint(self, lineThickness, isVirtualMapChanging=True):
+        #if isVirtualMapChanging is False, add big circle to mark current endpoint
         _time=time.time()
         if self.spray_intensity!=255:
-            self.isPaintStarted=True
-            if (self.prev_end_point is not None) and self.isDrawing:
-                #Add points between prev & current endpoint
-                queue=[]
-                dist=sqrt(pow(self.prev_end_point[0]-self.end_x,2)+pow(self.prev_end_point[1]-self.end_y,2))
-                div=int(ceil(dist/self.interval))   
-                for k in range(div+1):
-                    x=self.prev_end_point[0]+(k+1)/float(div)*(self.end_x-self.prev_end_point[0])
-                    y=self.prev_end_point[1]+(k+1)/float(div)*(self.end_y-self.prev_end_point[1])
-                    self.draw_endpoint(x,y, self.spray_intensity)
+            self.isPaintStarted=True #Initiate sync_real
+            #if (self.prev_end_point is not None) and self.isDrawing and isVirtualMapChanging:  #Add points between prev & current endpoint
+            #    queue=[]
+            #    dist=sqrt(pow(self.prev_end_point[0]-self.end_x,2)+pow(self.prev_end_point[1]-self.end_y,2))
+            #    div=int(ceil(dist/self.interval))
+            #    for k in range(div+1):
+            #        x=self.prev_end_point[0]+(k+1)/float(div)*(self.end_x-self.prev_end_point[0])
+            #        y=self.prev_end_point[1]+(k+1)/float(div)*(self.end_y-self.prev_end_point[1])
+            #        self.draw_endpoint(x,y, self.spray_intensity, lineThickness, isVirtualMapChanging)
+            #else:
+            #    self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, isVirtualMapChanging)
+            if isVirtualMapChanging:
+                self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, self.img)
+                self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, self.img_copy)
             else:
-                self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity)
+                self.draw_endpoint(self.end_x, self.end_y, self.spray_intensity, lineThickness, self.img_copy)
+
             self.isDrawing=True
             self.prev_end_point= [self.end_x, self.end_y]
         else:
@@ -115,6 +134,24 @@ class RobotView():
         # ttime.data=float(time.time()-_time)
         # self.pub3.publish(ttime)
         # print("map making time: "+str(time.time()-_time))
+
+    def add_square(self, _end_x, _end_y):
+        print("ADD_SQUARE, point: %d, %d / IMG SIZE: %d, %d" %(_end_x, _end_y, self.img_copy.shape[1], self.img_copy.shape[0]))
+        # size=int(1.5*self.lineThickness)
+        half_size=3
+
+        marked_pixel_cnt = 0
+        for i in range(2*half_size):
+            x_diff=[-half_size, half_size, -half_size+i, -half_size+i ]
+            y_diff=[-half_size+i, -half_size+i, -half_size, half_size ]
+            for j in range(len(x_diff)):
+                x=_end_x+x_diff[j]
+                y=_end_y+y_diff[j]
+                if x>0 and x<self.img_copy.shape[1] and y>0 and y<self.img_copy.shape[0]:
+                    self.img_copy[y][x]=0
+                    marked_pixel_cnt += 1
+        print("marked %d pixels" % marked_pixel_cnt)
+
 
     def remove_points_during_vision_compensation(self, _recent_pts, _num_remove_pts):
         #Make all pixels in recent_pts to white (255)
