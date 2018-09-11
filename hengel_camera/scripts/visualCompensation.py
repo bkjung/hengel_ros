@@ -374,7 +374,9 @@ class VisualCompensation():
                             # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
                             dist= sqrt(pow(_pnt.x,2)+pow(_pnt.y,2))
 
-                            if _pnt<0.02:
+
+                            offset_distance_limit = 0.05
+                            if _pnt<offset_distance_limit:
                                 print("Offset okay (less than distance, deg limit)")
                                 self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)
                                 self.vision_offset_publisher.publish(_pnt)
@@ -393,7 +395,7 @@ class VisualCompensation():
                                 print("Total Time (visual feedback): "+str(time.time()-_time))
 
                             else:
-                                print("Offset distance larger than limit (0.02m)")
+                                print("Offset distance larger than limit (%fm)" %(offset_distance_limit))
 
 
                 except Exception as e:
