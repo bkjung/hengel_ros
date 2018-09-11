@@ -27,14 +27,14 @@ class CamPublisher():
 		self.cam2.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
 		self.cam2.set(cv2.CAP_PROP_FOURCC, int(0x47504A4D))
 
-		rospy.Subscriber('/initiator', Bool, self.initiator)
+		# rospy.Subscriber('/initiator', Bool, self.initiator)
 		self.pub = rospy.Publisher('/genius3/compressed', CompressedImage, queue_size=10)
 		self.pub2= rospy.Publisher('/genius4/compressed', CompressedImage, queue_size=10)
 		#self.pub= rospy.Publisher('/pi3_imgs/compressed', CmpImg, queue_size=10)
 		self.rate = rospy.Rate(5)
 		self.publish()
 
-		rospy.spin()
+		# rospy.spin()
 
 
 	def initiator(self, msg):

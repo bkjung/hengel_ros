@@ -235,143 +235,145 @@ class FeatureMatch():
         # return M
 
 
-    def SIFT_FLANN_matching(self, img1, img2):
-        plt.figure(1, figsize=(10, 20))
-        plt.subplot(221)
-        # cv2.imshow("white", img1)
-        # cv2.waitKey(3)
-        plt.imshow(img1, cmap='gray')
-        plt.subplot(222)
-        plt.imshow(img2, cmap='gray')
+    # def SIFT_FLANN_matching(self, img1, img2):
+    #     plt.figure(1, figsize=(10, 20))
+    #     plt.subplot(221)
+    #     # cv2.imshow("white", img1)
+    #     # cv2.waitKey(3)
+    #     plt.imshow(img1, cmap='gray')
+    #     plt.subplot(222)
+    #     plt.imshow(img2, cmap='gray')
 
-        M=None
-        _time=time.time()
+    #     M=None
+    #     _time=time.time()
 
-        self.status = False
+    #     self.status = False
 
-        sift=cv2.xfeatures2d.SIFT_create()
-        ############ Slow Part ############
-        kp1, des1 = sift.detectAndCompute(img1, None)
-        # print("kp1 shape")
-        # print(kp1)
-        # print(len(kp1))
-        # print("des1 shape")
-        # print(len(des1))
-        # print(des1[0])
-        # print(des1[0][0])
-        # for i in range(len(des1)):
-        #     print(des1[i])
-        kp2, des2 = sift.detectAndCompute(img2, None)
-        ############ Slow Part ############
+    #     sift=cv2.xfeatures2d.SIFT_create()
+    #     ############ Slow Part ############
+    #     kp1, des1 = sift.detectAndCompute(img1, None)
+    #     # print("kp1 shape")
+    #     # print(kp1)
+    #     # print(len(kp1))
+    #     # print("des1 shape")
+    #     # print(len(des1))
+    #     # print(des1[0])
+    #     # print(des1[0][0])
+    #     # for i in range(len(des1)):
+    #     #     print(des1[i])
+    #     kp2, des2 = sift.detectAndCompute(img2, None)
+    #     ############ Slow Part ############
 
-        # orb=cv2.ORB_create(nfeatures=1500)
-        # kp1,des1=orb.detectAndCompute(img1, None)
-        # kp2, des2=orb.detectAndCompute(img2, None)
+    #     # orb=cv2.ORB_create(nfeatures=1500)
+    #     # kp1,des1=orb.detectAndCompute(img1, None)
+    #     # kp2, des2=orb.detectAndCompute(img2, None)
 
-        print("feature detection Time: "+str(time.time()-_time))
+    #     print("feature detection Time: "+str(time.time()-_time))
 
-        # MIN_MATCH_COUNT=10
-        MIN_MATCH_COUNT=5
-        FLANN_INDEX_KDTREE=0
+    #     # MIN_MATCH_COUNT=10
+    #     MIN_MATCH_COUNT=5
+    #     FLANN_INDEX_KDTREE=0
 
-        # index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-        # search_params = dict(checks=50)   # or pass empty dictionary
+    #     # index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+    #     # search_params = dict(checks=50)   # or pass empty dictionary
 
-        FLANN_INDEX_LSH=5
-        index_params=dict(algorithm= FLANN_INDEX_LSH,
-                        table_number = 6,
-                        key_size=12,
-                        multi_probe_level =1 )
-        search_params = dict(checks=50)   # or pass empty dictionary
+    #     FLANN_INDEX_LSH=5
+    #     index_params=dict(algorithm= FLANN_INDEX_LSH,
+    #                     table_number = 6,
+    #                     key_size=12,
+    #                     multi_probe_level =1 )
+    #     search_params = dict(checks=50)   # or pass empty dictionary
 
-        flann = cv2.FlannBasedMatcher(index_params,search_params)
+    #     flann = cv2.FlannBasedMatcher(index_params,search_params)
 
-        if des1 is not None and des2 is not None:
-            print("debug0")
-
-
-            #match keypoints here!!!
-            #1st
-            matches = flann.knnMatch(des1,des2,k=2)
-
-            # print("sift_flann 2 Time: "+str(time.time()-_time))
-
-            #filter matched keypoints
-            #2nd
-            #store all the good matches as per Lowe's ratio test
-            good=[]
-            matchesMask = [[0,0] for i in range(len(matches))]
-            for i,  (m,n) in enumerate(matches):
-                if m.distance < 0.7*n.distance:
-                    good.append(m)
-                    matchesMask[i]=[1,0]
-
-            # print(len(kp1))
-
-            # print("abc",kp1[good[3].queryIdx].pt)
+    #     if des1 is not None and des2 is not None:
+    #         print("debug0")
 
 
-            # print("sift_flann 3 Time: "+str(time.time()-_time))
+    #         #match keypoints here!!!
+    #         #1st
+    #         matches = flann.knnMatch(des1,des2,k=2)
 
-            if len(good)>MIN_MATCH_COUNT:
-                # print("FEATURE MATCH COUNT > MIN_MATCH_COUNT")
-                # print([m.queryIdx for m in good])
+    #         # print("sift_flann 2 Time: "+str(time.time()-_time))
 
-                # print(np.float32([ kp1[m.queryIdx].pt for m in good ]))
-                src_pts=np.float32([ kp2[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
-                dst_pts=np.float32([ kp1[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
+    #         #filter matched keypoints
+    #         #2nd
+    #         #store all the good matches as per Lowe's ratio test
+    #         good=[]
+    #         matchesMask = [[0,0] for i in range(len(matches))]
+    #         for i,  (m,n) in enumerate(matches):
+    #             if m.distance < 0.7*n.distance:
+    #                 good.append(m)
+    #                 matchesMask[i]=[1,0]
 
-                M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
-                if M is None:
-                    print("FAILED (Homography mtx M is None)")
-                else:
-                    self.status = True
-                    print("sift_flann match finished")
-                    print(M)
-            else:
-                print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
+    #         # print(len(kp1))
+
+    #         # print("abc",kp1[good[3].queryIdx].pt)
 
 
-            draw_params = dict(matchColor = (0,255,0),
-                            singlePointColor = (255,0,0),
-                            matchesMask = matchesMask,
-                            flags = 0)
-            print("debug2")
-            img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
-            # img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,flags=2)
-            print("debug3")
+    #         # print("sift_flann 3 Time: "+str(time.time()-_time))
 
-            # cv2.imwrite(self.folder_path+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
+    #         if len(good)>MIN_MATCH_COUNT:
+    #             # print("FEATURE MATCH COUNT > MIN_MATCH_COUNT")
+    #             # print([m.queryIdx for m in good])
 
-            plt.subplot(223)
-            plt.imshow(img3, cmap='gray')
+    #             # print(np.float32([ kp1[m.queryIdx].pt for m in good ]))
+    #             src_pts=np.float32([ kp2[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
+    #             dst_pts=np.float32([ kp1[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
-            img4=cv2.warpPerspective(img1, M, (1280,1280))
-            plt.subplot(224)
-            plt.imshow(img4, cmap='gray')
+    #             M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+    #             if M is None:
+    #                 print("FAILED (Homography mtx M is None)")
+    #             else:
+    #                 self.status = True
+    #                 print("sift_flann match finished")
+    #                 print(M)
+    #         else:
+    #             print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
 
-        else:
-            print("FAILED (Empty Descriptor)")
 
-        # plt.draw()
-        # plt.pause(0.00000000001)
-        # print("sift_flann 4 Time: "+str(time.time()-_time))
-        file_time = time.strftime("%y%m%d_%H%M%S")
-        plt.savefig(self.folder_path+"/SIFT_FLANN_"+file_time+".png")
-        print("FeatureMatch Saved to "+file_time)
+    #         draw_params = dict(matchColor = (0,255,0),
+    #                         singlePointColor = (255,0,0),
+    #                         matchesMask = matchesMask,
+    #                         flags = 0)
+    #         print("debug2")
+    #         img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,**draw_params)
+    #         # img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,matches,None,flags=2)
+    #         print("debug3")
 
-        plt.close("all")
+    #         # cv2.imwrite(self.folder_path+"/SIFT_FLANN_MATCH_"+time.strftime("%y%m%d_%H%M%S")+".png", img3)
 
-        return M
+    #         plt.subplot(223)
+    #         plt.imshow(img3, cmap='gray')
+
+    #         img4=cv2.warpPerspective(img1, M, (1280,1280))
+    #         plt.subplot(224)
+    #         plt.imshow(img4, cmap='gray')
+
+    #     else:
+    #         print("FAILED (Empty Descriptor)")
+
+    #     # plt.draw()
+    #     # plt.pause(0.00000000001)
+    #     # print("sift_flann 4 Time: "+str(time.time()-_time))
+    #     file_time = time.strftime("%y%m%d_%H%M%S")
+    #     plt.savefig(self.folder_path+"/SIFT_FLANN_"+file_time+".png")
+    #     print("FeatureMatch Saved to "+file_time)
+
+    #     plt.close("all")
+
+    #     return M
 
     def SURF_BF_matching(self, img1, img2, img1_marked, img2_marked):
         #img1: summed image
         #img2: virtual map
-        plt.figure(1, figsize=(10, 20))
-        plt.subplot(221)
-        plt.imshow(img1, cmap='gray')
-        plt.subplot(222)
-        plt.imshow(img2, cmap='gray')
+        if not self.option_without_save:
+            plt.figure(1, figsize=(10,20))
+            plt.subplot(221)
+            plt.imshow(img1, cmap='gray')
+            plt.subplot(222)
+            plt.imshow(img2, cmap='gray')
+
 
         M=None
         MIN_MATCH_COUNT=5
@@ -404,27 +406,33 @@ class FeatureMatch():
                 src_pts=np.float32([kp2[m.queryIdx].pt for m in good]).reshape(-1,1,2)
                 dst_pts=np.float32([kp1[m.trainIdx].pt for m in good]).reshape(-1,1,2)
 
-                M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+                H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
+                # M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
 
                 # H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
                 # print(H)
                 # M = np.eye(3)
                 # M[:2]=H
-                if M is None:
+                if H is None:
                 # if H is None:
                     print("FAILED (Homography mtx M is None")
                 else:
-                    self.status=True
-                    print("surf_bf match finished")
-                    print(M)
-                    img4 = cv2.warpPerspective(img1_marked, M,(1280, 1280))
-                    if not self.option_without_save:
-                        img5= cv2.warpPerspective(img2_marked, inv(M), (1280,1280))
-                        cv2.imwrite(self.folder_path+"/WARPED_IMAGE_"+file_time+".png", img4)
-                        cv2.imwrite(self.folder_path+"/WARPED_IMAGE_2_"+file_time+".png", img5)
+                    M=np.eye(3)
+                    M[:2]=H
+                    scale= sqrt(pow(H[0][0],2)+pow(H[0][1],2))
+                    if scale<=0.9 or scale>=1.1:
+                        print("FAILED (scale error)")
+                    elif abs(atan2(M[0][1],M[0][0])) >= 0.3:
+                        print("FAILED (angle error)")
+                    else:
+                        self.status=True
+                        print("sift_bf match finished")
+                        print(M)
+                        img4=cv2.warpPerspective(img1, M, (1280,1280))
 
-                    plt.subplot(224)
-                    plt.imshow(img4, cmap='gray')
+                        if not self.option_without_save:
+                            plt.subplot(224)
+                            plt.imshow(img4, cmap='gray')
 
             else:
                 print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
