@@ -199,7 +199,8 @@ class VisualCompensation():
 
         ########### STOPGAP ######################
         # if self.isNavigationStarted==True:
-        if self.isNavigationStarted==True and self.realcallback2:
+        #if self.isNavigationStarted==True and self.realcallback2:
+        if self.isNavigationStarted==True:
             if self.app_robotview.isPaintStarted == True:
                 print("\n-----------------sync real-----------------")
                 _time = time.time()
