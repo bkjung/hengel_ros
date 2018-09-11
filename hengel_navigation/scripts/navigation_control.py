@@ -434,13 +434,17 @@ class NavigationControl():
                                 dist=sqrt(pow(new_endpoint_x-self.current_waypoint[0],2)+pow(new_endpoint_y-self.current_waypoint[1],2))
 
                                 # if the acquired offset is too large, dismiss it.
-                                offset_upper_limit = 0.1
+                                #offset_upper_limit = 0.1
+                                offset_upper_limit = 0.02
+                                offset_deg_upper_limit = 5.0
                                 if dist>offset_upper_limit:
                                     print("VISUAL OFFSET is LARGER than %f (Dismissing the calculated offset)" %(offset_upper_limit))
                                     pass
 
-                                elif self.offset_theta>20.0*3.141592/180.0:
-                                    print("VISUAL OFFSET theta is LARGER than 30(deg) (Dismissing the calculated offset)")
+                                #elif self.offset_theta>20.0*3.141592/180.0:
+                                #elif self.offset_theta>10.0*3.141592/180.0:
+                                elif self.offset_theta>offset_deg_upper_limit*3.141592/180.0:
+                                    print("VISUAL OFFSET theta is LARGER than %f(deg) (Dismissing the calculated offset)" %(offset_deg_upper_limit))
                                     pass
 
                                 else:
