@@ -404,27 +404,33 @@ class FeatureMatch():
                 src_pts=np.float32([kp2[m.queryIdx].pt for m in good]).reshape(-1,1,2)
                 dst_pts=np.float32([kp1[m.trainIdx].pt for m in good]).reshape(-1,1,2)
 
-                M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+                H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
+                # M, mask= cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
 
                 # H = cv2.estimateRigidTransform(dst_pts, src_pts, False)
                 # print(H)
                 # M = np.eye(3)
                 # M[:2]=H
-                if M is None:
+                if H is None:
                 # if H is None:
                     print("FAILED (Homography mtx M is None")
                 else:
-                    self.status=True
-                    print("surf_bf match finished")
-                    print(M)
-                    img4 = cv2.warpPerspective(img1_marked, M,(1280, 1280))
-                    if not self.option_without_save:
-                        img5= cv2.warpPerspective(img2_marked, inv(M), (1280,1280))
-                        cv2.imwrite(self.folder_path+"/WARPED_IMAGE_"+file_time+".png", img4)
-                        cv2.imwrite(self.folder_path+"/WARPED_IMAGE_2_"+file_time+".png", img5)
+                    M=np.eye(3)
+                    M[:2]=H
+                    scale= sqrt(pow(H[0][0],2)+pow(H[0][1],2))
+                    if scale<=0.9 or scale>=1.1:
+                        print("FAILED (scale error)")
+                    elif abs(atan2(M[0][1],M[0][0])) >= 0.3:
+                        print("FAILED (angle error)")
+                    else:
+                        self.status=True
+                        print("sift_bf match finished")
+                        print(M)
+                        img4=cv2.warpPerspective(img1, M, (1280,1280))
 
-                    plt.subplot(224)
-                    plt.imshow(img4, cmap='gray')
+                        if not self.option_without_save:
+                            plt.subplot(224)
+                            plt.imshow(img4, cmap='gray')
 
             else:
                 print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
