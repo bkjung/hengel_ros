@@ -372,20 +372,30 @@ class VisualCompensation():
                             __time=time.time()
                             _pnt = self.relocalization(M)
                             # self.vision_offset_publisher.publish(Point(fm.delta_x, fm.delta_y, fm.delta_theta))
-                            self.vision_offset_publisher.publish(_pnt)
-                            print("ADD BIG CIRCLE: %f %f" %(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y))
+                            dist= sqrt(pow(_pnt.x,2)+pow(_pnt.y,2))
 
-                            #circle (original endpoint)
-                            self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y, 0), self.line_thickness*1.5)
-                            #square (compensated endpoint)
-                            self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x+_pnt.x, self.current_end_predict_canvas_y+_pnt.y,0), -2)
+                            if _pnt<0.02:
+                                print("Offset okay (less than distance, deg limit)")
+                                self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)
+                                self.vision_offset_publisher.publish(_pnt)
+                                print("ADD BIG CIRCLE: %f %f" %(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y))
 
-                            virtual_map_marked= self.app_robotview.img_copy
-                            # if not self.option_without_save:
-                            file_time = time.strftime("%y%m%d_%H%M%S")
-                            cv2.imwrite(self.folder_path+"/MATCHED_POINTS_"+file_time+".png", virtual_map_marked)
-                            # print("relocation time: "+str(time.time()-__time))
-                            print("Total Time (visual feedback): "+str(time.time()-_time))
+                                #circle (original endpoint)
+                                self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x, self.current_end_predict_canvas_y, 0), self.line_thickness*1.5)
+                                #square (compensated endpoint)
+                                self.app_robotview.run(Point(), Point(self.current_end_predict_canvas_x+_pnt.x, self.current_end_predict_canvas_y+_pnt.y,0), -2)
+
+                                virtual_map_marked= self.app_robotview.img_copy
+                                # if not self.option_without_save:
+                                file_time = time.strftime("%y%m%d_%H%M%S")
+                                cv2.imwrite(self.folder_path+"/MATCHED_POINTS_"+file_time+".png", virtual_map_marked)
+                                # print("relocation time: "+str(time.time()-__time))
+                                print("Total Time (visual feedback): "+str(time.time()-_time))
+
+                            else:
+                                print("Offset distance larger than limit (0.02m)")
+
+
                 except Exception as e:
                     print(e)
                     sys.exit("Feature Match error - debug1")
@@ -482,15 +492,6 @@ class VisualCompensation():
 
         self.success_try += 1
 
-        dist= sqrt(pow(offset.x,2)+pow(offset.y,2))
-
-        #if dist>=0.02:
-        # if dist>=0.1:     #dist larger than 0.1 would be handled in navigation_control anyway
-            # offset=Point()
-        # else:
-        #print("OFFSET less than limit (= 0.02)")
-        # print("OFFSET less than limit (= 0.1)")
-        self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)
         return offset
 
         # self.pub_offset.publish(offset)
