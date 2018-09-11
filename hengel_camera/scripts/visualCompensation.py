@@ -121,7 +121,7 @@ class VisualCompensation():
         # self.summed_image_prev = None
 
         # self.ts_2=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 10,0.1, allow_headerless=False)
-        self.ts_2=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2], 10,0.1, allow_headerless=False)
+        self.ts_2=message_filters.ApproximateTimeSynchronizer([self.callback1, self.callback2, self.callback3, self.callback4], 30,0.1, allow_headerless=True)
         ################# STOPGAP ###########################
         # self.ts_3=message_filters.ApproximateTimeSynchronizer([self.callback3, self.callback4], 10,0.1, allow_headerless=False)
         # self.ts_3.registerCallback(self.sync_real_callabck2)
@@ -199,11 +199,12 @@ class VisualCompensation():
 
         ########### STOPGAP ######################
         # if self.isNavigationStarted==True:
-        if self.isNavigationStarted==True and self.realcallback2:
+        #if self.isNavigationStarted==True and self.realcallback2:
+        if self.isNavigationStarted==True:
             if self.app_robotview.isPaintStarted == True:
                 print("\n-----------------sync real-----------------")
                 _time = time.time()
-                image_time = (_img1.header.stamp.to_nsec()+_img2.header.stamp.to_nsec()+self._img3.header.stamp.to_nsec()+self._img4.header.stamp.to_nsec())/4.0
+                image_time = (_img1.header.stamp.to_nsec()+_img2.header.stamp.to_nsec()+_img3.header.stamp.to_nsec()+_img4.header.stamp.to_nsec())/4.0
 
                 min_diff = 999999999999999.9
                 min_index = -1
@@ -229,8 +230,8 @@ class VisualCompensation():
 
                 # print("Processing Virtualmap Sync Time: "+str(time.time()-_time))
 
-                img1 = self.undistort1(_img1)
-                img2 = self.undistort2(_img2)
+                img1 = self.undistort1(_img2)
+                img2 = self.undistort2(_img1)
                 img3 = self.undistort3(_img3)
                 img4 = self.undistort4(_img4)
                 ###################### STOPGAP ###############
@@ -484,7 +485,7 @@ class VisualCompensation():
         dist= sqrt(pow(offset.x,2)+pow(offset.y,2))
 
         #if dist>=0.02:
-        # if dist>=0.1:     #dist larger than 0.1 would be handled in navigation_control anyway 
+        # if dist>=0.1:     #dist larger than 0.1 would be handled in navigation_control anyway
             # offset=Point()
         # else:
         #print("OFFSET less than limit (= 0.02)")
