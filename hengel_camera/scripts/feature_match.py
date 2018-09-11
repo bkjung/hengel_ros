@@ -367,11 +367,13 @@ class FeatureMatch():
     def SURF_BF_matching(self, img1, img2, img1_marked, img2_marked):
         #img1: summed image
         #img2: virtual map
-        plt.figure(1, figsize=(10, 20))
-        plt.subplot(221)
-        plt.imshow(img1, cmap='gray')
-        plt.subplot(222)
-        plt.imshow(img2, cmap='gray')
+        if not self.option_without_save:
+            plt.figure(1, figsize=(10,20))
+            plt.subplot(221)
+            plt.imshow(img1, cmap='gray')
+            plt.subplot(222)
+            plt.imshow(img2, cmap='gray')
+
 
         M=None
         MIN_MATCH_COUNT=5
