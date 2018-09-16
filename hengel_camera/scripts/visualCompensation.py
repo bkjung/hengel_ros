@@ -375,7 +375,7 @@ class VisualCompensation():
                             dist= sqrt(pow(_pnt.x,2)+pow(_pnt.y,2))
 
 
-                            offset_distance_limit = 0.05
+                            offset_distance_limit = 5.0
                             if _pnt<offset_distance_limit:
                                 print("Offset okay (less than distance, deg limit)")
                                 self.sum_compensation_distance += sqrt(offset.x*offset.x+offset.y*offset.y)

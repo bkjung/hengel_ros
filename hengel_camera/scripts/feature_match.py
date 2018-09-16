@@ -64,7 +64,7 @@ class FeatureMatch():
                     M[:2]=H
                     scale= sqrt(pow(H[0][0],2)+pow(H[0][1], 2))
 
-                    offset_deg_upper_limit = 8.0
+                    offset_deg_upper_limit = 90.0
                     if scale <=0.9 or scale>=1.1:
                         print("FAILED (scale error)")
                     elif abs(atan2(M[0][1],M[0][0])) >= offset_deg_upper_limit*3.141592/180.0:

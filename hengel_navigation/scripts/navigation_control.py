@@ -437,8 +437,8 @@ class NavigationControl():
                                 #offset_upper_limit = 0.1
 
                                 #This function is now moved to visualCompensation.py, so the limits are set to large values in order not to conflict the limiting step
-                                offset_upper_limit = 1.0
-                                offset_deg_upper_limit = 30.0
+                                offset_upper_limit = 10.0
+                                offset_deg_upper_limit = 90.0
                                 if dist>offset_upper_limit:
                                     print("VISUAL OFFSET is LARGER than %f (Dismissing the calculated offset)" %(offset_upper_limit))
                                     pass
