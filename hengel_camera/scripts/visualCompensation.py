@@ -230,10 +230,10 @@ class VisualCompensation():
 
                 # print("Processing Virtualmap Sync Time: "+str(time.time()-_time))
 
-                img1 = self.undistort1(_img2)
-                img2 = self.undistort2(_img1)
-                img3 = self.undistort3(_img3)
-                img4 = self.undistort4(_img4)
+                img1 = self.undistort1(_img1)
+                img2 = self.undistort2(_img2)
+                img3 = self.undistort3(_img4)
+                img4 = self.undistort4(_img3)
                 ###################### STOPGAP ###############
                 # img3 = self.undistort3(self._img3)
                 # img4 = self.undistort4(self._img4)
