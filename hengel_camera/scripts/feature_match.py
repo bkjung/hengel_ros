@@ -17,12 +17,12 @@ class FeatureMatch():
         self.option_without_save = _option_without_save
 
     def SIFT_BF_matching(self, img1, img2,img1_copy, img2_copy):
-        if not self.option_without_save:
-            plt.figure(1, figsize=(10,20))
-            plt.subplot(221)
-            plt.imshow(img1, cmap='gray')
-            plt.subplot(222)
-            plt.imshow(img2, cmap='gray')
+        #if not self.option_without_save:
+        #    plt.figure(1, figsize=(10,20))
+        #    plt.subplot(221)
+        #    plt.imshow(img1, cmap='gray')
+        #    plt.subplot(222)
+        #    plt.imshow(img2, cmap='gray')
 
         M=None
         _time=time.time()
@@ -75,9 +75,9 @@ class FeatureMatch():
                         print(M)
                         img4=cv2.warpPerspective(img1, M, (1280,1280))
 
-                        if not self.option_without_save:
-                            plt.subplot(224)
-                            plt.imshow(img4, cmap='gray')
+                        #if not self.option_without_save:
+                        #    plt.subplot(224)
+                        #    plt.imshow(img4, cmap='gray')
 
             else:
                 print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
@@ -88,17 +88,19 @@ class FeatureMatch():
                                 flags = 0)
             img3 = cv2.drawMatchesKnn(img2_copy,kp2,img1_copy,kp1,matches,None,**draw_params)
 
-            if not self.option_without_save:
-                cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)
-                plt.subplot(223)
-                plt.imshow(img3, cmap='gray')
+            #if not self.option_without_save:
+            #    cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)
+            #    plt.subplot(223)
+            #    plt.imshow(img3, cmap='gray')
 
         else:
             print("FAILED (Empty Descriptor)")
 
-        if not self.option_without_save:
-            plt.savefig(self.folder_path+"/SIFT_BF_"+file_time+".png")
+        #if not self.option_without_save:
+        #    plt.savefig(self.folder_path+"/SIFT_BF_"+file_time+".png")
 
+        cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
+        cv2.imwrite(self.folder_path+"/VIRTUAL_IMAGE_"+file_time+".png", img2)
         if not self.option_without_save:
             # cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
             # cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
@@ -107,17 +109,17 @@ class FeatureMatch():
         cv2.destroyAllWindows()
         print("FeatureMatch Saved to "+file_time)
 
-        if not self.option_without_save:
-            plt.close("all")
+        #if not self.option_without_save:
+        #    plt.close("all")
 
         return M
 
     def ORB_BF_matching(self, img1, img2):
-        plt.figure(1, figsize=(10, 20))
-        plt.subplot(221)
-        plt.imshow(img1, cmap='gray')
-        plt.subplot(222)
-        plt.imshow(img2, cmap='gray')
+        #plt.figure(1, figsize=(10, 20))
+        #plt.subplot(221)
+        #plt.imshow(img1, cmap='gray')
+        #plt.subplot(222)
+        #plt.imshow(img2, cmap='gray')
 
         M=None
         MIN_MATCH_COUNT=5
@@ -154,8 +156,8 @@ class FeatureMatch():
                 print(M)
                 print("sift_flann match finished")
                 img4= cv2.warpPerspective(img1, M, (1280,1280))
-                plt.subplot(224)
-                plt.imshow(img4, cmap='gray')
+                #plt.subplot(224)
+                #plt.imshow(img4, cmap='gray')
 
         else:
             print("Feature Match FAILED (Empty Descriptor)")
@@ -165,11 +167,11 @@ class FeatureMatch():
                         singlePointColor = (255,0,0),
                         flags = 0)
         img3 = cv2.drawMatches(img2,kp2,img1,kp1,matches[:10],None,**draw_params)
-        plt.subplot(223)
-        plt.imshow(img3, cmap='gray')
-        file_time = time.strftime("%y%m%d_%H%M%S")
-        plt.savefig(self.folder_path+"/ORB_BF_"+file_time+".png")
-        plt.close("all")
+        #plt.subplot(223)
+        #plt.imshow(img3, cmap='gray')
+        #file_time = time.strftime("%y%m%d_%H%M%S")
+        #plt.savefig(self.folder_path+"/ORB_BF_"+file_time+".png")
+        #plt.close("all")
 
         if not self.option_without_save:
             cv2.imwrite(self.folder_path+"/SUMMED_"+file_time+".png", img1)
@@ -369,12 +371,12 @@ class FeatureMatch():
     def SURF_BF_matching(self, img1, img2, img1_marked, img2_marked):
         #img1: summed image
         #img2: virtual map
-        if not self.option_without_save:
-            plt.figure(1, figsize=(10,20))
-            plt.subplot(221)
-            plt.imshow(img1, cmap='gray')
-            plt.subplot(222)
-            plt.imshow(img2, cmap='gray')
+        #if not self.option_without_save:
+        #    plt.figure(1, figsize=(10,20))
+        #    plt.subplot(221)
+        #    plt.imshow(img1, cmap='gray')
+        #    plt.subplot(222)
+        #    plt.imshow(img2, cmap='gray')
 
 
         M=None
@@ -432,9 +434,9 @@ class FeatureMatch():
                         print(M)
                         img4=cv2.warpPerspective(img1, M, (1280,1280))
 
-                        if not self.option_without_save:
-                            plt.subplot(224)
-                            plt.imshow(img4, cmap='gray')
+                        #if not self.option_without_save:
+                        #    plt.subplot(224)
+                        #    plt.imshow(img4, cmap='gray')
 
             else:
                 print("FAILED (Not enough features, %d <= %d)" %(len(good), MIN_MATCH_COUNT))
@@ -447,20 +449,22 @@ class FeatureMatch():
             if not self.option_without_save:
                 cv2.imwrite(self.folder_path+"/MATCH_"+file_time+".png", img3)
 
-            plt.subplot(223)
-            plt.imshow(img3, cmap='gray')
+            #plt.subplot(223)
+            #plt.imshow(img3, cmap='gray')
 
         else:
             print("FAILED (Empty Descriptor)")
 
-        plt.savefig(self.folder_path+"/SURF_BF_"+file_time+".png")
+        #plt.savefig(self.folder_path+"/SURF_BF_"+file_time+".png")
+        cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
+        cv2.imwrite(self.folder_path+"/VIRTUAL_IMAGE_"+file_time+".png", img2)
         # if not self.option_without_save:
             # cv2.imwrite(self.folder_path+"/SUMMED_IMAGE_"+file_time+".png", img1)
             # cv2.imwrite(self.folder_path+"/ VIRTUAL_IMAGE_"+file_time+".png", img2)
-        cv2.destroyAllWindows()
+        #cv2.destroyAllWindows()
         print("FeatureMatch Saved to "+file_time)
 
-        plt.close("all")
+        #plt.close("all")
 
         return M
 

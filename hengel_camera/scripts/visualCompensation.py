@@ -51,8 +51,8 @@ class VisualCompensation():
         #     self.height=float(word.split()[1])
         #     break
 
-        self.width = 5
-        self.height = 5
+        self.width = 4.3
+        self.height = 4.3
         # self.num_pts_delete = _num_pts_delete
         self.recent_pts = collections.deque(500*[(0.0,0.0)],500)
 
@@ -240,11 +240,16 @@ class VisualCompensation():
 
 
                 #ONLY FOR DEBUGGING!!!!!!!
-                if self.option_debug:
-                    bridge=CvBridge()
-                    summed_msg=bridge.cv2_to_compressed_imgmsg(img1+img2+img3+img4)
-                    self.pub_sum.publish(summed_msg)
-                    cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_summed_1.png",img1+img2+img3+img4)
+                #if self.option_debug:
+                img1_color = self.undistort1_color(_img2)
+                img2_color = self.undistort2_color(_img1)
+                img3_color = self.undistort3_color(_img3)
+                img4_color = self.undistort4_color(_img4)
+
+                #bridge=CvBridge()
+                #summed_msg=bridge.cv2_to_compressed_imgmsg(img1+img2+img3+img4)
+                #self.pub_sum.publish(summed_msg)
+                cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_summed_1.png",img1_color+img2_color+img3_color+img4_color)
 
                 im_mask13=cv2.bitwise_and(np.array(self.im_mask1).astype('uint8'), np.array(self.im_mask3).astype('uint8'))
 
@@ -404,8 +409,8 @@ class VisualCompensation():
             #################
 
                 #ONLY FOR DEBUGGING!!!!!!!
-                if self.option_debug:
-                    cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_summed_2.png",summed_image)
+                #if self.option_debug:
+                cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_summed_2.png",summed_image)
                 #    bridge=CvBridge()
                 #    summed_msg=bridge.cv2_to_compressed_imgmsg(summed_image)
                 #    self.pub_sum.publish(summed_msg)
@@ -584,8 +589,8 @@ class VisualCompensation():
     def undistort1(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        if self.option_debug:
-            cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_img1.png",img)
+        #if self.option_debug:
+        #    cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_img1.png",img)
         mtx=np.array([[393.8666817683925, 0.0, 399.6813895086665], [0.0, 394.55108358870405, 259.84676565717876], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0032079005049939543, -0.020856072501002923, 0.000252242294186179, -0.0021042704510431365])
 
@@ -600,14 +605,32 @@ class VisualCompensation():
 
         return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo, (1280,1280))
 
+    def undistort1_color(self, _img):
+        img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        #if self.option_debug:
+        #    cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_img1.png",img)
+        mtx=np.array([[393.8666817683925, 0.0, 399.6813895086665], [0.0, 394.55108358870405, 259.84676565717876], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.0032079005049939543, -0.020856072501002923, 0.000252242294186179, -0.0021042704510431365])
+
+        homo= self.homography[0]
+
+        #undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
+        undist_img_binary=cv2.undistort(img,mtx,dst, None, mtx)
+
+        if self.is_first1 == True:
+            img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo, (1280, 1280))
+            self.im_mask_inv1, self.im_mask1 = self.find_mask(img_for_mask)
+            self.is_first1=False
+
+        return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo, (1280,1280))
 
 
 
     def undistort2(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        if self.option_debug:
-            cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_img2.png",img)
+        #if self.option_debug:
+        #    cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_img2.png",img)
         mtx=np.array([[382.750581, 0, 422.843185], [0, 385.64829129, 290.20197850], [0.0, 0.0, 1.0]])
         dst=np.array([-0.018077383, -0.0130221045547, 0.0003464289655, 0.00581105231096])
 
@@ -622,11 +645,30 @@ class VisualCompensation():
 
         return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo, (1280,1280))
 
+    def undistort2_color(self, _img):
+        img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        #if self.option_debug:
+        #    cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_img2.png",img)
+        mtx=np.array([[382.750581, 0, 422.843185], [0, 385.64829129, 290.20197850], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.018077383, -0.0130221045547, 0.0003464289655, 0.00581105231096])
+
+        homo = self.homography[1]
+
+        #undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold2, 255, cv2.THRESH_BINARY)[1]
+        undist_img_binary=cv2.undistort(img,mtx,dst, None, mtx)
+
+        if self.is_first2 == True:
+            img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo, (1280, 1280))
+            self.im_mask_inv2, self.im_mask2 = self.find_mask(img_for_mask)
+            self.is_first2=False
+
+        return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo, (1280,1280))
+
     def undistort3(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        if self.option_debug:
-            cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_img3.png",img)
+        #if self.option_debug:
+        #    cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_img3.png",img)
         mtx=np.array([[387.8191999285985, 0.0, 392.3078288789019],[ 0.0, 382.1093651210362, 317.43368009853674], [0.0, 0.0, 1.0]])
         dst=np.array([-0.008671221810333559, -0.013546386893040543, -0.00016537575030651431, 0.002659594999360673])
 
@@ -641,18 +683,56 @@ class VisualCompensation():
 
         return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo, (1280,1280))
 
+    def undistort3_color(self, _img):
+        img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        #if self.option_debug:
+        #    cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_img3.png",img)
+        mtx=np.array([[387.8191999285985, 0.0, 392.3078288789019],[ 0.0, 382.1093651210362, 317.43368009853674], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.008671221810333559, -0.013546386893040543, -0.00016537575030651431, 0.002659594999360673])
+
+        homo= self.homography[2]
+
+        #undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold1, 255, cv2.THRESH_BINARY)[1]
+        undist_img_binary=cv2.undistort(img,mtx,dst, None, mtx)
+
+        if self.is_first3 == True:
+            img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo, (1280, 1280))
+            self.im_mask_inv3, self.im_mask3 = self.find_mask(img_for_mask)
+            self.is_first3=False
+
+        return cv2.warpPerspective( cv2.bitwise_not(undist_img_binary) , homo, (1280,1280))
 
     def undistort4(self, _img):
         img=self.bridge.compressed_imgmsg_to_cv2(_img)
         img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        if self.option_debug:
-            cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_img4.png",img)
+        #if self.option_debug:
+        #    cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_img4.png",img)
         mtx=np.array([[384.2121883964654, 0.0, 423.16727407803353], [0.0, 386.8188468139677, 359.5190506678551], [0.0, 0.0, 1.0]])
         dst=np.array([-0.0056866549555025896, -0.019460881544303938, 0.0012937686026747307, -0.0031999317338443087])
 
         homo= self.homography[3]
 
         undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold4, 255, cv2.THRESH_BINARY)[1]
+
+        if self.is_first4 == True:
+            img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo, (1280, 1280))
+            self.im_mask_inv4, self.im_mask4 = self.find_mask(img_for_mask)
+            self.is_first4=False
+
+
+        return cv2.warpPerspective(cv2.bitwise_not(undist_img_binary) , homo, (1280,1280))
+
+    def undistort4_color(self, _img):
+        img=self.bridge.compressed_imgmsg_to_cv2(_img)
+        #if self.option_debug:
+        #    cv2.imwrite(self.folder_path+"/"+time.strftime("%y%m%d_%H%M%S")+"_img4.png",img)
+        mtx=np.array([[384.2121883964654, 0.0, 423.16727407803353], [0.0, 386.8188468139677, 359.5190506678551], [0.0, 0.0, 1.0]])
+        dst=np.array([-0.0056866549555025896, -0.019460881544303938, 0.0012937686026747307, -0.0031999317338443087])
+
+        homo= self.homography[3]
+
+        #undist_img_binary= cv2.threshold(cv2.undistort(img ,mtx,dst ,None, mtx), self.threshold4, 255, cv2.THRESH_BINARY)[1]
+        undist_img_binary=cv2.undistort(img,mtx,dst, None, mtx)
 
         if self.is_first4 == True:
             img_for_mask = cv2.warpPerspective(cv2.undistort(img ,mtx, dst, None, mtx), homo, (1280, 1280))
